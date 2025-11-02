@@ -1,0 +1,13 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+qdrant-client==1.7.3
+sentence-transformers==2.7.0
+huggingface_hub==0.20.0
+python-multipart==0.0.9
+gradio==4.44.0
+requests==2.31.0
+python-dotenv==1.0.0
+openai>=1.0.0
+google-generativeai
+pdfplumber==0.10.0

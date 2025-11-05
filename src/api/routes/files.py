@@ -2,10 +2,10 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 from typing import List
 from api.api_constants import *
 from models.api_models import ApiResponse, ApiResponseWithBody, FileUploadResponse
-from services.file_service import FileService
+from services.storage_factory import get_file_service
 
 router = APIRouter()
-file_service = FileService()
+file_service = get_file_service()
 
 @router.post(FILES_BASE)
 def upload_file(file: UploadFile = File(...)) -> FileUploadResponse:

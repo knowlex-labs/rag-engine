@@ -3,7 +3,7 @@ from datetime import datetime
 import logging
 from repositories.qdrant_repository import QdrantRepository
 from utils.embedding_client import EmbeddingClient
-from services.file_service import FileService
+from services.storage_factory import get_file_service
 from services.query_service import QueryService
 from models.api_models import LinkContentItem, LinkContentResponse, ApiResponse, ApiResponseWithBody, QueryResponse, UnlinkContentResponse
 
@@ -13,7 +13,7 @@ class CollectionService:
     def __init__(self):
         self.qdrant_repo = QdrantRepository()
         self.embedding_client = EmbeddingClient()
-        self.file_service = FileService()
+        self.file_service = get_file_service()
         self.query_service = QueryService()
 
     def create_collection(self, name: str, rag_config: Optional[Dict] = None, indexing_config: Optional[Dict] = None) -> ApiResponse:

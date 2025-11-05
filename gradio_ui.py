@@ -45,13 +45,10 @@ custom_css = """
     border: 1px solid #e0e0e0 !important;
 }
 
-/* Enhanced styling for delete operations */
-.delete-warning {
-    background-color: #fff3cd !important;
-    border: 1px solid #ffeaa7 !important;
-    border-radius: 4px !important;
-    padding: 8px !important;
-    margin: 4px 0 !important;
+/* Smaller delete button icon */
+.delete-btn {
+    font-size: 11px !important;
+    padding: 5px 10px !important;
 }
 
 .collection-management {
@@ -521,7 +518,7 @@ class RAGGradioUI:
                                     choices=[],
                                     interactive=True
                                 )
-                                delete_btn = gr.Button("🗑️ Delete", variant="stop", size="sm")
+                                delete_btn = gr.Button("🗑 Delete", variant="stop", size="sm", elem_classes=["delete-btn"])
 
                 # Tab 2: Collection Management
                 with gr.Tab("📚 Collection Management"):
@@ -550,16 +547,13 @@ class RAGGradioUI:
                                 wrap=True
                             )
 
-                            gr.Markdown("⚠️ **Warning**: Collection deletion is permanent and will remove all indexed content!",
-                                       elem_classes=["delete-warning"])
-
                             with gr.Row():
                                 delete_collection_dropdown = gr.Dropdown(
                                     label="Select Collection to Delete",
                                     choices=[],
                                     interactive=True
                                 )
-                                delete_collection_btn = gr.Button("🗑️ Delete Collection", variant="stop", size="sm")
+                                delete_collection_btn = gr.Button("🗑 Delete", variant="stop", size="sm", elem_classes=["delete-btn"])
 
                     with gr.Row():
                         with gr.Column(scale=1):
@@ -596,7 +590,7 @@ class RAGGradioUI:
                                 multiselect=True,
                                 interactive=True
                             )
-                            unlink_btn = gr.Button("🗑️ Unlink Content", variant="stop", size="sm")
+                            unlink_btn = gr.Button("🗑 Unlink Content", variant="stop", size="sm", elem_classes=["delete-btn"])
                             unlink_status = gr.Textbox(
                                 label="Unlink Status",
                                 interactive=False,

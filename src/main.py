@@ -14,8 +14,9 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",  # React dev server
         "http://localhost:7860",  # Gradio UI
+        "http://localhost:5173",
         "https://parkho-ai-frontend-846780462763.us-central1.run.app",
-        "https://ai-content-tutor-846780462763.us-central1.run.app" 
+        "https://ai-content-tutor-846780462763.us-central1.run.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],

@@ -1,0 +1,181 @@
+{
+  "concept_explanation": {
+    "query": "What is Newton's second law of motion?",
+    "expected_structure": {
+      "answer": "string (200-500 chars)",
+      "answer_must_contain": [
+        "acceleration",
+        "force",
+        "mass",
+        "F = ma"
+      ],
+      "sources": [
+        {
+          "chunk_id": "string",
+          "text": "string",
+          "source": {
+            "book": "Fundamentals of Physics (Resnick Halliday), 10th Edition",
+            "chapter": "5. Force and Motion - I",
+            "section": "5.4 Newton's Second Law",
+            "page": "number"
+          },
+          "relevance_score": "float > 0.8"
+        }
+      ],
+      "metadata": {
+        "response_time_ms": "number < 500",
+        "chunks_retrieved": "number > 0",
+        "chunks_used": "number >= 1",
+        "confidence": "float > 0.8"
+      }
+    }
+  },
+
+  "knowledge_testing": {
+    "query": "Give me questions from the book to test my knowledge on Newton's second law",
+    "expected_structure": {
+      "questions": [
+        {
+          "question": "string",
+          "type": "multiple_choice | short_answer | numerical",
+          "options": ["A", "B", "C", "D"],
+          "correct_answer": "string",
+          "explanation": "string",
+          "source": {
+            "chapter": "number",
+            "section": "string",
+            "page": "number"
+          },
+          "difficulty": "easy | medium | hard"
+        }
+      ],
+      "metadata": {
+        "total_questions": "number >= 3",
+        "from_book": true,
+        "response_time_ms": "number < 1000"
+      }
+    },
+    "validation_rules": {
+      "min_questions": 3,
+      "max_questions": 10,
+      "must_be_from_book_content": true,
+      "must_have_correct_answers": true
+    }
+  },
+
+  "test_generation": {
+    "query": "Generate a test of 10 questions. Include diagrams, mathematical equations as part of questions. Generate MCQ and multiple correct answer and short answer.",
+    "expected_structure": {
+      "test": {
+        "title": "string",
+        "total_questions": 10,
+        "total_marks": "number",
+        "questions": [
+          {
+            "id": "number",
+            "type": "mcq | multiple_correct | short_answer",
+            "question": "string",
+            "options": ["array if MCQ"],
+            "correct_answers": ["array"],
+            "marks": "number",
+            "has_diagram": "boolean",
+            "has_equation": "boolean",
+            "diagram_reference": "string (if has_diagram)",
+            "equations": ["array (if has_equation)"],
+            "difficulty": "easy | medium | hard",
+            "source": {
+              "chapter": "number",
+              "section": "string",
+              "page": "number"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "question_types": {
+          "mcq": "number >= 3",
+          "multiple_correct": "number >= 2",
+          "short_answer": "number >= 2"
+        },
+        "has_diagrams": "number >= 1",
+        "has_equations": "number >= 3",
+        "response_time_ms": "number < 2000"
+      }
+    },
+    "validation_rules": {
+      "total_questions_exact": 10,
+      "variety_of_types": true,
+      "includes_diagrams": true,
+      "includes_equations": true,
+      "all_from_book": true
+    }
+  },
+
+  "problem_generation": {
+    "query": "Give me 2 big problem statements to solve",
+    "expected_structure": {
+      "problems": [
+        {
+          "id": "number",
+          "title": "string",
+          "problem_statement": "string (detailed, 100+ chars)",
+          "difficulty": "medium | hard",
+          "type": "numerical | conceptual | proof",
+          "given_data": ["array of strings"],
+          "to_find": ["array of strings"],
+          "hints": ["array of strings (optional)"],
+          "related_concepts": ["array"],
+          "estimated_time_minutes": "number",
+          "source": {
+            "inspired_by": "Sample Problem X.X",
+            "chapter": "number",
+            "section": "string",
+            "page": "number"
+          }
+        }
+      ],
+      "metadata": {
+        "total_problems": 2,
+        "difficulty_level": "challenging",
+        "requires_multi_step_solution": true,
+        "response_time_ms": "number < 1500"
+      }
+    },
+    "validation_rules": {
+      "exactly_2_problems": true,
+      "substantial_complexity": true,
+      "based_on_book_content": true,
+      "not_direct_copy": true
+    }
+  },
+
+  "analogy_generation": {
+    "query": "Give me real world analogies to understand Newton's second law better",
+    "expected_structure": {
+      "analogies": [
+        {
+          "title": "string",
+          "analogy": "string (detailed explanation, 150+ chars)",
+          "mapping": {
+            "force": "real-world equivalent",
+            "mass": "real-world equivalent",
+            "acceleration": "real-world equivalent"
+          },
+          "example_scenario": "string",
+          "why_it_works": "string (explanation)"
+        }
+      ],
+      "metadata": {
+        "total_analogies": "number >= 3",
+        "based_on_book_applications": true,
+        "response_time_ms": "number < 1000"
+      }
+    },
+    "validation_rules": {
+      "min_analogies": 3,
+      "clear_concept_mapping": true,
+      "relatable_scenarios": true,
+      "explains_relationship": true
+    }
+  }
+}

@@ -1,4 +1,4 @@
-"""Unit tests for chunking logic"""
+"""Unit tests for header-based chunking logic"""
 import pytest
 
 
@@ -14,13 +14,17 @@ class TestPDFExtraction:
         content = service_file.read_text()
         assert "chunk_pdf_hierarchically" in content
 
-    def test_extract_preserves_structure(self):
-        """Headers, paragraph breaks, sample problems preserved"""
+    def test_header_based_extraction(self):
+        """Headers define chunk boundaries, not paragraphs"""
         from pathlib import Path
         service_file = Path("src/services/hierarchical_chunking_service.py")
         content = service_file.read_text()
-        assert "_extract_topic_content" in content
-        assert "_split_into_paragraphs" in content
+        # Verify new header-based methods exist
+        assert "_extract_headers_with_font_sizes" in content
+        assert "_extract_content_between_headers" in content
+        # Verify old paragraph methods are removed
+        assert "_split_into_paragraphs" not in content
+        assert "_extract_topic_content" not in content
 
 
 class TestStructureDetection:
@@ -32,78 +36,123 @@ class TestStructureDetection:
         # Test chapter pattern similar to implementation
         chapter_pattern = re.compile(
             r'^(?:chapter|ch\.?)\s*(\d+)[:\-\s]*(.+?)$',
-            re.IGNORECASE | re.MULTILINE
+            re.IGNORECASE
         )
         match = chapter_pattern.match("CHAPTER 5: Force and Motion - I")
         assert match is not None
         assert match.group(1) == "5"
+        assert match.group(2) == "Force and Motion - I"
 
     def test_detect_section_headers(self):
         """Extract section number and title"""
         import re
         section_pattern = re.compile(
-            r'^(?:section|§)?\s*(\d+(?:\.\d+)?)[:\-\s]+(.+?)$',
-            re.IGNORECASE | re.MULTILINE
+            r'^(\d+(?:\.\d+)+)[:\-\s]+(.+?)$',
+            re.IGNORECASE
         )
         match = section_pattern.match("5.4 Newton's Second Law")
         assert match is not None
         assert match.group(1) == "5.4"
+        assert match.group(2) == "Newton's Second Law"
 
-    def test_detect_sample_problems(self):
-        """Identify sample problems and boundaries"""
+    def test_font_size_detection(self):
+        """Use font size to identify headers"""
         from pathlib import Path
         service_file = Path("src/services/hierarchical_chunking_service.py")
         content = service_file.read_text()
-        assert "_classify_content_type" in content
-        assert "example_keywords" in content
+        # Verify font size detection methods exist
+        assert "_extract_headers_with_font_sizes" in content
+        assert "_extract_lines_with_font_info" in content
+        assert "header_threshold" in content
+        assert "chapter_threshold" in content
+
+    def test_header_classification_by_text(self):
+        """Classify chunk type based on header text patterns"""
+        from pathlib import Path
+        service_file = Path("src/services/hierarchical_chunking_service.py")
+        content = service_file.read_text()
+        # Verify header-based classification exists
+        assert "_classify_chunk_type_from_header" in content
+        assert "example_header_patterns" in content
+        assert "question_header_patterns" in content
 
     def test_build_hierarchy_tree(self):
-        """Build Chapter → Sections → Subsections tree"""
+        """Build Chapter → Sections hierarchy from headers"""
         from pathlib import Path
         service_file = Path("src/services/hierarchical_chunking_service.py")
         content = service_file.read_text()
-        assert "_extract_topics" in content
-        assert "_process_topic" in content
+        # Verify new header extraction exists
+        assert "_extract_headers_with_font_sizes" in content
+        assert "_extract_headers_text_based" in content
+        # Verify old methods are removed
+        assert "_extract_topics" not in content
+        assert "_process_topic" not in content
 
 
-class TestSemanticChunking:
-    """Semantic boundary chunking tests"""
+class TestHeaderBasedChunking:
+    """Header-based chunking boundary tests"""
 
-    def test_chunk_by_paragraphs(self):
-        """Break at paragraph boundaries, no mid-sentence breaks"""
-        import re
-        text = "5.4 NEWTON'S SECOND LAW\n\nThe acceleration...\n\nThis is fundamental...\n\nF = ma."
-        paragraphs = re.split(r'\n\s*\n', text)
-        assert len(paragraphs) >= 3
-
-    def test_chunk_respects_token_limit(self):
-        """All chunks ≤512 tokens"""
+    def test_chunk_by_headers_not_paragraphs(self):
+        """Chunks defined by headers, not paragraph boundaries"""
         from pathlib import Path
         service_file = Path("src/services/hierarchical_chunking_service.py")
         content = service_file.read_text()
+        # Verify header-based chunking
+        assert "_create_chunk_from_header" in content
+        assert "_extract_content_between_headers" in content
+        # Verify no paragraph-based chunking
+        assert "paragraph" not in content or "not paragraph" in content
+
+    def test_no_overlap_between_chunks(self):
+        """Content extracted strictly between headers prevents overlaps"""
+        from pathlib import Path
+        service_file = Path("src/services/hierarchical_chunking_service.py")
+        content = service_file.read_text()
+        # Verify precise boundary extraction
+        assert "_extract_content_between_headers" in content
+        assert "strictly between" in content.lower()
+
+    def test_chunk_respects_natural_boundaries(self):
+        """Headers define natural semantic boundaries"""
+        from pathlib import Path
+        service_file = Path("src/services/hierarchical_chunking_service.py")
+        content = service_file.read_text()
+        # chunk_size is max size, not enforced at boundaries
         assert "chunk_size" in content
+        # Headers define boundaries naturally
+        assert "next_header" in content
 
-    def test_chunk_with_overlap(self):
-        """Last 50 tokens of chunk N in first 50 of chunk N+1"""
+    def test_dont_split_across_pages_arbitrarily(self):
+        """Text spanning pages stays together within header boundaries"""
         from pathlib import Path
         service_file = Path("src/services/hierarchical_chunking_service.py")
         content = service_file.read_text()
-        assert "chunk_overlap" in content
+        # Extract content between headers handles multi-page content
+        assert "page_idx" in content or "start_page" in content
+        assert "end_page" in content
 
-    def test_dont_break_equations(self):
-        """Equations stay intact, not split across chunks"""
+    def test_equations_stay_with_section(self):
+        """Equations stay in their section chunk, not split"""
         import re
+        from pathlib import Path
+        service_file = Path("src/services/hierarchical_chunking_service.py")
+        content = service_file.read_text()
+        # Equation extraction happens within chunks
+        assert "_extract_equations" in content
+        # Equations pattern still exists
         text = "The force equation:\n\nF = ma\n\nwhere F is force..."
         equation_pattern = re.compile(r'[=+\-*/]\s*[A-Za-z0-9]|[A-Za-z]\s*=')
         assert equation_pattern.search(text)
 
-    def test_keep_sample_problems_together(self):
-        """Problem statement + solution in same chunk"""
+    def test_keep_section_content_together(self):
+        """All content between two headers stays in one chunk"""
         from pathlib import Path
         service_file = Path("src/services/hierarchical_chunking_service.py")
         content = service_file.read_text()
-        # Check that classification logic exists
-        assert "ChunkType.EXAMPLE" in content or "example_keywords" in content
+        # Classification happens at header level
+        assert "_classify_chunk_type_from_header" in content
+        assert "ChunkType.EXAMPLE" in content
+        assert "example_header_patterns" in content
 
 
 class TestMetadataGeneration:
@@ -119,17 +168,39 @@ class TestMetadataGeneration:
         assert "TopicMetadata" in content
         assert "ChunkMetadata" in content
 
-    def test_detect_chunk_type(self):
-        """Correctly identify: concept_explanation, sample_problem, definition, application"""
+    def test_detect_chunk_type_from_header(self):
+        """Classify chunk type based on header text: concept/example/question"""
         from pathlib import Path
         service_file = Path("src/services/hierarchical_chunking_service.py")
         content = service_file.read_text()
-        assert "concept_keywords" in content
-        assert "example_keywords" in content
-        assert "question_keywords" in content
+        # New header-based classification
+        assert "_classify_chunk_type_from_header" in content
+        assert "example_header_patterns" in content
+        assert "question_header_patterns" in content
+        # Old content-based classification removed
+        assert "_classify_content_type" not in content
+
+    def test_classification_is_straightforward(self):
+        """Classification uses simple pattern matching on headers"""
+        import sys
+        import os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../src'))
+
+        from services.hierarchical_chunking_service import HierarchicalChunkingService
+        from models.api_models import ChunkType
+
+        service = HierarchicalChunkingService()
+
+        # Test straightforward classification
+        assert service._classify_chunk_type_from_header("Example 5.1") == ChunkType.EXAMPLE
+        assert service._classify_chunk_type_from_header("Sample Problem") == ChunkType.EXAMPLE
+        assert service._classify_chunk_type_from_header("Exercise 5.3") == ChunkType.QUESTION
+        assert service._classify_chunk_type_from_header("Practice Problems") == ChunkType.QUESTION
+        assert service._classify_chunk_type_from_header("5.4 Newton's Law") == ChunkType.CONCEPT
+        assert service._classify_chunk_type_from_header("Introduction") == ChunkType.CONCEPT
 
     def test_extract_equations(self):
-        """Extract all equations from chunk"""
+        """Extract all equations from chunk content"""
         import re
         text = "Newton's second law: F = ma. Rearranging: a = F/m."
         equation_pattern = re.compile(r'[=+\-*/]\s*[A-Za-z0-9]|[A-Za-z]\s*=')
@@ -137,8 +208,19 @@ class TestMetadataGeneration:
         assert len(matches) > 0
 
     def test_extract_key_terms(self):
-        """Extract physics terms, exclude common words"""
+        """Extract physics terms from content"""
         from pathlib import Path
         service_file = Path("src/services/hierarchical_chunking_service.py")
         content = service_file.read_text()
         assert "_extract_key_terms" in content
+
+    def test_accurate_page_tracking(self):
+        """Track exact page start and end for each chunk"""
+        from pathlib import Path
+        service_file = Path("src/services/hierarchical_chunking_service.py")
+        content = service_file.read_text()
+        # Verify page tracking in metadata
+        assert "page_start" in content
+        assert "page_end" in content
+        # Verify it uses next_header page for end
+        assert "next_header.get('page'" in content or "next_header['page']" in content

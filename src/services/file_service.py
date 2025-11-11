@@ -28,10 +28,27 @@ class FileService:
         except Exception:
             pass
 
+    def _detect_file_type(self, file_extension: str) -> str:
+        """
+        Detect file type from file extension.
+        Returns 'pdf' for PDF files, 'text' for text-based files.
+        """
+        if file_extension == '.pdf':
+            return 'pdf'
+        elif file_extension in ['.txt', '.md', '.csv', '.json', '.xml', '.html', '.htm']:
+            return 'text'
+        else:
+            # Default to text for unknown extensions
+            return 'text'
+
     def upload_file(self, file: UploadFile) -> FileUploadResponse:
         try:
             file_id = str(uuid.uuid4())
             file_path = os.path.join(self.upload_dir, f"{file_id}_{file.filename}")
+
+            # Detect file type from extension
+            file_extension = os.path.splitext(file.filename)[1].lower()
+            file_type = self._detect_file_type(file_extension)
 
             with open(file_path, "wb") as buffer:
                 content = file.file.read()
@@ -43,6 +60,7 @@ class FileService:
                 "file_id": file_id,
                 "filename": file.filename,
                 "file_size": file_size,
+                "file_type": file_type,  # Store detected file type
                 "upload_date": datetime.now().isoformat(),
                 "file_path": file_path
             }

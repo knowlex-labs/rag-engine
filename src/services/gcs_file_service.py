@@ -65,10 +65,27 @@ class GCSFileService:
         except Exception as e:
             print(f"Error saving metadata: {e}")
 
+    def _detect_file_type(self, file_extension: str) -> str:
+        """
+        Detect file type from file extension.
+        Returns 'pdf' for PDF files, 'text' for text-based files.
+        """
+        if file_extension == '.pdf':
+            return 'pdf'
+        elif file_extension in ['.txt', '.md', '.csv', '.json', '.xml', '.html', '.htm']:
+            return 'text'
+        else:
+            # Default to text for unknown extensions
+            return 'text'
+
     def upload_file(self, file: UploadFile) -> FileUploadResponse:
         try:
             file_id = str(uuid.uuid4())
             file_content = file.file.read()
+
+            # Detect file type from extension
+            file_extension = os.path.splitext(file.filename)[1].lower()
+            file_type = self._detect_file_type(file_extension)
 
             if self.use_gcs:
                 # Upload to GCS
@@ -90,6 +107,7 @@ class GCSFileService:
                 "file_id": file_id,
                 "filename": file.filename,
                 "file_size": file_size,
+                "file_type": file_type,  # Store detected file type
                 "upload_date": datetime.now().isoformat(),
                 "file_path": storage_path
             }

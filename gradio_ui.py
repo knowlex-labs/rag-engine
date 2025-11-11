@@ -329,7 +329,7 @@ class RAGGradioUI:
                 files_to_link.append({
                     "name": selected_file['filename'],
                     "file_id": file_id,
-                    "type": "text"
+                    "type": selected_file.get('file_type', 'text')  # Use stored file type
                 })
 
         if not files_to_link:

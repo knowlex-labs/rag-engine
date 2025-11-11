@@ -38,6 +38,10 @@ def read_root():
         "gradio_ui": "http://localhost:7860"
     }
 
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "timestamp": "2025-11-11T10:36:39Z"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

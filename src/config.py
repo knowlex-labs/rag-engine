@@ -31,11 +31,18 @@ class LlmConfig:
 
 class AppConfig:
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
     API_PORT: int = int(os.getenv("API_PORT", "8000"))
     UPLOADS_DIR: str = os.getenv("UPLOADS_DIR", "uploads")
     MAX_FILE_SIZE_MB: int = int(os.getenv("MAX_FILE_SIZE_MB", "100"))
+
+    def __post_init__(self):
+        # Validate log level
+        valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+        if self.LOG_LEVEL not in valid_levels:
+            print(f"Warning: Invalid LOG_LEVEL '{self.LOG_LEVEL}', defaulting to 'INFO'")
+            self.LOG_LEVEL = 'INFO'
 
 class RerankingConfig:
     RERANKER_MODEL: str = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")

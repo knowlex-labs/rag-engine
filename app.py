@@ -10,11 +10,22 @@ from pathlib import Path
 src_path = Path(__file__).parent / "src"
 sys.path.insert(0, str(src_path))
 
+# Import config after setting up paths
+from config import Config
+
+# Configure logging with environment variable
+log_level = getattr(logging, Config.app.LOG_LEVEL, logging.INFO)
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=log_level,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
 )
+
+# Set up logger
 logger = logging.getLogger(__name__)
+logger.info(f"🔧 Logging configured at {Config.app.LOG_LEVEL} level")
 
 def run_fastapi():
     """Run FastAPI server"""
@@ -26,7 +37,7 @@ def run_fastapi():
         app,
         host="0.0.0.0",
         port=8000,
-        log_level="info"
+        log_level=Config.app.LOG_LEVEL.lower()
     )
 
 def run_gradio():
@@ -44,7 +55,7 @@ def run_gradio():
         server_port=7860,
         share=False,
         quiet=False,
-        inbrowser=True
+        inbrowser=False
     )
 
 def main():

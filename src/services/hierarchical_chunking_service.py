@@ -49,6 +49,7 @@ class HierarchicalChunkingService:
 
         chunks = []
 
+        logger.info("Chunk PDF Hierarchiaclly called")
         try:
             with pdfplumber.open(file_path) as pdf:
                 logger.info(f"Processing PDF with {len(pdf.pages)} pages for document {document_id}")

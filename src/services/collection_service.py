@@ -13,11 +13,13 @@ logger = logging.getLogger(__name__)
 
 class CollectionService:
     def __init__(self):
+        logger.info("🔧 Initializing CollectionService")
         self.qdrant_repo = QdrantRepository()
         self.embedding_client = EmbeddingClient()
         self.file_service = get_file_service()
         self.query_service = QueryService()
         self.chunking_service = HierarchicalChunkingService()
+        logger.debug("✅ CollectionService initialized successfully")
 
     def create_collection(self, name: str, rag_config: Optional[Dict] = None, indexing_config: Optional[Dict] = None) -> ApiResponse:
         try:
@@ -72,7 +74,8 @@ class CollectionService:
         try:
             documents = []
 
-            if file_type.lower() == "pdf":
+            logger.info("file type lower is : " + file_type.lower())
+            if file_type.lower() in ["pdf", "text"]:
                 file_path = self.file_service.get_file_path(file_id)
                 if not file_path:
                     return None
@@ -207,7 +210,7 @@ class CollectionService:
                     responses.append(self._create_link_error_response(file_item, 500, "Could not read file content"))
                     continue
 
-                logger.debug(f"Generating embedding for file {file_item.file_id}")
+                logger.info(f"Generating embedding for file {file_item.file_id}")
                 documents = self._generate_embedding_and_document(
                     file_item.file_id, file_content, file_item.type
                 )

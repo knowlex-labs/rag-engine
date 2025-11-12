@@ -444,7 +444,7 @@ class RAGGradioUI:
 
         actual_enable_critic = enable_critic and structured_output
 
-        response = api_client.query_collection(collection_name, message.strip(), actual_enable_critic)
+        response = api_client.query_collection(collection_name, message.strip(), actual_enable_critic, structured_output)
 
         if response["success"]:
             data = response.get("data", {})

@@ -1,6 +1,7 @@
 import re
 import uuid
 import logging
+import os
 from typing import List, Dict, Any, Optional, Tuple
 import pdfplumber
 from models.api_models import (
@@ -50,6 +51,8 @@ class HierarchicalChunkingService:
         chunks = []
 
         logger.info("Chunk PDF Hierarchiaclly called")
+        logger.info(f"DEBUG: Attempting to open file_path: '{file_path}'")
+        logger.info(f"DEBUG: File path exists check: {os.path.exists(file_path) if file_path else 'N/A'}")
         try:
             with pdfplumber.open(file_path) as pdf:
                 logger.info(f"Processing PDF with {len(pdf.pages)} pages for document {document_id}")

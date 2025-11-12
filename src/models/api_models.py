@@ -82,6 +82,7 @@ class CriticEvaluation(BaseModel):
 class QueryRequest(BaseModel):
     query: str
     enable_critic: bool = True
+    structured_output: bool = False
 
 class QueryResponse(BaseModel):
     answer: str

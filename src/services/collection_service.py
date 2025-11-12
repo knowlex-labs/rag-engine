@@ -78,16 +78,24 @@ class CollectionService:
 
             logger.info("file type is: " + file_type)
             if file_type in [FileType.PDF.value, FileType.TEXT.value]:
-                file_path = self.file_service.get_file_path(file_id, user_id)
+                file_path = self.file_service.get_local_file_for_processing(file_id, user_id)
                 if not file_path:
                     return None
 
-                chunks = self.chunking_service.chunk_pdf_hierarchically(
-                    file_path=file_path,
-                    document_id=file_id,
-                    chunk_size=Config.embedding.CHUNK_SIZE,
-                    chunk_overlap=Config.embedding.CHUNK_OVERLAP
-                )
+                storage_path = self.file_service.get_file_path(file_id, user_id)
+                is_temp_file = not self.file_service._is_local_storage(storage_path)
+
+                try:
+                    chunks = self.chunking_service.chunk_pdf_hierarchically(
+                        file_path=file_path,
+                        document_id=file_id,
+                        chunk_size=Config.embedding.CHUNK_SIZE,
+                        chunk_overlap=Config.embedding.CHUNK_OVERLAP
+                    )
+                finally:
+                    if is_temp_file:
+                        import os
+                        os.unlink(file_path)
 
                 if not chunks:
                     logger.warning(f"No chunks generated for {file_id}, falling back to full document")

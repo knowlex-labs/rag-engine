@@ -18,19 +18,36 @@ class LlmClient:
             self.max_tokens = Config.llm.GEMINI_MAX_TOKENS
             self.temperature = Config.llm.GEMINI_TEMPERATURE
 
-    def generate_answer(self, query: str, context_chunks: List[str]) -> str:
+    def generate_answer(self, query: str, context_chunks: List[str], force_json: bool = None) -> str:
         if not context_chunks:
             return "No relevant context found"
 
-        context = "\n\n".join(context_chunks)
-        prompt = f"""Based on the following context, answer the user's question. If the context doesn't contain enough information to answer the question, say so clearly.
+        should_use_json = force_json if force_json is not None else Config.llm.ENABLE_JSON_RESPONSE
 
-Context:
+        if should_use_json and self._is_educational_query(query):
+            return self._generate_educational_json(query, context_chunks)
+        else:
+            return self._generate_text_response(query, context_chunks)
+
+    def _is_educational_query(self, query: str) -> bool:
+        educational_keywords = [
+            "mcq", "questions", "quiz", "test", "exam", "assessment",
+            "generate", "create questions", "multiple choice", "true false"
+        ]
+        return any(keyword in query.lower() for keyword in educational_keywords)
+
+    def _generate_text_response(self, query: str, context_chunks: List[str]) -> str:
+        context = "\n\n".join(context_chunks)
+        prompt = f"""You are an experienced physics teacher with advanced expertise who helps students prepare for examinations. You have deep knowledge of physics concepts and can create educational content including questions, explanations, and practice materials.
+
+Based on the following physics content, respond to the student's request. Whether they ask for explanations, practice questions, MCQs, or any other educational assistance, provide comprehensive and accurate help.
+
+Physics Content:
 {context}
 
-Question: {query}
+Student Request: {query}
 
-Answer:"""
+Your Response:"""
 
         try:
             if self.provider == "openai":
@@ -40,11 +57,50 @@ Answer:"""
         except Exception as e:
             return f"Error generating answer: {str(e)}"
 
+    def _generate_educational_json(self, query: str, context_chunks: List[str]) -> str:
+        context = "\n\n".join(context_chunks)
+        prompt = f"""You are an experienced physics teacher creating educational content. Generate structured educational material in valid JSON format.
+
+Physics Content:
+{context}
+
+Student Request: {query}
+
+Respond with valid JSON only:
+{{
+    "questions": [
+        {{
+            "question_text": "Complete question text here",
+            "options": ["Option A text", "Option B text", "Option C text", "Option D text"],
+            "correct_answer": "Option B text",
+            "explanation": "Detailed explanation why this is correct",
+            "requires_diagram": true,
+            "contains_math": true,
+            "diagram_type": "pulley_system"
+        }}
+    ]
+}}
+
+Important:
+- Generate exactly the number of questions requested
+- For diagram_type use: "pulley_system", "inclined_plane", "force_diagram", "circuit", or null
+- Set requires_diagram to true only if essential for understanding
+- Set contains_math to true if equations/formulas are present
+- Ensure JSON is valid and complete"""
+
+        try:
+            if self.provider == "openai":
+                return self._generate_openai_answer(prompt)
+            elif self.provider == "gemini":
+                return self._generate_gemini_answer(prompt)
+        except Exception as e:
+            return f"Error generating educational JSON: {str(e)}"
+
     def _generate_openai_answer(self, prompt: str) -> str:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that answers questions based only on the provided context. Be accurate and concise."},
+                {"role": "system", "content": "You are an experienced physics teacher with advanced expertise who helps students prepare for examinations. You have deep knowledge of physics concepts and excel at creating educational content including detailed explanations, practice questions, MCQs, and examination materials. Always provide comprehensive, accurate, and pedagogically sound responses."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=self.max_tokens,
@@ -64,4 +120,4 @@ Answer:"""
             return response.text.strip()
         except:
             # Handle the case where response.text is not available (e.g., blocked for safety)
-            return "I'm unable to generate a response for this query. Please try rephrasing your question."
+            return "I'm unable to generate a response for this request. This might be due to content safety filters. Please try rephrasing your question or request in a different way."

@@ -1,18 +1,18 @@
 from minio import Minio
-import os
 import logging
 from typing import Optional, BinaryIO
 import io
+from config import Config
 
 logger = logging.getLogger(__name__)
 
 
 class MinioService:
     def __init__(self):
-        self.host = os.getenv("MINIO_HOST", "localhost:9000")
-        self.access_key = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-        self.secret_key = os.getenv("MINIO_SECRET_KEY", "minioadmin")
-        self.secure = os.getenv("MINIO_SECURE", "false").lower() == "true"
+        self.host = Config.minio.HOST
+        self.access_key = Config.minio.ACCESS_KEY
+        self.secret_key = Config.minio.SECRET_KEY
+        self.secure = Config.minio.SECURE
 
         self.client = Minio(
             endpoint=self.host,

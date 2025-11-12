@@ -40,5 +40,5 @@ def unlink_content(collection_name: str, file_ids: List[str], response: Response
 
 @router.post("/{collection_name}" + QUERY_COLLECTION)
 def query_collection(collection_name: str, request: QueryRequest) -> QueryResponse:
-    return collection_service.query_collection(collection_name, request.query, request.enable_critic)
+    return collection_service.query_collection(collection_name, request.query, request.enable_critic, request.structured_output)
 

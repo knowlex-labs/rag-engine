@@ -3,6 +3,7 @@ from repositories.qdrant_repository import QdrantRepository
 from repositories.feedback_repository import FeedbackRepository
 from utils.embedding_client import EmbeddingClient
 from utils.llm_client import LlmClient
+from utils.response_enhancer import enhance_response_if_needed
 from models.api_models import QueryResponse, ChunkConfig, CriticEvaluation, ChunkType
 from core.reranker import reranker
 from core.critic import critic
@@ -123,7 +124,9 @@ class QueryService:
         combined.sort(key=lambda x: x.get("score", 0), reverse=True)
         return combined[:limit]
 
-    def _filter_relevant_results(self, results: List[Dict], threshold: float = 0.5) -> List[Dict]:
+    def _filter_relevant_results(self, results: List[Dict], threshold: float = None) -> List[Dict]:
+        if threshold is None:
+            threshold = Config.query.RELEVANCE_THRESHOLD
         return [result for result in results if result.get("score", 0) >= threshold]
 
     def _is_valid_text(self, text: str) -> bool:
@@ -169,7 +172,7 @@ class QueryService:
             return 0.0
         return max(result.get("score", 0) for result in results)
 
-    def _create_query_response(self, results: List[Dict], query: str, enable_critic: bool = True) -> QueryResponse:
+    def _create_query_response(self, results: List[Dict], query: str, enable_critic: bool = True, structured_output: bool = False) -> QueryResponse:
         relevant_results = self._filter_relevant_results(results)
 
         if not relevant_results:
@@ -192,7 +195,9 @@ class QueryService:
 
         chunk_texts = [chunk.text for chunk in chunks]
         full_chunk_texts = self._extract_full_texts(relevant_results)
-        answer = self.llm_client.generate_answer(query, chunk_texts)
+        answer = self.llm_client.generate_answer(query, chunk_texts, force_json=structured_output)
+        answer = enhance_response_if_needed(answer, query)
+
         confidence = self._calculate_confidence(relevant_results)
 
         critic_result = None
@@ -242,7 +247,7 @@ class QueryService:
         except Exception:
             return results
 
-    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True) -> QueryResponse:
+    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False) -> QueryResponse:
         """
         Search with smart chunking - automatically detects query intent and retrieves
         appropriate chunk types (concepts, examples, or questions).
@@ -260,7 +265,7 @@ class QueryService:
             # Apply feedback scoring if enabled
             results = self._apply_feedback_scoring(results, query_vector, collection_name)
 
-            return self._create_query_response(results, query_text, enable_critic)
+            return self._create_query_response(results, query_text, enable_critic, structured_output)
         except Exception as e:
             return QueryResponse(
                 answer="Context not found",

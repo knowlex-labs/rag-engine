@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any, List
 from models.api_models import FileUploadResponse
 from models.file_types import FileExtensions, UnsupportedFileTypeError
-from services.minio_service import minio_service
+from services.storage.storage_factory import get_storage_service
 from database.postgres_connection import db_connection
 
 logger = logging.getLogger(__name__)
@@ -19,6 +19,7 @@ class UnifiedFileService:
         self.bucket_prefix = "user-files"
         self.session_user_id = "system_session"
         self.local_storage_path = os.path.join(os.getcwd(), "uploads")
+        self.storage_service = get_storage_service()
         self.ensure_local_storage()
         self.init_database()
         self.ensure_session_user()
@@ -46,31 +47,44 @@ class UnifiedFileService:
     def get_local_path(self, minio_path: str) -> str:
         return minio_path[8:]
 
-    def _read_file_data(self, minio_path: str) -> Optional[bytes]:
+    def _read_file_data(self, storage_path: str) -> Optional[bytes]:
         try:
-            if self._is_local_storage(minio_path):
-                local_file_path = self.get_local_path(minio_path)
+            if self._is_local_storage(storage_path):
+                local_file_path = self.get_local_path(storage_path)
                 with open(local_file_path, "rb") as f:
                     return f.read()
             else:
-                bucket_name, object_name = minio_path.split('/', 1)
-                return minio_service.download_file(bucket_name, object_name)
+                local_temp_path = self.storage_service.download_for_processing(storage_path)
+                if local_temp_path:
+                    with open(local_temp_path, "rb") as f:
+                        data = f.read()
+                    os.remove(local_temp_path)
+                    return data
+                return None
         except Exception as e:
-            logger.error(f"Failed to read file {minio_path}: {e}")
+            logger.error(f"Failed to read file {storage_path}: {e}")
             return None
 
-    def _delete_file_storage(self, minio_path: str) -> bool:
+    def _delete_file_storage(self, storage_path: str) -> bool:
         try:
-            if self._is_local_storage(minio_path):
-                local_file_path = self.get_local_path(minio_path)
-                os.remove(local_file_path)
-                return True
-            else:
-                bucket_name, object_name = minio_path.split('/', 1)
-                return minio_service.delete_file(bucket_name, object_name)
+            return self.storage_service.delete_file(storage_path)
         except Exception as e:
-            logger.error(f"Failed to delete file {minio_path}: {e}")
+            logger.error(f"Failed to delete file {storage_path}: {e}")
             return False
+
+    def get_local_file_for_processing(self, file_id: str, user_id: Optional[str]) -> Optional[str]:
+        try:
+            storage_path = self.get_file_path(file_id, user_id)
+            if not storage_path:
+                return None
+
+            if self._is_local_storage(storage_path):
+                return self.get_local_path(storage_path)
+            else:
+                return self.storage_service.download_for_processing(storage_path)
+        except Exception as e:
+            logger.error(f"Failed to get local file for processing: {e}")
+            return None
 
     def init_database(self):
         try:
@@ -119,17 +133,16 @@ class UnifiedFileService:
             bucket_name = f"{self.bucket_prefix}"
             object_name = f"{user_id}/{file_id}_{file.filename}"
 
-            file_data = io.BytesIO(file_content)
-            success = minio_service.upload_file(bucket_name, object_name, file_data, file_size)
+            storage_path = f"{bucket_name}/{object_name}"
+            success = self.storage_service.upload_file(file_content, storage_path)
 
             if success:
-                minio_path = f"{bucket_name}/{object_name}"
 
                 query = """
                 INSERT INTO user_files (id, user_id, filename, file_type, file_size, minio_path)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 """
-                db_connection.execute_query(query, (file_id, user_id, file.filename, file_type, file_size, minio_path))
+                db_connection.execute_query(query, (file_id, user_id, file.filename, file_type, file_size, storage_path))
 
                 return FileUploadResponse(
                     status="SUCCESS",

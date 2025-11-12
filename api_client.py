@@ -123,8 +123,8 @@ class RAGAPIClient:
             params["user_id"] = self.current_user_id
         return self._make_request("POST", f"/{collection_name}/unlink-content", json=file_ids, params=params)
 
-    def query_collection(self, collection_name: str, query: str = "", enable_critic: bool = True) -> Dict[str, Any]:
-        data = {"query": query, "enable_critic": enable_critic}
+    def query_collection(self, collection_name: str, query: str = "", enable_critic: bool = True, structured_output: bool = False) -> Dict[str, Any]:
+        data = {"query": query, "enable_critic": enable_critic, "structured_output": structured_output}
         return self._make_request("POST", f"/{collection_name}/query", json=data)
 
     def submit_feedback(self, query: str, doc_ids: List[str], label: int, collection: str) -> Dict[str, Any]:

@@ -1,0 +1,98 @@
+{
+  "resnick_halliday_chapter_5": [
+    {
+      "id": "chunk_5_4_intro",
+      "text": "5.4 NEWTON'S SECOND LAW\n\nThe acceleration of an object is directly proportional to the net force acting on it and inversely proportional to its mass. This relationship is Newton's second law of motion.\n\nMathematically, we write:\nF_net = ma\n\nwhere F_net is the net force (in Newtons), m is mass (in kg), and a is acceleration (in m/s²).",
+      "metadata": {
+        "book_id": "resnick_halliday_10th",
+        "book_title": "Fundamentals of Physics (Resnick Halliday), 10th Edition",
+        "chapter_num": 5,
+        "chapter_title": "Force and Motion - I",
+        "section_num": "5.4",
+        "section_title": "Newton's Second Law",
+        "chunk_type": "concept_explanation",
+        "page_start": 92,
+        "page_end": 92,
+        "has_equations": true,
+        "equations": ["F_net = ma"],
+        "key_terms": ["Newton's second law", "force", "mass", "acceleration", "net force"]
+      }
+    },
+    {
+      "id": "chunk_5_4_detail_1",
+      "text": "The direction of the acceleration is the same as the direction of the net force. If the net force is doubled, the acceleration is doubled. If the mass is doubled (with the same net force), the acceleration is halved.\n\nThis law applies to any object, from atoms to galaxies, and is fundamental to classical mechanics. The net force is the vector sum of all forces acting on the object.",
+      "metadata": {
+        "book_id": "resnick_halliday_10th",
+        "book_title": "Fundamentals of Physics (Resnick Halliday), 10th Edition",
+        "chapter_num": 5,
+        "chapter_title": "Force and Motion - I",
+        "section_num": "5.4",
+        "section_title": "Newton's Second Law",
+        "chunk_type": "concept_explanation",
+        "page_start": 92,
+        "page_end": 93,
+        "parent_chunk_id": "chunk_5_4_intro",
+        "has_equations": false,
+        "key_terms": ["acceleration", "net force", "vector sum", "classical mechanics"]
+      }
+    },
+    {
+      "id": "chunk_5_4_problem_1",
+      "text": "Sample Problem 5.2: Applying Newton's Second Law\n\nA 2.0 kg block on a frictionless horizontal surface is pushed with a horizontal force of 10 N. What is its acceleration?\n\nSOLUTION:\nKey Idea: We can relate the block's acceleration to the force applied using Newton's second law.\n\nCalculation: Using F = ma:\na = F/m = 10 N / 2.0 kg = 5.0 m/s²\n\nThe acceleration is 5.0 m/s² in the direction of the applied force.",
+      "metadata": {
+        "book_id": "resnick_halliday_10th",
+        "book_title": "Fundamentals of Physics (Resnick Halliday), 10th Edition",
+        "chapter_num": 5,
+        "chapter_title": "Force and Motion - I",
+        "section_num": "5.4",
+        "section_title": "Newton's Second Law",
+        "chunk_type": "sample_problem",
+        "page_start": 94,
+        "page_end": 94,
+        "related_concept_id": "chunk_5_4_intro",
+        "has_equations": true,
+        "equations": ["a = F/m"],
+        "problem_type": "numerical",
+        "difficulty": "easy"
+      }
+    },
+    {
+      "id": "chunk_5_4_problem_2",
+      "text": "Sample Problem 5.3: Newton's Second Law with Multiple Forces\n\nA 3.0 kg object is acted upon by two horizontal forces: F1 = 8.0 N to the right and F2 = 5.0 N to the left. What is the object's acceleration?\n\nSOLUTION:\nKey Idea: First find the net force by vector addition, then apply F_net = ma.\n\nCalculation:\nF_net = F1 - F2 = 8.0 N - 5.0 N = 3.0 N (to the right)\na = F_net/m = 3.0 N / 3.0 kg = 1.0 m/s² (to the right)\n\nThe acceleration is 1.0 m/s² to the right.",
+      "metadata": {
+        "book_id": "resnick_halliday_10th",
+        "book_title": "Fundamentals of Physics (Resnick Halliday), 10th Edition",
+        "chapter_num": 5,
+        "chapter_title": "Force and Motion - I",
+        "section_num": "5.4",
+        "section_title": "Newton's Second Law",
+        "chunk_type": "sample_problem",
+        "page_start": 95,
+        "page_end": 95,
+        "related_concept_id": "chunk_5_4_intro",
+        "has_equations": true,
+        "equations": ["F_net = F1 - F2", "a = F_net/m"],
+        "problem_type": "numerical",
+        "difficulty": "medium"
+      }
+    },
+    {
+      "id": "chunk_5_4_application",
+      "text": "Real-World Applications of Newton's Second Law:\n\n1. Vehicle Safety: Airbags reduce the force on passengers during collisions by increasing the time over which momentum changes, thus reducing acceleration.\n\n2. Rocket Propulsion: Rockets accelerate by expelling mass (fuel) at high velocity, demonstrating that force equals mass times acceleration.\n\n3. Sports: Athletes use Newton's second law when they push harder against the ground to achieve greater acceleration when sprinting.",
+      "metadata": {
+        "book_id": "resnick_halliday_10th",
+        "book_title": "Fundamentals of Physics (Resnick Halliday), 10th Edition",
+        "chapter_num": 5,
+        "chapter_title": "Force and Motion - I",
+        "section_num": "5.4",
+        "section_title": "Newton's Second Law",
+        "chunk_type": "application",
+        "page_start": 96,
+        "page_end": 96,
+        "related_concept_id": "chunk_5_4_intro",
+        "has_equations": false,
+        "key_terms": ["airbags", "rockets", "sports", "real-world applications"]
+      }
+    }
+  ]
+}

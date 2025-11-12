@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional, Any, Dict
 from datetime import datetime
+from enum import Enum
 
 class RagConfig(BaseModel):
     name: str
@@ -42,6 +43,37 @@ class ChunkConfig(BaseModel):
     source: str
     text: str
 
+class ChunkType(str, Enum):
+    CONCEPT = "concept"
+    EXAMPLE = "example"
+    QUESTION = "question"
+    OTHER = "other"
+
+class TopicMetadata(BaseModel):
+    chapter_num: Optional[int] = None
+    chapter_title: Optional[str] = None
+    section_num: Optional[str] = None
+    section_title: Optional[str] = None
+    page_start: Optional[int] = None
+    page_end: Optional[int] = None
+
+class ChunkMetadata(BaseModel):
+    chunk_type: ChunkType
+    topic_id: str
+    key_terms: List[str] = []
+    equations: List[str] = []
+    has_equations: bool = False
+    has_diagrams: bool = False
+    difficulty_level: Optional[str] = None
+
+class HierarchicalChunk(BaseModel):
+    chunk_id: str
+    document_id: str
+    topic_metadata: TopicMetadata
+    chunk_metadata: ChunkMetadata
+    text: str
+    embedding_vector: Optional[List[float]] = None
+
 class CriticEvaluation(BaseModel):
     confidence: float
     missing_info: str
@@ -50,6 +82,7 @@ class CriticEvaluation(BaseModel):
 class QueryRequest(BaseModel):
     query: str
     enable_critic: bool = True
+    structured_output: bool = False
 
 class QueryResponse(BaseModel):
     answer: str

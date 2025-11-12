@@ -68,8 +68,56 @@ class RAGGradioUI:
         self.last_query = None
         self.last_collection = None
         self.last_doc_ids = []
+        self.current_user = "nakul_test"  # Default user
+        self._ensure_default_user()
 
-    # Utility functions
+    def _ensure_default_user(self):
+        try:
+            response = api_client.get_user(self.current_user)
+            if not response["success"]:
+                create_response = api_client.create_user(
+                    user_id=self.current_user,
+                    email="nakul@test.com",
+                    name="Nakul Test User"
+                )
+                if create_response["success"]:
+                    logger.info(f"Created default user: {self.current_user}")
+                else:
+                    logger.error(f"Failed to create default user: {create_response.get('error')}")
+
+            api_client.set_user(self.current_user)
+            logger.info(f"Set default user: {self.current_user}")
+        except Exception as e:
+            logger.error(f"Error ensuring default user: {e}")
+
+    def _get_user_choices(self) -> List[str]:
+        import time
+        time.sleep(10)  
+        try:
+            response = api_client.list_users()
+            if response["success"]:
+                users_data = response["data"].get("body", {}).get("users", [])
+                logger.info(f"Got users from API: {users_data}")
+                return users_data if users_data else [self.current_user]
+            else:
+                logger.warning(f"Backend not ready yet, using fallback")
+                return [self.current_user]
+        except Exception as e:
+            logger.warning(f"Backend not ready, using fallback: {e}")
+            return [self.current_user]
+
+    def change_user(self, user_id: str):
+        if user_id and user_id != self.current_user:
+            self.current_user = user_id
+            api_client.set_user(user_id)
+            logger.info(f"Switched to user: {user_id}")
+
+    def switch_user_and_refresh(self, user_id: str):
+        self.change_user(user_id)
+        files_df, file_dropdown = self.refresh_files()
+        collections_df, _, _, _, _ = self.refresh_collections()
+        return files_df, file_dropdown, collections_df
+
     def _format_response(self, response: Dict[str, Any]) -> str:
         if response["success"]:
             data = response.get("data", {})
@@ -86,7 +134,6 @@ class RAGGradioUI:
 
             if files_data:
                 df = pd.DataFrame(files_data)
-                # Reorder columns for better display
                 df = df[["filename", "file_size", "upload_date", "file_id"]]
                 df["file_size"] = df["file_size"].apply(lambda x: f"{x:,} bytes")
                 df["upload_date"] = pd.to_datetime(df["upload_date"]).dt.strftime("%Y-%m-%d %H:%M")
@@ -165,29 +212,22 @@ class RAGGradioUI:
             return f"⚠️ {success_count} {operation}ed, {failed_count} failed"
 
     def _translate_error_message(self, backend_message: str, operation: str) -> str:
-        # Mapping backend errors to user-friendly messages
         error_mappings = {
-            # Link operation errors
             "File not found": "File missing",
             "File already linked, unlink first": "Already linked",
             "Could not read file content": "File unreadable",
             "Failed to generate embedding": "Processing failed",
             "Failed to link content to collection": "Database error",
-
-            # Unlink operation errors
             "File not found in collection": "Not linked",
             "Failed to unlink content from collection": "Database error",
         }
 
-        # Check for exact matches first
         if backend_message in error_mappings:
             return error_mappings[backend_message]
 
-        # Check for partial matches (for "Internal error: ..." messages)
         if backend_message.startswith("Internal error:"):
             return "System error"
 
-        # Default fallback
         return "Operation failed"
 
     def _format_file_status_list(self, responses: List[Dict], operation: str) -> str:
@@ -202,7 +242,7 @@ class RAGGradioUI:
             if status_code == 200:
                 if operation == "link":
                     status_lines.append(f"{filename} ✅ LINKED")
-                else:  # unlink
+                else: 
                     status_lines.append(f"{filename} ❌ UNLINKED")
             else:
                 backend_message = response.get("message", "Failed")
@@ -315,10 +355,8 @@ class RAGGradioUI:
         if not file_ids:
             return "⚠️ Selected files not found"
 
-        # Create files array for API
         files_to_link = []
         for file_id in file_ids:
-            # Find the file details from current_files
             selected_file = None
             for file in self.current_files:
                 if file['file_id'] == file_id:
@@ -329,7 +367,7 @@ class RAGGradioUI:
                 files_to_link.append({
                     "name": selected_file['filename'],
                     "file_id": file_id,
-                    "type": "text"
+                    "type": selected_file.get('file_type', 'text')
                 })
 
         if not files_to_link:
@@ -337,7 +375,6 @@ class RAGGradioUI:
 
         response = api_client.link_content(collection_name, files_to_link)
 
-        # Handle 207 multi-status response
         if response["success"] and response["status_code"] == 207:
             results = response.get("data", [])
             return self._format_file_status_list(results, "link")
@@ -358,7 +395,6 @@ class RAGGradioUI:
 
         response = api_client.unlink_content(collection_name, file_ids)
 
-        # Handle 207 multi-status response
         if response["success"] and response["status_code"] == 207:
             results = response.get("data", [])
             return self._format_file_status_list(results, "unlink")
@@ -406,15 +442,13 @@ class RAGGradioUI:
 
         history.append([message, ""])
 
-        # Auto-disable critic if structured output is OFF
         actual_enable_critic = enable_critic and structured_output
 
-        response = api_client.query_collection(collection_name, message.strip(), actual_enable_critic)
+        response = api_client.query_collection(collection_name, message.strip(), actual_enable_critic, structured_output)
 
         if response["success"]:
             data = response.get("data", {})
 
-            # Store data for feedback
             self.last_query = message.strip()
             self.last_collection = collection_name
             chunks = data.get("chunks", [])
@@ -432,7 +466,6 @@ class RAGGradioUI:
                 history[-1][1] = answer
         else:
             history[-1][1] = f"❌ {response.get('error', 'Unknown error')}"
-            # Clear feedback data on error
             self.last_query = None
             self.last_collection = None
             self.last_doc_ids = []
@@ -481,8 +514,18 @@ class RAGGradioUI:
 
     def create_interface(self) -> gr.Blocks:
         with gr.Blocks(css=custom_css, title="RAG Engine", theme=gr.themes.Default()) as demo:
-            gr.Markdown("# 🚀 RAG Engine", elem_classes=["center"])
-            gr.Markdown("Upload files, create collections, and query your documents", elem_classes=["center"])
+            with gr.Row():
+                with gr.Column(scale=4):
+                    gr.Markdown("# 🚀 RAG Engine")
+                    gr.Markdown("Upload files, create collections, and query your documents")
+                with gr.Column(scale=1):
+                    user_dropdown = gr.Dropdown(
+                        label="User",
+                        choices=self._get_user_choices(),
+                        value=self.current_user,
+                        interactive=True,
+                        scale=1
+                    )
 
             with gr.Tabs():
                 # Tab 1: File Management
@@ -763,18 +806,27 @@ class RAGGradioUI:
                 queue=False
             )
 
+            # User switching functionality
+            user_dropdown.change(
+                fn=self.switch_user_and_refresh,
+                inputs=[user_dropdown],
+                outputs=[files_table, file_selector, collections_table],
+                queue=False
+            )
+
             # Initialize with current data on load
             def initialize_data():
                 files_df, file_choices = self.refresh_files()
                 collections_df, delete_dropdown, link_dropdown, unlink_dropdown, chat_dropdown = self.refresh_collections()
-                return (files_df, file_choices, collections_df,
+                user_choices = self._get_user_choices()
+                return (gr.Dropdown(choices=user_choices, value=self.current_user), files_df, file_choices, collections_df,
                         gr.Dropdown(choices=self._get_file_choices(), multiselect=True),
                         gr.Dropdown(choices=self._get_file_choices(), multiselect=True),
                         delete_dropdown, link_dropdown, unlink_dropdown, chat_dropdown)
 
             demo.load(
                 fn=initialize_data,
-                outputs=[files_table, file_selector, collections_table, link_file_dropdown,
+                outputs=[user_dropdown, files_table, file_selector, collections_table, link_file_dropdown,
                         unlink_file_dropdown, delete_collection_dropdown, link_collection_dropdown, unlink_collection_dropdown, chat_collection_dropdown],
                 queue=False
             )

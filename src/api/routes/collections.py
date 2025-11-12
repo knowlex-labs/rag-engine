@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response, Query
 from typing import List
 from api.api_constants import *
 from models.api_models import CreateCollectionRequest, ApiResponse, ApiResponseWithBody, LinkContentItem, LinkContentResponse, QueryRequest, QueryResponse, UnlinkContentResponse
@@ -29,16 +29,16 @@ def delete_collection(collection_name: str) -> ApiResponse:
 
 
 @router.post("/{collection_name}" + LINK_CONTENT)
-def link_content(collection_name: str, files: List[LinkContentItem], response: Response) -> List[LinkContentResponse]:
+def link_content(collection_name: str, files: List[LinkContentItem], response: Response, user_id: str = Query(...)) -> List[LinkContentResponse]:
     response.status_code = 207
-    return collection_service.link_content(collection_name, files)
+    return collection_service.link_content(collection_name, files, user_id)
 
 @router.post("/{collection_name}" + UNLINK_CONTENT)
-def unlink_content(collection_name: str, file_ids: List[str], response: Response) -> List[UnlinkContentResponse]:
+def unlink_content(collection_name: str, file_ids: List[str], response: Response, user_id: str = Query(...)) -> List[UnlinkContentResponse]:
     response.status_code = 207
-    return collection_service.unlink_content(collection_name, file_ids)
+    return collection_service.unlink_content(collection_name, file_ids, user_id)
 
 @router.post("/{collection_name}" + QUERY_COLLECTION)
 def query_collection(collection_name: str, request: QueryRequest) -> QueryResponse:
-    return collection_service.query_collection(collection_name, request.query, request.enable_critic)
+    return collection_service.query_collection(collection_name, request.query, request.enable_critic, request.structured_output)
 

@@ -1,0 +1,35 @@
+{
+  "concept_explanation_queries": [
+    "What is Newton's second law of motion?",
+    "Explain the relationship between force, mass, and acceleration",
+    "How does Newton's second law apply to everyday situations?",
+    "What is the mathematical formula for Newton's second law?",
+    "Explain how net force affects acceleration"
+  ],
+
+  "knowledge_testing_queries": [
+    "Give me questions from the book to test my knowledge on Newton's second law",
+    "Test my understanding of force and acceleration",
+    "Give me practice questions on F=ma",
+    "Quiz me on Chapter 5 concepts"
+  ],
+
+  "test_generation_queries": [
+    "Generate a test of 10 questions. Include diagrams, mathematical equations as part of questions. Generate MCQ and multiple correct answer and short answer.",
+    "Create a comprehensive test on Newton's second law with 10 questions",
+    "Make a mixed test with MCQs, equations, and short answers on force and motion"
+  ],
+
+  "problem_generation_queries": [
+    "Give me 2 big problem statements to solve",
+    "Create challenging problems on Newton's second law",
+    "Give me complex multi-step problems on force and acceleration"
+  ],
+
+  "analogy_generation_queries": [
+    "Give me real world analogies to understand Newton's second law better",
+    "Explain Newton's second law with everyday examples",
+    "Help me understand F=ma with relatable scenarios",
+    "What are some real-world applications of Newton's second law?"
+  ]
+}

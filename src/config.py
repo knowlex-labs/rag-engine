@@ -1,8 +1,6 @@
 import os
-from typing import Optional
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 class DatabaseConfig:
@@ -28,16 +26,19 @@ class LlmConfig:
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash")
     GEMINI_MAX_TOKENS: int = int(os.getenv("GEMINI_MAX_TOKENS", "4000"))
     GEMINI_TEMPERATURE: float = float(os.getenv("GEMINI_TEMPERATURE", "0.1"))
+    ENABLE_JSON_RESPONSE: bool = os.getenv("ENABLE_JSON_RESPONSE", "false").lower() == "true"
 
 class AppConfig:
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
     API_PORT: int = int(os.getenv("API_PORT", "8000"))
     UPLOADS_DIR: str = os.getenv("UPLOADS_DIR", "uploads")
     MAX_FILE_SIZE_MB: int = int(os.getenv("MAX_FILE_SIZE_MB", "100"))
 
 class RerankingConfig:
+    ENABLE_RERANKER: bool = os.getenv("ENABLE_RERANKER", "true").lower() == "true"
     RERANKER_MODEL: str = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
     RERANKER_TOP_K: int = int(os.getenv("RERANKER_TOP_K", "5"))
     RERANKER_ENABLED: bool = os.getenv("RERANKER_ENABLED", "true").lower() == "true"
@@ -52,6 +53,18 @@ class FeedbackConfig:
     FEEDBACK_ENABLED: bool = os.getenv("FEEDBACK_ENABLED", "true").lower() == "true"
     FEEDBACK_SIMILARITY_THRESHOLD: float = float(os.getenv("FEEDBACK_SIMILARITY_THRESHOLD", "0.8"))
 
+class QueryConfig:
+    RELEVANCE_THRESHOLD: float = float(os.getenv("RELEVANCE_THRESHOLD", "0.25"))
+
+class StorageConfig:
+    STORAGE_TYPE: str = os.getenv("STORAGE_TYPE", "minio").lower()
+
+class MinIOConfig:
+    HOST: str = os.getenv("MINIO_HOST", "localhost:9000")
+    ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
+    SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "minioadmin")
+    SECURE: bool = os.getenv("MINIO_SECURE", "false").lower() == "true"
+
 class Config:
     database = DatabaseConfig()
     embedding = EmbeddingConfig()
@@ -60,3 +73,6 @@ class Config:
     reranking = RerankingConfig()
     critic = CriticConfig()
     feedback = FeedbackConfig()
+    query = QueryConfig()
+    storage = StorageConfig()
+    minio = MinIOConfig()

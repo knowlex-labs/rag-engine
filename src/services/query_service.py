@@ -1,12 +1,14 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from repositories.qdrant_repository import QdrantRepository
 from repositories.feedback_repository import FeedbackRepository
 from utils.embedding_client import EmbeddingClient
 from utils.llm_client import LlmClient
-from models.api_models import QueryResponse, ChunkConfig, CriticEvaluation
+from utils.response_enhancer import enhance_response_if_needed
+from models.api_models import QueryResponse, ChunkConfig, CriticEvaluation, ChunkType
 from core.reranker import reranker
 from core.critic import critic
 from config import Config
+import re
 
 class QueryService:
     def __init__(self):
@@ -15,7 +17,116 @@ class QueryService:
         self.llm_client = LlmClient()
         self.feedback_repo = FeedbackRepository()
 
-    def _filter_relevant_results(self, results: List[Dict], threshold: float = 0.5) -> List[Dict]:
+        # Patterns for detecting query intent
+        self.concept_patterns = [
+            r'^what (is|are|does|do)',
+            r'^explain',
+            r'^define',
+            r'^describe',
+            r'definition of',
+            r'meaning of',
+            r'concept of',
+            r'understanding',
+            r'tell me about'
+        ]
+        self.example_patterns = [
+            r'example',
+            r'show me',
+            r'demonstrate',
+            r'illustration',
+            r'sample',
+            r'case study'
+        ]
+        self.question_patterns = [
+            r'^how (do|to|can)',
+            r'^solve',
+            r'^calculate',
+            r'^find',
+            r'^determine',
+            r'practice',
+            r'exercise',
+            r'problem'
+        ]
+
+    def _detect_query_intent(self, query: str) -> Optional[str]:
+        """
+        Detect the intent of a query to determine which chunk type to prioritize.
+
+        Returns:
+            'concept', 'example', 'question', or None for mixed search
+        """
+        query_lower = query.lower().strip()
+
+        # Check for concept queries
+        for pattern in self.concept_patterns:
+            if re.search(pattern, query_lower, re.IGNORECASE):
+                return ChunkType.CONCEPT.value
+
+        # Check for example queries
+        for pattern in self.example_patterns:
+            if re.search(pattern, query_lower, re.IGNORECASE):
+                return ChunkType.EXAMPLE.value
+
+        # Check for question/problem queries
+        for pattern in self.question_patterns:
+            if re.search(pattern, query_lower, re.IGNORECASE):
+                return ChunkType.QUESTION.value
+
+        return None  # No specific intent, search all types
+
+    def _smart_chunk_retrieval(
+        self,
+        collection_name: str,
+        query_vector: List[float],
+        query_text: str,
+        limit: int = 10
+    ) -> List[Dict]:
+        """
+        Intelligently retrieve chunks based on query intent.
+
+        For concept queries: Prioritize concepts, then examples
+        For example queries: Prioritize examples, then concepts
+        For problem queries: Prioritize questions and examples
+        For general queries: Mix all types
+        """
+        intent = self._detect_query_intent(query_text)
+
+        if not intent:
+            # No specific intent - get diverse results
+            return self.qdrant_repo.query_collection(collection_name, query_vector, limit)
+
+        # Get chunks of the prioritized type
+        primary_results = self.qdrant_repo.query_collection(
+            collection_name, query_vector, limit=limit//2, chunk_type=intent
+        )
+
+        # Get supporting chunks based on intent
+        if intent == ChunkType.CONCEPT.value:
+            # For concept queries, also get examples to illustrate
+            secondary_results = self.qdrant_repo.query_collection(
+                collection_name, query_vector, limit=limit//2, chunk_type=ChunkType.EXAMPLE.value
+            )
+        elif intent == ChunkType.EXAMPLE.value:
+            # For example queries, also get concepts for context
+            secondary_results = self.qdrant_repo.query_collection(
+                collection_name, query_vector, limit=limit//2, chunk_type=ChunkType.CONCEPT.value
+            )
+        elif intent == ChunkType.QUESTION.value:
+            # For problem queries, get examples showing solutions
+            secondary_results = self.qdrant_repo.query_collection(
+                collection_name, query_vector, limit=limit//2, chunk_type=ChunkType.EXAMPLE.value
+            )
+        else:
+            secondary_results = []
+
+        # Combine and sort by relevance
+        combined = primary_results + secondary_results
+        combined.sort(key=lambda x: x.get("score", 0), reverse=True)
+        return combined[:limit]
+
+    def _filter_relevant_results(self, results: List[Dict], threshold: float = None) -> List[Dict]:
+        if threshold is None:
+            threshold = Config.query.RELEVANCE_THRESHOLD
         return [result for result in results if result.get("score", 0) >= threshold]
 
     def _is_valid_text(self, text: str) -> bool:
@@ -61,7 +172,7 @@ class QueryService:
             return 0.0
         return max(result.get("score", 0) for result in results)
 
-    def _create_query_response(self, results: List[Dict], query: str, enable_critic: bool = True) -> QueryResponse:
+    def _create_query_response(self, results: List[Dict], query: str, enable_critic: bool = True, structured_output: bool = False) -> QueryResponse:
         relevant_results = self._filter_relevant_results(results)
 
         if not relevant_results:
@@ -84,7 +195,9 @@ class QueryService:
 
         chunk_texts = [chunk.text for chunk in chunks]
         full_chunk_texts = self._extract_full_texts(relevant_results)
-        answer = self.llm_client.generate_answer(query, chunk_texts)
+        answer = self.llm_client.generate_answer(query, chunk_texts, force_json=structured_output)
+        answer = enhance_response_if_needed(answer, query)
+
         confidence = self._calculate_confidence(relevant_results)
 
         critic_result = None
@@ -134,10 +247,16 @@ class QueryService:
         except Exception:
             return results
 
-    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True) -> QueryResponse:
+    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False) -> QueryResponse:
+        """
+        Search with smart chunking - automatically detects query intent and retrieves
+        appropriate chunk types (concepts, examples, or questions).
+        """
         try:
             query_vector = self.embedding_client.generate_single_embedding(query_text)
-            results = self.qdrant_repo.query_collection(collection_name, query_vector, limit)
+
+            # Use smart retrieval to get relevant chunks based on query intent
+            results = self._smart_chunk_retrieval(collection_name, query_vector, query_text, limit)
 
             # Apply reranking if available and enabled
             if reranker.is_available() and results:
@@ -146,7 +265,7 @@ class QueryService:
             # Apply feedback scoring if enabled
             results = self._apply_feedback_scoring(results, query_vector, collection_name)
 
-            return self._create_query_response(results, query_text, enable_critic)
+            return self._create_query_response(results, query_text, enable_critic, structured_output)
         except Exception as e:
             return QueryResponse(
                 answer="Context not found",

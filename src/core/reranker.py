@@ -47,6 +47,7 @@ class Reranker:
 
         # Use config value if top_k not specified
         final_top_k = top_k or Config.reranking.RERANKER_TOP_K
+        logger.info(f"Fetching top {final_top_k} documents")
 
         # If reranker is disabled or model failed to load, return original order
         if not Config.reranking.RERANKER_ENABLED or self._model is None:

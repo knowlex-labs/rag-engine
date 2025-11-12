@@ -10,12 +10,7 @@ router = APIRouter()
 @router.get("/")
 def list_users() -> ApiResponseWithBody:
     try:
-        # Get a simple list of user IDs from database
-        query = "SELECT id FROM users ORDER BY created_at DESC"
-        from database.connection import db_connection
-        results = db_connection.execute_query(query)
-        user_ids = [row[0] for row in results] if results else []
-
+        user_ids = user_service.list_users()
         return ApiResponseWithBody(
             status="SUCCESS",
             message="Users retrieved successfully",

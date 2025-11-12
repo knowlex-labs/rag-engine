@@ -46,12 +46,10 @@ class RAGAPIClient:
             return {"success": False, "error": error_msg, "status_code": 0}
 
     def set_user(self, user_id: Optional[str]):
-        """Set the current user for API operations"""
         self.current_user_id = user_id
         logger.info(f"Current user set to: {user_id or 'None (session user)'}")
 
     def create_user(self, user_id: str, email: str, name: str) -> Dict[str, Any]:
-        """Register a new user"""
         data = {
             "user_id": user_id,
             "email": email,
@@ -60,7 +58,6 @@ class RAGAPIClient:
         return self._make_request("POST", "/users/register", json=data)
 
     def create_anonymous_user(self) -> Dict[str, Any]:
-        """Create an anonymous user"""
         return self._make_request("POST", "/users/anonymous")
 
     def list_users(self) -> Dict[str, Any]:

@@ -72,12 +72,9 @@ class RAGGradioUI:
         self._ensure_default_user()
 
     def _ensure_default_user(self):
-        """Ensure the default user exists and set it as current user"""
         try:
-            # Try to get the user first
             response = api_client.get_user(self.current_user)
             if not response["success"]:
-                # User doesn't exist, create them
                 create_response = api_client.create_user(
                     user_id=self.current_user,
                     email="nakul@test.com",
@@ -88,7 +85,6 @@ class RAGGradioUI:
                 else:
                     logger.error(f"Failed to create default user: {create_response.get('error')}")
 
-            # Set the user in api_client
             api_client.set_user(self.current_user)
             logger.info(f"Set default user: {self.current_user}")
         except Exception as e:
@@ -96,7 +92,7 @@ class RAGGradioUI:
 
     def _get_user_choices(self) -> List[str]:
         import time
-        time.sleep(10)  # Wait for backend to start
+        time.sleep(10)  
         try:
             response = api_client.list_users()
             if response["success"]:
@@ -118,14 +114,10 @@ class RAGGradioUI:
 
     def switch_user_and_refresh(self, user_id: str):
         self.change_user(user_id)
-
-        # Refresh files and collections for the new user
         files_df, file_dropdown = self.refresh_files()
         collections_df, _, _, _, _ = self.refresh_collections()
-
         return files_df, file_dropdown, collections_df
 
-    # Utility functions
     def _format_response(self, response: Dict[str, Any]) -> str:
         if response["success"]:
             data = response.get("data", {})
@@ -142,7 +134,6 @@ class RAGGradioUI:
 
             if files_data:
                 df = pd.DataFrame(files_data)
-                # Reorder columns for better display
                 df = df[["filename", "file_size", "upload_date", "file_id"]]
                 df["file_size"] = df["file_size"].apply(lambda x: f"{x:,} bytes")
                 df["upload_date"] = pd.to_datetime(df["upload_date"]).dt.strftime("%Y-%m-%d %H:%M")
@@ -221,29 +212,22 @@ class RAGGradioUI:
             return f"⚠️ {success_count} {operation}ed, {failed_count} failed"
 
     def _translate_error_message(self, backend_message: str, operation: str) -> str:
-        # Mapping backend errors to user-friendly messages
         error_mappings = {
-            # Link operation errors
             "File not found": "File missing",
             "File already linked, unlink first": "Already linked",
             "Could not read file content": "File unreadable",
             "Failed to generate embedding": "Processing failed",
             "Failed to link content to collection": "Database error",
-
-            # Unlink operation errors
             "File not found in collection": "Not linked",
             "Failed to unlink content from collection": "Database error",
         }
 
-        # Check for exact matches first
         if backend_message in error_mappings:
             return error_mappings[backend_message]
 
-        # Check for partial matches (for "Internal error: ..." messages)
         if backend_message.startswith("Internal error:"):
             return "System error"
 
-        # Default fallback
         return "Operation failed"
 
     def _format_file_status_list(self, responses: List[Dict], operation: str) -> str:
@@ -258,7 +242,7 @@ class RAGGradioUI:
             if status_code == 200:
                 if operation == "link":
                     status_lines.append(f"{filename} ✅ LINKED")
-                else:  # unlink
+                else: 
                     status_lines.append(f"{filename} ❌ UNLINKED")
             else:
                 backend_message = response.get("message", "Failed")
@@ -371,10 +355,8 @@ class RAGGradioUI:
         if not file_ids:
             return "⚠️ Selected files not found"
 
-        # Create files array for API
         files_to_link = []
         for file_id in file_ids:
-            # Find the file details from current_files
             selected_file = None
             for file in self.current_files:
                 if file['file_id'] == file_id:
@@ -385,7 +367,7 @@ class RAGGradioUI:
                 files_to_link.append({
                     "name": selected_file['filename'],
                     "file_id": file_id,
-                    "type": selected_file.get('file_type', 'text')  # Use stored file type
+                    "type": selected_file.get('file_type', 'text')
                 })
 
         if not files_to_link:
@@ -393,7 +375,6 @@ class RAGGradioUI:
 
         response = api_client.link_content(collection_name, files_to_link)
 
-        # Handle 207 multi-status response
         if response["success"] and response["status_code"] == 207:
             results = response.get("data", [])
             return self._format_file_status_list(results, "link")
@@ -414,7 +395,6 @@ class RAGGradioUI:
 
         response = api_client.unlink_content(collection_name, file_ids)
 
-        # Handle 207 multi-status response
         if response["success"] and response["status_code"] == 207:
             results = response.get("data", [])
             return self._format_file_status_list(results, "unlink")
@@ -462,7 +442,6 @@ class RAGGradioUI:
 
         history.append([message, ""])
 
-        # Auto-disable critic if structured output is OFF
         actual_enable_critic = enable_critic and structured_output
 
         response = api_client.query_collection(collection_name, message.strip(), actual_enable_critic)
@@ -470,7 +449,6 @@ class RAGGradioUI:
         if response["success"]:
             data = response.get("data", {})
 
-            # Store data for feedback
             self.last_query = message.strip()
             self.last_collection = collection_name
             chunks = data.get("chunks", [])
@@ -488,7 +466,6 @@ class RAGGradioUI:
                 history[-1][1] = answer
         else:
             history[-1][1] = f"❌ {response.get('error', 'Unknown error')}"
-            # Clear feedback data on error
             self.last_query = None
             self.last_collection = None
             self.last_doc_ids = []

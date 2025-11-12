@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import logging
 from repositories.qdrant_repository import QdrantRepository
+from repositories.collection_repository import collection_repository
 from utils.embedding_client import EmbeddingClient
 from services.file_service import file_service
 from services.query_service import QueryService
@@ -17,57 +18,86 @@ class CollectionService:
     def __init__(self):
         logger.info("Initializing CollectionService")
         self.qdrant_repo = QdrantRepository()
+        self.collection_repo = collection_repository
         self.embedding_client = EmbeddingClient()
         self.file_service = file_service
         self.query_service = QueryService()
         self.chunking_service = HierarchicalChunkingService()
         logger.debug("CollectionService initialized successfully")
 
-    def create_collection(self, name: str, rag_config: Optional[Dict] = None, indexing_config: Optional[Dict] = None) -> ApiResponse:
+    def _get_qdrant_collection_name(self, user_id: str, collection_name: str) -> str:
+        """Generate Qdrant collection name with user prefix"""
+        return f"{user_id}_{collection_name}"
+
+    def create_collection(self, user_id: str, name: str, rag_config: Optional[Dict] = None, indexing_config: Optional[Dict] = None) -> ApiResponse:
         try:
-            success = self.qdrant_repo.create_collection(name)
+            # Check if collection already exists for this user
+            if self.collection_repo.collection_exists(user_id, name):
+                return ApiResponse(status="FAILURE", message="Collection already exists")
+
+            # Create in Qdrant with user-prefixed name
+            qdrant_name = self._get_qdrant_collection_name(user_id, name)
+            success = self.qdrant_repo.create_collection(qdrant_name)
+
             if success:
-                return ApiResponse(status="SUCCESS", message="Collection created successfully")
+                # Store in PostgreSQL
+                db_success = self.collection_repo.create_collection(user_id, name, rag_config, indexing_config)
+                if db_success:
+                    return ApiResponse(status="SUCCESS", message="Collection created successfully")
+                else:
+                    # Rollback Qdrant collection if DB insert fails
+                    self.qdrant_repo.delete_collection(qdrant_name)
+                    return ApiResponse(status="FAILURE", message="Failed to save collection metadata")
             else:
-                return ApiResponse(status="FAILURE", message="Failed to create collection, already exists")
+                return ApiResponse(status="FAILURE", message="Failed to create collection in vector database")
         except Exception as e:
+            logger.error(f"Failed to create collection: {e}")
             return ApiResponse(status="FAILURE", message=f"Failed to create collection: {str(e)}")
 
-    def delete_collection(self, name: str) -> ApiResponse:
+    def delete_collection(self, user_id: str, name: str) -> ApiResponse:
         try:
-            if not self.qdrant_repo.collection_exists(name):
+            if not self.collection_repo.collection_exists(user_id, name):
                 return ApiResponse(status="FAILURE", message=f"Collection '{name}' does not exist")
 
-            success = self.qdrant_repo.delete_collection(name)
-            if success:
+            # Delete from Qdrant
+            qdrant_name = self._get_qdrant_collection_name(user_id, name)
+            qdrant_success = self.qdrant_repo.delete_collection(qdrant_name)
+
+            # Delete from PostgreSQL
+            db_success = self.collection_repo.delete_collection(user_id, name)
+
+            if qdrant_success and db_success:
                 return ApiResponse(status="SUCCESS", message=f"Collection '{name}' deleted successfully")
             else:
                 return ApiResponse(status="FAILURE", message=f"Failed to delete collection '{name}' - check server logs for details")
         except Exception as e:
+            logger.error(f"Failed to delete collection: {e}")
             return ApiResponse(status="FAILURE", message=f"Failed to delete collection: {str(e)}")
 
-    def list_collections(self) -> ApiResponseWithBody:
+    def list_collections(self, user_id: str) -> ApiResponseWithBody:
         try:
-            collections = self.qdrant_repo.list_collections()
+            collections = self.collection_repo.list_collections(user_id)
             return ApiResponseWithBody(status="SUCCESS", message="Collections retrieved successfully", body={"collections": collections})
         except Exception as e:
+            logger.error(f"Failed to list collections: {e}")
             return ApiResponseWithBody(status="FAILURE", message=f"Failed to list collections: {str(e)}", body={})
 
-    def get_collection(self, name: str) -> ApiResponse:
+    def get_collection(self, user_id: str, name: str) -> ApiResponse:
         try:
-            exists = self.qdrant_repo.collection_exists(name)
+            exists = self.collection_repo.collection_exists(user_id, name)
             if exists:
                 return ApiResponse(status="SUCCESS", message=f"Collection '{name}' exists")
             else:
                 return ApiResponse(status="FAILURE", message=f"Collection '{name}' not found")
         except Exception as e:
+            logger.error(f"Failed to check collection: {e}")
             return ApiResponse(status="FAILURE", message=f"Failed to check collection: {str(e)}")
 
     def _validate_file_exists(self, file_id: str, user_id: str) -> bool:
         return self.file_service.file_exists(file_id, user_id)
 
-    def _validate_collection_exists(self, collection_name: str) -> bool:
-        return self.qdrant_repo.collection_exists(collection_name)
+    def _validate_collection_exists(self, user_id: str, collection_name: str) -> bool:
+        return self.collection_repo.collection_exists(user_id, collection_name)
 
     def _get_file_content(self, file_id: str, user_id: str) -> Optional[str]:
         return self.file_service.get_file_content(file_id, user_id)
@@ -118,9 +148,10 @@ class CollectionService:
             logger.error(f"Error generating embeddings: {e}")
             return None
 
-    def _check_file_already_linked(self, collection_name: str, file_id: str) -> bool:
+    def _check_file_already_linked(self, user_id: str, collection_name: str, file_id: str) -> bool:
         try:
-            status = self.qdrant_repo.batch_read_files(collection_name, [file_id])
+            qdrant_collection_name = self._get_qdrant_collection_name(user_id, collection_name)
+            status = self.qdrant_repo.batch_read_files(qdrant_collection_name, [file_id])
             return status.get(file_id) == "indexed"
         except Exception:
             return False
@@ -156,16 +187,19 @@ class CollectionService:
 
 
     def link_content(self, collection_name: str, files: List[LinkContentItem], user_id: str) -> List[LinkContentResponse]:
-        logger.info(f"Linking {len(files)} files to collection '{collection_name}'")
+        logger.info(f"Linking {len(files)} files to collection '{collection_name}' for user '{user_id}'")
         responses = []
 
-        if not self._validate_collection_exists(collection_name):
-            logger.error(f"Collection '{collection_name}' does not exist")
+        if not self._validate_collection_exists(user_id, collection_name):
+            logger.error(f"Collection '{collection_name}' does not exist for user '{user_id}'")
             for file_item in files:
                 responses.append(self._create_link_error_response(
                     file_item, 404, f"Collection '{collection_name}' does not exist"
                 ))
             return responses
+
+        # Get the actual Qdrant collection name
+        qdrant_collection_name = self._get_qdrant_collection_name(user_id, collection_name)
 
         for file_item in files:
             try:
@@ -176,7 +210,7 @@ class CollectionService:
                     responses.append(self._create_link_error_response(file_item, 404, "File not found"))
                     continue
 
-                if self._check_file_already_linked(collection_name, file_item.file_id):
+                if self._check_file_already_linked(user_id, collection_name, file_item.file_id):
                     logger.warning(f"File {file_item.file_id} already linked to collection '{collection_name}'")
                     responses.append(self._create_link_error_response(file_item, 409, "File already linked, unlink first"))
                     continue
@@ -196,8 +230,8 @@ class CollectionService:
                     responses.append(self._create_link_error_response(file_item, 500, "Failed to generate embedding"))
                     continue
 
-                logger.debug(f"Linking file {file_item.file_id} to collection '{collection_name}'")
-                success = self.qdrant_repo.link_content(collection_name, documents)
+                logger.debug(f"Linking file {file_item.file_id} to collection '{qdrant_collection_name}'")
+                success = self.qdrant_repo.link_content(qdrant_collection_name, documents)
                 if success:
                     logger.info(f"Successfully linked file {file_item.file_id} to collection '{collection_name}'")
                     responses.append(self._create_link_success_response(file_item))
@@ -214,26 +248,29 @@ class CollectionService:
         return responses
 
     def unlink_content(self, collection_name: str, file_ids: List[str], user_id: str) -> List[UnlinkContentResponse]:
-        logger.info(f"Unlinking {len(file_ids)} files from collection '{collection_name}'")
+        logger.info(f"Unlinking {len(file_ids)} files from collection '{collection_name}' for user '{user_id}'")
         responses = []
 
-        if not self._validate_collection_exists(collection_name):
-            logger.error(f"Collection '{collection_name}' does not exist")
+        if not self._validate_collection_exists(user_id, collection_name):
+            logger.error(f"Collection '{collection_name}' does not exist for user '{user_id}'")
             for file_id in file_ids:
                 responses.append(self._create_unlink_response(file_id, 404, f"Collection '{collection_name}' does not exist"))
             return responses
+
+        # Get the actual Qdrant collection name
+        qdrant_collection_name = self._get_qdrant_collection_name(user_id, collection_name)
 
         for file_id in file_ids:
             try:
                 logger.debug(f"Processing unlink for file {file_id}")
 
-                if not self._check_file_already_linked(collection_name, file_id):
+                if not self._check_file_already_linked(user_id, collection_name, file_id):
                     logger.warning(f"File {file_id} not found in collection '{collection_name}'")
                     responses.append(self._create_unlink_response(file_id, 404, "File not found in collection"))
                     continue
 
                 logger.debug(f"File {file_id} found in collection, proceeding with unlink")
-                success = self.qdrant_repo.unlink_content(collection_name, [file_id])
+                success = self.qdrant_repo.unlink_content(qdrant_collection_name, [file_id])
                 if success:
                     logger.info(f"Successfully unlinked file {file_id} from collection '{collection_name}'")
                     responses.append(self._create_unlink_response(file_id, 200, "Successfully unlinked from collection"))
@@ -249,8 +286,8 @@ class CollectionService:
         logger.info(f"Completed unlink operation for collection '{collection_name}'. Processed {len(responses)} files")
         return responses
 
-    def query_collection(self, collection_name: str, query_text: str, enable_critic: bool = True, limit: int = 5) -> QueryResponse:
-        if not self._validate_collection_exists(collection_name):
+    def query_collection(self, user_id: str, collection_name: str, query_text: str, enable_critic: bool = True, limit: int = 5) -> QueryResponse:
+        if not self._validate_collection_exists(user_id, collection_name):
             return QueryResponse(
                 answer="Context not found",
                 confidence=0.0,
@@ -266,5 +303,7 @@ class CollectionService:
                 chunks=[]
             )
 
-        return self.query_service.search(collection_name, query_text, limit, enable_critic)
+        # Get the actual Qdrant collection name
+        qdrant_collection_name = self._get_qdrant_collection_name(user_id, collection_name)
+        return self.query_service.search(qdrant_collection_name, query_text, limit, enable_critic)
 

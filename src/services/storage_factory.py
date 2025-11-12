@@ -4,7 +4,7 @@ def get_file_service():
     use_unified = os.getenv("USE_UNIFIED_STORAGE", "true").lower() == "true"
 
     if use_unified:
-        from services.unified_file_service import UnifiedFileService
+        from services.file_service import UnifiedFileService
         return UnifiedFileService()
     else:
         gcs_bucket = os.getenv("GCS_BUCKET_NAME", "")

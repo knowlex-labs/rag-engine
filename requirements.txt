@@ -11,4 +11,5 @@ python-dotenv==1.0.0
 openai>=1.0.0
 google-generativeai
 pdfplumber==0.10.0
-google-cloud-storage==2.14.0
+minio==7.2.9
+psycopg2-binary==2.9.9

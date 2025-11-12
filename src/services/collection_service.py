@@ -3,7 +3,7 @@ from datetime import datetime
 import logging
 from repositories.qdrant_repository import QdrantRepository
 from utils.embedding_client import EmbeddingClient
-from services.unified_file_service import unified_file_service
+from services.file_service import file_service
 from services.query_service import QueryService
 from services.hierarchical_chunking_service import HierarchicalChunkingService
 from models.api_models import LinkContentItem, LinkContentResponse, ApiResponse, ApiResponseWithBody, QueryResponse, UnlinkContentResponse
@@ -18,7 +18,7 @@ class CollectionService:
         logger.info("Initializing CollectionService")
         self.qdrant_repo = QdrantRepository()
         self.embedding_client = EmbeddingClient()
-        self.file_service = unified_file_service
+        self.file_service = file_service
         self.query_service = QueryService()
         self.chunking_service = HierarchicalChunkingService()
         logger.debug("CollectionService initialized successfully")

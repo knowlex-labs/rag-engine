@@ -16,8 +16,14 @@ class RAGAPIClient:
         url = f"{self.base_url}{endpoint}"
         start_time = time.time()
 
+        # Add x-user-id header if current user is set
+        if self.current_user_id:
+            if "headers" not in kwargs:
+                kwargs["headers"] = {}
+            kwargs["headers"]["x-user-id"] = self.current_user_id
+
         try:
-            logger.info(f"API Call: {method} {url}")
+            logger.info(f"API Call: {method} {url} (user: {self.current_user_id})")
             response = requests.request(method, url, **kwargs)
 
             elapsed_time = round((time.time() - start_time) * 1000, 2)
@@ -68,35 +74,28 @@ class RAGAPIClient:
 
     def upload_file(self, file_content: bytes, filename: str) -> Dict[str, Any]:
         files = {"file": (filename, BytesIO(file_content), "application/octet-stream")}
-        params = {}
-        if self.current_user_id:
-            params["user_id"] = self.current_user_id
-        return self._make_request("POST", "/files", files=files, params=params)
+        # x-user-id header is automatically added by _make_request
+        return self._make_request("POST", "/files", files=files)
 
     def list_files(self) -> Dict[str, Any]:
-        params = {}
-        if self.current_user_id:
-            params["user_id"] = self.current_user_id
-        return self._make_request("GET", "/files", params=params)
+        # x-user-id header is automatically added by _make_request
+        return self._make_request("GET", "/files")
 
     def get_file(self, file_id: str) -> Dict[str, Any]:
-        params = {}
-        if self.current_user_id:
-            params["user_id"] = self.current_user_id
-        return self._make_request("GET", f"/files/{file_id}", params=params)
+        # x-user-id header is automatically added by _make_request
+        return self._make_request("GET", f"/files/{file_id}")
 
     def delete_file(self, file_id: str) -> Dict[str, Any]:
-        params = {}
-        if self.current_user_id:
-            params["user_id"] = self.current_user_id
-        return self._make_request("DELETE", f"/files/{file_id}", params=params)
+        # x-user-id header is automatically added by _make_request
+        return self._make_request("DELETE", f"/files/{file_id}")
 
     def list_collections(self) -> Dict[str, Any]:
+        # x-user-id header is automatically added by _make_request
         return self._make_request("GET", "/collections")
 
     def get_collection(self, collection_name: str) -> Dict[str, Any]:
+        # x-user-id header is automatically added by _make_request
         return self._make_request("GET", f"/collection/{collection_name}")
-
 
     def create_collection(self, name: str, rag_config: Optional[Dict] = None, indexing_config: Optional[Dict] = None) -> Dict[str, Any]:
         data = {"name": name}
@@ -105,27 +104,38 @@ class RAGAPIClient:
         if indexing_config:
             data["indexing_config"] = indexing_config
 
+        # x-user-id header is automatically added by _make_request
         return self._make_request("POST", "/collection", json=data)
 
     def delete_collection(self, collection_name: str) -> Dict[str, Any]:
+        # x-user-id header is automatically added by _make_request
         return self._make_request("DELETE", f"/collection/{collection_name}")
 
-
     def link_content(self, collection_name: str, files: List[Dict[str, str]]) -> Dict[str, Any]:
-        params = {}
-        if self.current_user_id:
-            params["user_id"] = self.current_user_id
-        return self._make_request("POST", f"/{collection_name}/link-content", json=files, params=params)
+        # x-user-id header is automatically added by _make_request
+        return self._make_request("POST", f"/{collection_name}/link-content", json=files)
 
     def unlink_content(self, collection_name: str, file_ids: List[str]) -> Dict[str, Any]:
-        params = {}
-        if self.current_user_id:
-            params["user_id"] = self.current_user_id
-        return self._make_request("POST", f"/{collection_name}/unlink-content", json=file_ids, params=params)
+        # x-user-id header is automatically added by _make_request
+        return self._make_request("POST", f"/{collection_name}/unlink-content", json=file_ids)
 
     def query_collection(self, collection_name: str, query: str = "", enable_critic: bool = True, structured_output: bool = False) -> Dict[str, Any]:
         data = {"query": query, "enable_critic": enable_critic, "structured_output": structured_output}
+        # x-user-id header is automatically added by _make_request
         return self._make_request("POST", f"/{collection_name}/query", json=data)
+
+    def get_collection_embeddings(self, collection_name: str, limit: int = 100, offset: Optional[str] = None, include_vectors: bool = False) -> Dict[str, Any]:
+        """Retrieve all embeddings from a collection with pagination"""
+        params = {}
+        if limit:
+            params["limit"] = limit
+        if offset:
+            params["offset"] = offset
+        if include_vectors:
+            params["include_vectors"] = "true"
+
+        # x-user-id header is automatically added by _make_request
+        return self._make_request("GET", f"/{collection_name}/embeddings", params=params)
 
     def submit_feedback(self, query: str, doc_ids: List[str], label: int, collection: str) -> Dict[str, Any]:
         data = {

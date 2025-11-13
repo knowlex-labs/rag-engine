@@ -97,6 +97,7 @@ class HierarchicalChunkingService:
             logger.error(f"Error processing PDF {file_path}: {e}", exc_info=True)
             return []
 
+        logger.info(f"CHUNKING RESULT: Returning {len(chunks)} chunks for document {document_id}")
         return chunks
 
     def _create_basic_chunks(

@@ -74,16 +74,24 @@ class UnifiedFileService:
 
     def get_local_file_for_processing(self, file_id: str, user_id: Optional[str]) -> Optional[str]:
         try:
+            logger.info(f"get_local_file_for_processing called with file_id={file_id}, user_id={user_id}")
             storage_path = self.get_file_path(file_id, user_id)
             if not storage_path:
+                logger.error(f"CRITICAL: get_file_path returned None for file_id={file_id}, user_id={user_id}")
                 return None
 
+            logger.info(f"Storage path found: {storage_path}")
             if self._is_local_storage(storage_path):
-                return self.get_local_path(storage_path)
+                local_path = self.get_local_path(storage_path)
+                logger.info(f"Local storage, resolved path: {local_path}")
+                return local_path
             else:
-                return self.storage_service.download_for_processing(storage_path)
+                logger.info(f"Remote storage, downloading for processing...")
+                downloaded_path = self.storage_service.download_for_processing(storage_path)
+                logger.info(f"Downloaded to temp path: {downloaded_path}")
+                return downloaded_path
         except Exception as e:
-            logger.error(f"Failed to get local file for processing: {e}")
+            logger.error(f"Failed to get local file for processing: {e}", exc_info=True)
             return None
 
     def init_database(self):
@@ -182,10 +190,17 @@ class UnifiedFileService:
     def get_file_path(self, file_id: str, user_id: Optional[str]) -> Optional[str]:
         try:
             actual_user_id = user_id if user_id else self.session_user_id
+            logger.info(f"get_file_path: file_id={file_id}, user_id={user_id}, actual_user_id={actual_user_id}")
             query = "SELECT minio_path FROM user_files WHERE id = %s AND user_id = %s"
             result = db_connection.execute_one(query, (file_id, actual_user_id))
-            return result[0] if result else None
-        except Exception:
+            if result:
+                logger.info(f"File path found in database: {result[0]}")
+                return result[0]
+            else:
+                logger.error(f"CRITICAL: No file found in database for file_id={file_id}, user_id={actual_user_id}")
+                return None
+        except Exception as e:
+            logger.error(f"Database error in get_file_path: {e}", exc_info=True)
             return None
 
     def get_file_content(self, file_id: str, user_id: Optional[str]) -> Optional[str]:

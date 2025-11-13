@@ -118,3 +118,16 @@ class FeedbackResponse(BaseModel):
     status: str
     message: str
 
+class EmbeddingItem(BaseModel):
+    id: str
+    document_id: str
+    text: str
+    source: str
+    metadata: Dict[str, Any]
+    vector: Optional[List[float]] = None
+
+class GetEmbeddingsResponse(BaseModel):
+    status: str
+    message: str
+    body: Dict[str, Any]
+

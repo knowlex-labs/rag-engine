@@ -8,6 +8,8 @@ logger = logging.getLogger(__name__)
 
 
 class UserService:
+    def __init__(self):
+        self.verified_users = set()
 
     def generate_anonymous_user_id(self) -> str:
         return f"anonymous_{str(uuid.uuid4())[:8]}"
@@ -21,6 +23,30 @@ class UserService:
         except Exception as e:
             logger.error(f"Failed to create anonymous user: {e}")
             raise e
+
+    def create_anonymous_user_with_id(self, user_id: str) -> bool:
+        try:
+            user_repository.create_user(user_id, is_anonymous=True)
+            logger.info(f"Auto-created anonymous user: {user_id}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to auto-create user {user_id}: {e}")
+            return False
+
+    def ensure_user_exists(self, user_id: str) -> bool:
+        if user_id in self.verified_users:
+            return True
+
+        if self.user_exists(user_id):
+            self.verified_users.add(user_id)
+            return True
+
+        success = self.create_anonymous_user_with_id(user_id)
+        if success:
+            self.verified_users.add(user_id)
+            return True
+
+        return False
 
     def register_user(self, user_id: str, email: str, name: str, anonymous_session_id: Optional[str] = None) -> Dict[str, Any]:
         try:

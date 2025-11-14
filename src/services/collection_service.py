@@ -7,6 +7,7 @@ from utils.embedding_client import EmbeddingClient
 from services.file_service import file_service
 from services.query_service import QueryService
 from services.hierarchical_chunking_service import HierarchicalChunkingService
+from services.user_service import user_service
 from models.api_models import LinkContentItem, LinkContentResponse, ApiResponse, ApiResponseWithBody, QueryResponse, UnlinkContentResponse
 from config import Config
 from utils.document_builder import build_chunk_document, build_content_document
@@ -31,6 +32,10 @@ class CollectionService:
 
     def create_collection(self, user_id: str, name: str, rag_config: Optional[Dict] = None, indexing_config: Optional[Dict] = None) -> ApiResponse:
         try:
+            # Ensure user exists before creating collection
+            if not user_service.ensure_user_exists(user_id):
+                logger.warning(f"Failed to create user {user_id}, proceeding with collection creation anyway")
+
             # Check if collection already exists for this user
             if self.collection_repo.collection_exists(user_id, name):
                 return ApiResponse(status="FAILURE", message="Collection already exists")
@@ -59,15 +64,40 @@ class CollectionService:
             if not self.collection_repo.collection_exists(user_id, name):
                 return ApiResponse(status="FAILURE", message=f"Collection '{name}' does not exist")
 
-            # Delete from Qdrant
             qdrant_name = self._get_qdrant_collection_name(user_id, name)
+
+            # Step 1: Get all files in the collection before deletion
+            logger.info(f"Getting all files in collection '{name}' for cleanup")
+            try:
+                embeddings_result = self.qdrant_repo.get_all_embeddings(qdrant_name, limit=1000, include_vectors=False)
+                embeddings = embeddings_result.get("embeddings", [])
+
+                # Extract unique file IDs
+                file_ids = list(set([emb.get("document_id") for emb in embeddings if emb.get("document_id")]))
+
+                if file_ids:
+                    logger.info(f"Found {len(file_ids)} files to unlink from collection '{name}'")
+
+                    # Step 2: Unlink all files from collection
+                    unlink_success = self.qdrant_repo.unlink_content(qdrant_name, file_ids)
+                    if unlink_success:
+                        logger.info(f"Successfully unlinked {len(file_ids)} files from collection '{name}'")
+                    else:
+                        logger.warning(f"Failed to unlink some files from collection '{name}', proceeding with deletion")
+                else:
+                    logger.info(f"No files found in collection '{name}', proceeding with deletion")
+
+            except Exception as e:
+                logger.warning(f"Failed to clean up files in collection '{name}': {e}, proceeding with deletion")
+
+            # Step 3: Delete from Qdrant
             qdrant_success = self.qdrant_repo.delete_collection(qdrant_name)
 
-            # Delete from PostgreSQL
+            # Step 4: Delete from PostgreSQL
             db_success = self.collection_repo.delete_collection(user_id, name)
 
             if qdrant_success and db_success:
-                return ApiResponse(status="SUCCESS", message=f"Collection '{name}' deleted successfully")
+                return ApiResponse(status="SUCCESS", message=f"Collection '{name}' and all linked files deleted successfully")
             else:
                 return ApiResponse(status="FAILURE", message=f"Failed to delete collection '{name}' - check server logs for details")
         except Exception as e:
@@ -106,26 +136,41 @@ class CollectionService:
         try:
             documents = []
 
-            logger.info("file type is: " + file_type)
-            if file_type in [FileType.PDF.value, FileType.TEXT.value]:
+            file_type_normalized = file_type.lower().strip()
+            logger.info(f"file type (normalized): {file_type_normalized}")
+
+            supported_types = [FileType.PDF.value, FileType.TEXT.value]
+            if file_type_normalized in supported_types:
+                logger.info(f"Getting local file path for file_id={file_id}, user_id={user_id}")
                 file_path = self.file_service.get_local_file_for_processing(file_id, user_id)
                 if not file_path:
+                    logger.error(f"CRITICAL: get_local_file_for_processing returned None for file_id={file_id}")
                     return None
 
                 storage_path = self.file_service.get_file_path(file_id, user_id)
                 is_temp_file = not self.file_service._is_local_storage(storage_path)
+                logger.info(f"File path resolved: {file_path}, is_temp_file: {is_temp_file}")
 
                 try:
+                    logger.info(f"Starting hierarchical chunking for file: {file_path}")
                     chunks = self.chunking_service.chunk_pdf_hierarchically(
                         file_path=file_path,
                         document_id=file_id,
                         chunk_size=Config.embedding.CHUNK_SIZE,
                         chunk_overlap=Config.embedding.CHUNK_OVERLAP
                     )
+                    logger.info(f"Chunking completed. Generated {len(chunks) if chunks else 0} chunks")
+                except Exception as e:
+                    logger.error(f"Exception during chunking: {e}", exc_info=True)
+                    chunks = []
                 finally:
                     if is_temp_file:
                         import os
-                        os.unlink(file_path)
+                        logger.info(f"Cleaning up temp file: {file_path}")
+                        try:
+                            os.unlink(file_path)
+                        except Exception as e:
+                            logger.error(f"Failed to cleanup temp file {file_path}: {e}")
 
                 if not chunks:
                     logger.warning(f"No chunks generated for {file_id}, falling back to full document")
@@ -222,8 +267,9 @@ class CollectionService:
                     continue
 
                 logger.info(f"Generating embedding for file {file_item.file_id}")
+                file_type_normalized = file_item.type.lower().strip()
                 documents = self._generate_embedding_and_document(
-                    file_item.file_id, file_content, file_item.type, user_id
+                    file_item.file_id, file_content, file_type_normalized, user_id
                 )
                 if not documents:
                     logger.error(f"Failed to generate embedding for file {file_item.file_id}")
@@ -306,4 +352,51 @@ class CollectionService:
         # Get the actual Qdrant collection name
         qdrant_collection_name = self._get_qdrant_collection_name(user_id, collection_name)
         return self.query_service.search(qdrant_collection_name, query_text, limit, enable_critic)
+
+    def get_collection_embeddings(self, user_id: str, collection_name: str, limit: int = 100, offset: Optional[str] = None, include_vectors: bool = False):
+        """Retrieve all embeddings from a collection with pagination"""
+        try:
+            # Validate collection exists and user has access
+            if not self._validate_collection_exists(user_id, collection_name):
+                return {
+                    "status": "FAILURE",
+                    "message": f"Collection '{collection_name}' does not exist",
+                    "body": {}
+                }
+
+            # Get the actual Qdrant collection name
+            qdrant_collection_name = self._get_qdrant_collection_name(user_id, collection_name)
+
+            # Call repository to get embeddings
+            logger.info(f"Getting embeddings for collection '{collection_name}' for user '{user_id}'")
+            result = self.qdrant_repo.get_all_embeddings(
+                collection_name=qdrant_collection_name,
+                limit=limit,
+                offset=offset,
+                include_vectors=include_vectors
+            )
+
+            if "error" in result:
+                return {
+                    "status": "FAILURE",
+                    "message": f"Failed to retrieve embeddings: {result['error']}",
+                    "body": {}
+                }
+
+            logger.info(f"Successfully retrieved {len(result['embeddings'])} embeddings from collection '{collection_name}'")
+
+            return {
+                "status": "SUCCESS",
+                "message": "Embeddings retrieved successfully",
+                "body": result
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to get embeddings from collection '{collection_name}' for user '{user_id}': {e}")
+            logger.exception("Full exception details:")
+            return {
+                "status": "FAILURE",
+                "message": f"Internal error: {str(e)}",
+                "body": {}
+            }
 

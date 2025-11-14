@@ -225,6 +225,67 @@ class QdrantRepository:
             logger.error(f"Error querying collection: {e}")
             return []
 
+    def get_all_embeddings(self, collection_name: str, limit: int = 100, offset: Optional[str] = None, include_vectors: bool = False) -> Dict[str, Any]:
+        try:
+            logger.info(f"Retrieving embeddings from collection '{collection_name}' with limit={limit}, include_vectors={include_vectors}")
+
+            # Get collection info for total count
+            collection_info = self.client.get_collection(collection_name)
+            total_count = collection_info.points_count
+
+            # Scroll through points with pagination
+            result = self.client.scroll(
+                collection_name=collection_name,
+                limit=limit,
+                offset=offset,
+                with_vectors=include_vectors,
+                with_payload=True
+            )
+
+            points, next_offset = result
+
+            # Format embeddings data
+            embeddings = []
+            for point in points:
+                embedding_item = {
+                    "id": point.id,
+                    "document_id": point.payload.get("document_id", ""),
+                    "text": point.payload.get("text", ""),
+                    "source": point.payload.get("source", ""),
+                    "metadata": point.payload.get("metadata", {})
+                }
+
+                if include_vectors and point.vector:
+                    embedding_item["vector"] = point.vector
+
+                embeddings.append(embedding_item)
+
+            logger.info(f"Retrieved {len(embeddings)} embeddings from collection '{collection_name}'")
+
+            return {
+                "embeddings": embeddings,
+                "next_offset": next_offset,
+                "total_count": total_count,
+                "has_more": next_offset is not None,
+                "collection_info": {
+                    "name": collection_name,
+                    "points_count": total_count,
+                    "vectors_count": collection_info.vectors_count if hasattr(collection_info, 'vectors_count') else total_count
+                }
+            }
+
+        except Exception as e:
+            logger.error(f"Failed to retrieve embeddings from collection '{collection_name}': {str(e)}")
+            logger.exception("Full exception details:")
+            return {
+                "embeddings": [],
+                "next_offset": None,
+                "total_count": 0,
+                "has_more": False,
+                "collection_info": {},
+                "error": str(e)
+            }
+
     def batch_read_files(self, collection_name: str, document_ids: List[str]) -> Dict[str, Any]:
         try:
             logger.debug(f"Checking status of {len(document_ids)} documents in collection '{collection_name}'")

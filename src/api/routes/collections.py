@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Response, Query, Header
-from typing import List
+from typing import List, Optional
 from api.api_constants import *
-from models.api_models import CreateCollectionRequest, ApiResponse, ApiResponseWithBody, LinkContentItem, LinkContentResponse, QueryRequest, QueryResponse, UnlinkContentResponse
+from models.api_models import CreateCollectionRequest, ApiResponse, ApiResponseWithBody, LinkContentItem, LinkContentResponse, QueryRequest, QueryResponse, UnlinkContentResponse, GetEmbeddingsResponse
 from services.collection_service import CollectionService
 
 router = APIRouter()
@@ -42,4 +42,26 @@ def unlink_content(collection_name: str, file_ids: List[str], response: Response
 @router.post("/{collection_name}" + QUERY_COLLECTION)
 def query_collection(collection_name: str, request: QueryRequest, x_user_id: str = Header(...)) -> QueryResponse:
     return collection_service.query_collection(x_user_id, collection_name, request.query, request.enable_critic, request.structured_output)
+
+@router.get("/{collection_name}/embeddings")
+def get_collection_embeddings(
+    collection_name: str,
+    x_user_id: str = Header(...),
+    limit: int = Query(100, ge=1, le=500, description="Number of embeddings to retrieve per page"),
+    offset: Optional[str] = Query(None, description="Pagination offset token"),
+    include_vectors: bool = Query(False, description="Include vector data in response")
+) -> GetEmbeddingsResponse:
+    result = collection_service.get_collection_embeddings(
+        user_id=x_user_id,
+        collection_name=collection_name,
+        limit=limit,
+        offset=offset,
+        include_vectors=include_vectors
+    )
+
+    return GetEmbeddingsResponse(
+        status=result["status"],
+        message=result["message"],
+        body=result["body"]
+    )
 

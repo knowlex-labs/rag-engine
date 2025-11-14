@@ -38,10 +38,9 @@ class AppConfig:
     MAX_FILE_SIZE_MB: int = int(os.getenv("MAX_FILE_SIZE_MB", "100"))
 
 class RerankingConfig:
-    ENABLE_RERANKER: bool = os.getenv("ENABLE_RERANKER", "true").lower() == "true"
+    RERANKER_ENABLED: bool = os.getenv("RERANKER_ENABLED", "true").lower() == "true"
     RERANKER_MODEL: str = os.getenv("RERANKER_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
     RERANKER_TOP_K: int = int(os.getenv("RERANKER_TOP_K", "5"))
-    RERANKER_ENABLED: bool = os.getenv("RERANKER_ENABLED", "true").lower() == "true"
 
 class CriticConfig:
     CRITIC_ENABLED: bool = os.getenv("CRITIC_ENABLED", "true").lower() == "true"

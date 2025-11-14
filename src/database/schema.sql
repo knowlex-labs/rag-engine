@@ -30,6 +30,20 @@ CREATE TABLE IF NOT EXISTS user_collections (
     UNIQUE(user_id, collection_name)
 );
 
+CREATE TABLE IF NOT EXISTS user_quizzes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id VARCHAR(255) NOT NULL REFERENCES users(id),
+    quiz_id VARCHAR(255) NOT NULL,
+    collection_name VARCHAR(255) NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    difficulty VARCHAR(50) NOT NULL,
+    quiz_data JSONB NOT NULL,
+    generation_metadata JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, quiz_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_is_anonymous ON users(is_anonymous);
 CREATE INDEX IF NOT EXISTS idx_user_files_user_id ON user_files(user_id);
@@ -37,3 +51,6 @@ CREATE INDEX IF NOT EXISTS idx_user_files_file_type ON user_files(file_type);
 CREATE INDEX IF NOT EXISTS idx_user_files_upload_date ON user_files(upload_date);
 CREATE INDEX IF NOT EXISTS idx_user_collections_user_id ON user_collections(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_collections_collection_name ON user_collections(collection_name);
+CREATE INDEX IF NOT EXISTS idx_user_quizzes_user_id ON user_quizzes(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_quizzes_collection_name ON user_quizzes(collection_name);
+CREATE INDEX IF NOT EXISTS idx_user_quizzes_created_at ON user_quizzes(created_at);

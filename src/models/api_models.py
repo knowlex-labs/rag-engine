@@ -79,10 +79,22 @@ class CriticEvaluation(BaseModel):
     missing_info: str
     enrichment_suggestions: List[str]
 
+class QuizConfig(BaseModel):
+    template: str = "standard"
+    collection_name: str
+    num_questions: int
+    difficulty: str
+    question_types: List[str] = ["multiple_choice"]
+    time_limit_minutes: int
+    total_score: int
+    passing_score: int
+    points_per_question: int
+
 class QueryRequest(BaseModel):
     query: str
     enable_critic: bool = True
     structured_output: bool = False
+    quiz_config: Optional[QuizConfig] = None
 
 class QueryResponse(BaseModel):
     answer: str

@@ -65,7 +65,11 @@ class DatabaseConnection:
         cursor = conn.cursor()
         try:
             cursor.execute(query, params)
-            return cursor.fetchone()
+            result = cursor.fetchone()
+            # Commit non-SELECT queries
+            if not query.strip().upper().startswith('SELECT'):
+                conn.commit()
+            return result
         except Exception as e:
             conn.rollback()
             raise e

@@ -1,14 +1,20 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from datetime import datetime
 import logging
+from fastapi import BackgroundTasks
 from repositories.qdrant_repository import QdrantRepository
 from repositories.collection_repository import collection_repository
+from repositories.quiz_repository import quiz_repository
 from utils.embedding_client import EmbeddingClient
 from services.file_service import file_service
 from services.query_service import QueryService
 from services.hierarchical_chunking_service import HierarchicalChunkingService
 from services.user_service import user_service
-from models.api_models import LinkContentItem, LinkContentResponse, ApiResponse, ApiResponseWithBody, QueryResponse, UnlinkContentResponse
+from services.quiz_job_service import quiz_job_service
+from services.quiz_generation_worker import quiz_generation_worker
+from models.api_models import LinkContentItem, LinkContentResponse, ApiResponse, ApiResponseWithBody, QueryResponse, UnlinkContentResponse, QuizConfig
+from models.quiz_models import QuizResponse
+from models.quiz_job_models import QuizJobResponse
 from config import Config
 from utils.document_builder import build_chunk_document, build_content_document
 from models.file_types import FileType
@@ -332,26 +338,96 @@ class CollectionService:
         logger.info(f"Completed unlink operation for collection '{collection_name}'. Processed {len(responses)} files")
         return responses
 
-    def query_collection(self, user_id: str, collection_name: str, query_text: str, enable_critic: bool = True, limit: int = 5) -> QueryResponse:
+    def query_collection(self, user_id: str, collection_name: str, query_text: str, enable_critic: bool = True, structured_output: bool = False, quiz_config: Optional[QuizConfig] = None, background_tasks: Optional[BackgroundTasks] = None) -> Union[QueryResponse, QuizResponse, QuizJobResponse]:
+        # Create error response based on mode
+        def create_error_response(message: str):
+            if quiz_config is not None:
+                # Return quiz error response
+                from models.quiz_models import QuizData, QuizMetadata, QuizSource, ContentSummary, ScoringInfo, GenerationMetadata
+                import time
+
+                quiz_metadata = QuizMetadata(
+                    quiz_id="error",
+                    title="Quiz Generation Error",
+                    difficulty="unknown",
+                    estimated_time_minutes=0,
+                    total_questions=0,
+                    max_score=0,
+                    created_at=time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()),
+                    source=QuizSource(type="collection", collection_name=collection_name, source_count=0)
+                )
+
+                return QuizResponse(
+                    quiz_data=QuizData(
+                        quiz_metadata=quiz_metadata,
+                        questions=[],
+                        content_summary=ContentSummary(
+                            main_summary=message,
+                            key_concepts=[],
+                            topics_covered=[],
+                            prerequisite_knowledge=[]
+                        ),
+                        scoring_info=ScoringInfo(
+                            total_score=0,
+                            passing_score=0,
+                            time_limit_minutes=0
+                        )
+                    ),
+                    generation_metadata=GenerationMetadata(
+                        confidence=0.0,
+                        is_relevant=False,
+                        generation_time_ms=0,
+                        model_used="unknown",
+                        content_sources=[]
+                    )
+                )
+            else:
+                return QueryResponse(
+                    answer=message,
+                    confidence=0.0,
+                    is_relevant=False,
+                    chunks=[]
+                )
+
         if not self._validate_collection_exists(user_id, collection_name):
-            return QueryResponse(
-                answer="Context not found",
-                confidence=0.0,
-                is_relevant=False,
-                chunks=[]
-            )
+            return create_error_response("Context not found")
 
         if not query_text.strip():
-            return QueryResponse(
-                answer="Context not found",
-                confidence=0.0,
-                is_relevant=False,
-                chunks=[]
+            return create_error_response("Context not found")
+
+        # Check if this is a quiz request - make it async
+        if quiz_config is not None:
+            # Create async quiz generation job
+            quiz_job_response = quiz_job_service.create_quiz_job(
+                user_id=user_id,
+                collection_name=collection_name,
+                query_text=query_text,
+                quiz_config=quiz_config
             )
 
-        # Get the actual Qdrant collection name
-        qdrant_collection_name = self._get_qdrant_collection_name(user_id, collection_name)
-        return self.query_service.search(qdrant_collection_name, query_text, limit, enable_critic)
+            # Start background task if available
+            if background_tasks:
+                background_tasks.add_task(
+                    quiz_generation_worker.generate_quiz_async,
+                    quiz_job_response.quiz_job_id
+                )
+                logger.info(f"Started background quiz generation for job {quiz_job_response.quiz_job_id}")
+            else:
+                # Fallback: start task manually (for testing)
+                import threading
+                thread = threading.Thread(
+                    target=quiz_generation_worker.generate_quiz_async,
+                    args=(quiz_job_response.quiz_job_id,)
+                )
+                thread.daemon = True
+                thread.start()
+                logger.info(f"Started threaded quiz generation for job {quiz_job_response.quiz_job_id}")
+
+            return quiz_job_response
+        else:
+            # Regular synchronous query
+            qdrant_collection_name = self._get_qdrant_collection_name(user_id, collection_name)
+            return self.query_service.search(qdrant_collection_name, query_text, 10, enable_critic, structured_output, quiz_config)
 
     def get_collection_embeddings(self, user_id: str, collection_name: str, limit: int = 100, offset: Optional[str] = None, include_vectors: bool = False):
         """Retrieve all embeddings from a collection with pagination"""

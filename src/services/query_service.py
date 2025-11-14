@@ -4,11 +4,17 @@ from repositories.feedback_repository import FeedbackRepository
 from utils.embedding_client import EmbeddingClient
 from utils.llm_client import LlmClient
 from utils.response_enhancer import enhance_response_if_needed
-from models.api_models import QueryResponse, ChunkConfig, CriticEvaluation, ChunkType
+from models.api_models import QueryResponse, ChunkConfig, CriticEvaluation, ChunkType, QuizConfig
+from models.quiz_models import QuizResponse
+from services.quiz_mapper_service import QuizMapperService
 from core.reranker import reranker
 from core.critic import critic
 from config import Config
 import re
+import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 class QueryService:
     def __init__(self):
@@ -16,6 +22,7 @@ class QueryService:
         self.embedding_client = EmbeddingClient()
         self.llm_client = LlmClient()
         self.feedback_repo = FeedbackRepository()
+        self.quiz_mapper = QuizMapperService()
 
         # Patterns for detecting query intent
         self.concept_patterns = [
@@ -151,7 +158,7 @@ class QueryService:
                 seen_texts.add(text)
                 chunks.append(ChunkConfig(source=source, text=text))
 
-        return chunks[:3]
+        return chunks[:5]  # Increased for better quiz generation context
 
     def _extract_full_texts(self, results: List[Dict]) -> List[str]:
         full_texts = []
@@ -165,7 +172,7 @@ class QueryService:
                 seen_texts.add(text)
                 full_texts.append(text)
 
-        return full_texts[:3]
+        return full_texts[:5]  # Increased for better context
 
     def _calculate_confidence(self, results: List[Dict]) -> float:
         if not results:
@@ -213,6 +220,153 @@ class QueryService:
             critic=critic_result
         )
 
+    def _create_quiz_response(self, results: List[Dict], query: str, quiz_config: QuizConfig, collection_name: str, start_time: float) -> QuizResponse:
+        """Create quiz response using the quiz mapper service."""
+        relevant_results = self._filter_relevant_results(results)
+
+        if not relevant_results:
+            return self._create_error_quiz_response("Context not found")
+
+        chunks = self._extract_relevant_chunks(relevant_results)
+
+        if not chunks:
+            return self._create_error_quiz_response("Error: Stored content is corrupted or unreadable")
+
+        chunk_texts = [chunk.text for chunk in chunks]
+
+        enhanced_query = self._enhance_quiz_query(query, chunk_texts, quiz_config)
+
+        llm_response = self.llm_client.generate_answer(enhanced_query, chunk_texts, force_json=True, quiz_config=quiz_config)
+
+        generation_time_ms = int((time.time() - start_time) * 1000)
+
+        query_metadata = {
+            "confidence": self._calculate_confidence(relevant_results),
+            "is_relevant": True,
+            "model_used": self.llm_client.provider
+        }
+
+        return self.quiz_mapper.transform_llm_to_frontend(
+            llm_response=llm_response,
+            quiz_config=quiz_config,
+            query_metadata=query_metadata,
+            context_chunks=chunks,
+            generation_time_ms=generation_time_ms
+        )
+
+    def _create_error_quiz_response(self, error_message: str) -> QuizResponse:
+        """Create a default quiz response structure for errors."""
+        from models.quiz_models import (
+            QuizData, QuizMetadata, QuizSource, ContentSummary,
+            ScoringInfo, GenerationMetadata
+        )
+
+        # Create minimal error response structure
+        quiz_metadata = QuizMetadata(
+            quiz_id="error",
+            title="Quiz Generation Error",
+            difficulty="unknown",
+            estimated_time_minutes=0,
+            total_questions=0,
+            max_score=0,
+            created_at=time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()),
+            source=QuizSource(type="collection", collection_name="unknown", source_count=0)
+        )
+
+        content_summary = ContentSummary(
+            main_summary=f"Error: {error_message}",
+            key_concepts=[],
+            topics_covered=[],
+            prerequisite_knowledge=[]
+        )
+
+        scoring_info = ScoringInfo(
+            total_score=0,
+            passing_score=0,
+            time_limit_minutes=0
+        )
+
+        generation_metadata = GenerationMetadata(
+            confidence=0.0,
+            is_relevant=False,
+            generation_time_ms=0,
+            model_used="unknown",
+            content_sources=[]
+        )
+
+        quiz_data = QuizData(
+            quiz_metadata=quiz_metadata,
+            questions=[],
+            content_summary=content_summary,
+            scoring_info=scoring_info
+        )
+
+        return QuizResponse(
+            quiz_data=quiz_data,
+            generation_metadata=generation_metadata
+        )
+
+    def _enhance_quiz_query(self, query: str, chunk_texts: List[str], quiz_config: QuizConfig) -> str:
+        """Enhance quiz queries with specific topic information from content and quiz config details."""
+
+        topics = self._extract_topics_from_content(chunk_texts)
+        collection_name = quiz_config.collection_name.replace('_', ' ').title()
+
+        if topics:
+            topic_list = ', '.join(topics[:3])
+            enhanced_query = f"Generate {quiz_config.num_questions} {quiz_config.difficulty} level quiz questions about {topic_list} from {collection_name} collection. Original request: {query}"
+        else:
+            enhanced_query = f"Generate {quiz_config.num_questions} {quiz_config.difficulty} level quiz questions from {collection_name} collection based on the provided content. Original request: {query}"
+
+        return enhanced_query
+
+    def _extract_topics_from_content(self, chunk_texts: List[str]) -> List[str]:
+        """Extract physics topics from content chunks."""
+
+        physics_topics = {
+            'newton': "Newton's Laws",
+            'motion': "Motion and Kinematics",
+            'force': "Forces",
+            'energy': "Energy",
+            'momentum': "Momentum",
+            'gravity': "Gravity",
+            'friction': "Friction",
+            'waves': "Waves",
+            'thermodynamics': "Thermodynamics",
+            'heat': "Heat Transfer",
+            'electricity': "Electricity",
+            'magnetism': "Magnetism",
+            'optics': "Optics",
+            'light': "Light and Optics",
+            'quantum': "Quantum Physics",
+            'relativity': "Relativity",
+            'mechanics': "Classical Mechanics",
+            'equilibrium': "Equilibrium",
+            'acceleration': "Acceleration",
+            'velocity': "Velocity",
+            'pressure': "Pressure",
+            'circuit': "Electric Circuits",
+            'magnetic field': "Magnetic Fields",
+            'electric field': "Electric Fields",
+            'work': "Work and Power",
+            'power': "Power",
+            'oscillation': "Oscillations",
+            'pendulum': "Pendulum Motion",
+            'fluid': "Fluid Mechanics",
+            'gas': "Gas Laws",
+            'atomic': "Atomic Physics",
+            'nuclear': "Nuclear Physics"
+        }
+
+        content = ' '.join(chunk_texts).lower()
+        found_topics = []
+
+        for keyword, topic in physics_topics.items():
+            if keyword in content and topic not in found_topics:
+                found_topics.append(topic)
+
+        return found_topics
+
     def _apply_feedback_scoring(self, results: List[Dict], query_vector: List[float],
                               collection_name: str) -> List[Dict]:
         if not Config.feedback.FEEDBACK_ENABLED or not results:
@@ -247,12 +401,17 @@ class QueryService:
         except Exception:
             return results
 
-    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False) -> QueryResponse:
+    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False, quiz_config: Optional[QuizConfig] = None):
         """
         Search with smart chunking - automatically detects query intent and retrieves
         appropriate chunk types (concepts, examples, or questions).
+
+        Returns QuizResponse if quiz_config is provided, otherwise QueryResponse.
         """
+        start_time = time.time()
+
         try:
+            # Generate embedding
             query_vector = self.embedding_client.generate_single_embedding(query_text)
 
             # Use smart retrieval to get relevant chunks based on query intent
@@ -265,11 +424,20 @@ class QueryService:
             # Apply feedback scoring if enabled
             results = self._apply_feedback_scoring(results, query_vector, collection_name)
 
-            return self._create_query_response(results, query_text, enable_critic, structured_output)
+            # Quiz mode vs regular mode
+            if quiz_config is not None:
+                return self._create_quiz_response(results, query_text, quiz_config, collection_name, start_time)
+            else:
+                return self._create_query_response(results, query_text, enable_critic, structured_output)
         except Exception as e:
-            return QueryResponse(
-                answer="Context not found",
-                confidence=0.0,
-                is_relevant=False,
-                chunks=[]
-            )
+            logger.error(f"Error in query search: {str(e)}")
+            if quiz_config is not None:
+                # Return a default quiz response structure for errors
+                return self._create_error_quiz_response(str(e))
+            else:
+                return QueryResponse(
+                    answer="Context not found",
+                    confidence=0.0,
+                    is_relevant=False,
+                    chunks=[]
+                )

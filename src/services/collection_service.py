@@ -12,12 +12,13 @@ from services.hierarchical_chunking_service import HierarchicalChunkingService
 from services.user_service import user_service
 from services.quiz_job_service import quiz_job_service
 from services.quiz_generation_worker import quiz_generation_worker
-from models.api_models import LinkContentItem, LinkContentResponse, ApiResponse, ApiResponseWithBody, QueryResponse, UnlinkContentResponse, QuizConfig
+from models.api_models import LinkContentItem, LinkContentResponse, ApiResponse, ApiResponseWithBody, QueryResponse, UnlinkContentResponse, BookMetadata, ContentType, QuizConfig
 from models.quiz_models import QuizResponse
 from models.quiz_job_models import QuizJobResponse
 from config import Config
 from utils.document_builder import build_chunk_document, build_content_document
 from models.file_types import FileType
+from strategies.content_strategy_selector import ContentStrategySelector
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class CollectionService:
         self.file_service = file_service
         self.query_service = QueryService()
         self.chunking_service = HierarchicalChunkingService()
+        self.strategy_selector = ContentStrategySelector()
         logger.debug("CollectionService initialized successfully")
 
     def _get_qdrant_collection_name(self, user_id: str, collection_name: str) -> str:
@@ -138,7 +140,29 @@ class CollectionService:
     def _get_file_content(self, file_id: str, user_id: str) -> Optional[str]:
         return self.file_service.get_file_content(file_id, user_id)
 
-    def _generate_embedding_and_document(self, file_id: str, file_content: str, file_type: str, user_id: str) -> Optional[List[Dict[str, Any]]]:
+    def _generate_embedding_and_document(
+        self,
+        file_id: str,
+        file_content: str,
+        file_type: str,
+        user_id: str,
+        content_type_hint: Optional[ContentType] = None,
+        book_metadata_hint: Optional[BookMetadata] = None
+    ) -> Optional[List[Dict[str, Any]]]:
+        """
+        Generate embeddings and documents using adaptive chunking strategy.
+
+        Args:
+            file_id: Unique file identifier
+            file_content: Raw file content
+            file_type: Type of file (pdf, text, etc.)
+            user_id: User identifier
+            content_type_hint: Optional user-provided content type
+            book_metadata_hint: Optional user-provided book metadata
+
+        Returns:
+            List of documents with embeddings and metadata
+        """
         try:
             documents = []
 
@@ -158,12 +182,33 @@ class CollectionService:
                 logger.info(f"File path resolved: {file_path}, is_temp_file: {is_temp_file}")
 
                 try:
-                    logger.info(f"Starting hierarchical chunking for file: {file_path}")
-                    chunks = self.chunking_service.chunk_pdf_hierarchically(
+                    # STRATEGY PATTERN: Detect content type and select strategy
+                    content_type = self.strategy_selector.detect_content_type(
+                        file_path,
+                        user_hint=content_type_hint
+                    )
+                    logger.info(f"Detected content type: {content_type.value}")
+
+                    # Get appropriate strategy
+                    strategy = self.strategy_selector.get_strategy(content_type)
+                    logger.info(f"Using strategy: {strategy}")
+
+                    # Extract metadata from document
+                    extracted_metadata = strategy.extract_metadata(file_path)
+                    logger.info(f"Extracted metadata: {extracted_metadata}")
+
+                    # Merge extracted metadata with user-provided metadata
+                    book_metadata = self._merge_book_metadata(
+                        extracted_metadata,
+                        book_metadata_hint
+                    )
+
+                    # Chunk document using strategy
+                    chunks = strategy.chunk_document(
                         file_path=file_path,
                         document_id=file_id,
-                        chunk_size=Config.embedding.CHUNK_SIZE,
-                        chunk_overlap=Config.embedding.CHUNK_OVERLAP
+                        hierarchical_chunker=self.chunking_service,
+                        book_metadata=book_metadata
                     )
                     logger.info(f"Chunking completed. Generated {len(chunks) if chunks else 0} chunks")
                 except Exception as e:
@@ -178,26 +223,104 @@ class CollectionService:
                         except Exception as e:
                             logger.error(f"Failed to cleanup temp file {file_path}: {e}")
 
-                if not chunks:
-                    logger.warning(f"No chunks generated for {file_id}, falling back to full document")
-                    embedding = self.embedding_client.generate_single_embedding(file_content)
-                    return [build_content_document(file_id, file_type, file_content, embedding)]
+                    if not chunks:
+                        logger.warning(f"No chunks generated for {file_id}, falling back to full document")
+                        embedding = self.embedding_client.generate_single_embedding(file_content)
+                        return [build_content_document(file_id, file_type, file_content, embedding)]
 
-                for chunk in chunks:
-                    embedding = self.embedding_client.generate_single_embedding(chunk.text)
-                    doc = build_chunk_document(file_id, file_type, chunk, embedding)
-                    documents.append(doc)
+                    # Generate embeddings and build documents
+                    for chunk in chunks:
+                        embedding = self.embedding_client.generate_single_embedding(chunk.text)
+                        doc = build_chunk_document(
+                            file_id=file_id,
+                            file_type=file_type,
+                            chunk=chunk,
+                            embedding=embedding,
+                            book_metadata=book_metadata,
+                            content_type=content_type
+                        )
+                        documents.append(doc)
 
-                logger.info(f"Generated {len(documents)} hierarchical chunks for {file_id}")
+                    logger.info(
+                        f"Generated {len(documents)} chunks for {file_id} "
+                        f"using {content_type.value} strategy ({strategy.chunk_size} chars)"
+                    )
+
+                finally:
+                    # Clean up temp file
+                    if is_temp_file:
+                        import os
+                        try:
+                            os.unlink(file_path)
+                            logger.debug(f"Cleaned up temp file: {file_path}")
+                        except Exception as e:
+                            logger.warning(f"Failed to clean up temp file {file_path}: {e}")
 
             else:
+                # Non-PDF/text files: use simple embedding
                 embedding = self.embedding_client.generate_single_embedding(file_content)
                 documents = [build_content_document(file_id, file_type, file_content, embedding)]
 
             return documents
+
         except Exception as e:
-            logger.error(f"Error generating embeddings: {e}")
+            logger.error(f"Error generating embeddings for {file_id}: {e}", exc_info=True)
             return None
+
+    def _merge_book_metadata(
+        self,
+        extracted: Dict[str, Any],
+        user_provided: Optional[BookMetadata]
+    ) -> Optional[BookMetadata]:
+        """
+        Merge extracted and user-provided book metadata.
+
+        User-provided metadata takes precedence over extracted.
+
+        Args:
+            extracted: Metadata extracted from PDF
+            user_provided: User-provided metadata
+
+        Returns:
+            Merged BookMetadata or None
+        """
+        # If no metadata at all, return None
+        if not extracted and not user_provided:
+            return None
+
+        # Start with extracted metadata
+        merged = BookMetadata(
+            book_id=extracted.get("book_id"),
+            book_title=extracted.get("book_title"),
+            book_authors=extracted.get("book_authors", []),
+            book_edition=extracted.get("book_edition"),
+            book_subject=extracted.get("book_subject"),
+            total_chapters=extracted.get("total_chapters"),
+            total_pages=extracted.get("total_pages")
+        )
+
+        # Override with user-provided values
+        if user_provided:
+            if user_provided.book_id:
+                merged.book_id = user_provided.book_id
+            if user_provided.book_title:
+                merged.book_title = user_provided.book_title
+            if user_provided.book_authors:
+                merged.book_authors = user_provided.book_authors
+            if user_provided.book_edition:
+                merged.book_edition = user_provided.book_edition
+            if user_provided.book_subject:
+                merged.book_subject = user_provided.book_subject
+            if user_provided.total_chapters:
+                merged.total_chapters = user_provided.total_chapters
+            if user_provided.total_pages:
+                merged.total_pages = user_provided.total_pages
+
+        # Only return if we have at least some metadata
+        if merged.book_title or merged.book_id or merged.book_authors:
+            return merged
+
+        return None
 
     def _check_file_already_linked(self, user_id: str, collection_name: str, file_id: str) -> bool:
         try:
@@ -275,7 +398,12 @@ class CollectionService:
                 logger.info(f"Generating embedding for file {file_item.file_id}")
                 file_type_normalized = file_item.type.lower().strip()
                 documents = self._generate_embedding_and_document(
-                    file_item.file_id, file_content, file_type_normalized, user_id
+                    file_id=file_item.file_id,
+                    file_content=file_content,
+                    file_type=file_item.type,
+                    user_id=user_id,
+                    content_type_hint=file_item.content_type,  # Pass user hint
+                    book_metadata_hint=file_item.book_metadata  # Pass user metadata
                 )
                 if not documents:
                     logger.error(f"Failed to generate embedding for file {file_item.file_id}")

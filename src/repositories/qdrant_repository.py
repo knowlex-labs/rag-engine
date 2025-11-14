@@ -39,33 +39,36 @@ class QdrantRepository:
             return False
 
     def ensure_indexes(self, collection_name: str) -> bool:
+        """
+        Ensure all required payload indexes exist on collection.
+
+        Indexes improve query performance for filtering operations.
+        """
         try:
             logger.info(f"Ensuring payload indexes exist on collection '{collection_name}'")
-            try:
-                self.client.create_payload_index(
-                    collection_name=collection_name,
-                    field_name="document_id",
-                    field_schema="keyword"
-                )
-                logger.debug(f"Created index for document_id on collection '{collection_name}'")
-            except Exception as e:
-                if "already exists" in str(e).lower():
-                    logger.debug(f"Index for document_id already exists on collection '{collection_name}'")
-                else:
-                    logger.warning(f"Could not create index for document_id: {str(e)}")
 
-            try:
-                self.client.create_payload_index(
-                    collection_name=collection_name,
-                    field_name="metadata.chunk_type",
-                    field_schema="keyword"
-                )
-                logger.debug(f"Created index for metadata.chunk_type on collection '{collection_name}'")
-            except Exception as e:
-                if "already exists" in str(e).lower():
-                    logger.debug(f"Index for metadata.chunk_type already exists on collection '{collection_name}'")
-                else:
-                    logger.warning(f"Could not create index for metadata.chunk_type: {str(e)}")
+            indexes_to_create = [
+                ("document_id", "keyword"),
+                ("metadata.chunk_type", "keyword"),
+                ("metadata.chapter_num", "integer"),
+                ("metadata.content_type", "keyword"),
+                ("metadata.book_metadata.book_id", "keyword"),
+                ("metadata.book_metadata.book_title", "keyword"),
+            ]
+
+            for field_name, field_schema in indexes_to_create:
+                try:
+                    self.client.create_payload_index(
+                        collection_name=collection_name,
+                        field_name=field_name,
+                        field_schema=field_schema
+                    )
+                    logger.debug(f"Created index for {field_name} on collection '{collection_name}'")
+                except Exception as e:
+                    if "already exists" in str(e).lower():
+                        logger.debug(f"Index for {field_name} already exists on collection '{collection_name}'")
+                    else:
+                        logger.warning(f"Could not create index for {field_name}: {str(e)}")
 
             logger.info(f"Payload indexes ensured on collection '{collection_name}'")
             return True

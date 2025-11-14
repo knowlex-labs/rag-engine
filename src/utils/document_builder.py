@@ -1,27 +1,67 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from models.api_models import BookMetadata, ContentType
 
 
-def build_chunk_document(file_id: str, file_type: str, chunk, embedding: List[float]) -> Dict[str, Any]:
+def build_chunk_document(
+    file_id: str,
+    file_type: str,
+    chunk,
+    embedding: List[float],
+    book_metadata: Optional[BookMetadata] = None,
+    content_type: Optional[ContentType] = None
+) -> Dict[str, Any]:
+    """
+    Build a document for Qdrant storage with chunk and metadata.
+
+    Args:
+        file_id: Unique file identifier
+        file_type: Type of file (e.g., 'pdf')
+        chunk: HierarchicalChunk object
+        embedding: Vector embedding
+        book_metadata: Optional book-level metadata
+        content_type: Optional content type used for chunking
+
+    Returns:
+        Document dictionary for Qdrant
+    """
+    metadata = {
+        "file_type": file_type,
+        "chunk_type": chunk.chunk_metadata.chunk_type.value,
+        "topic_id": chunk.chunk_metadata.topic_id,
+        "chapter_num": chunk.topic_metadata.chapter_num,
+        "chapter_title": chunk.topic_metadata.chapter_title,
+        "section_num": chunk.topic_metadata.section_num,
+        "section_title": chunk.topic_metadata.section_title,
+        "page_start": chunk.topic_metadata.page_start,
+        "page_end": chunk.topic_metadata.page_end,
+        "key_terms": chunk.chunk_metadata.key_terms,
+        "equations": chunk.chunk_metadata.equations,
+        "has_equations": chunk.chunk_metadata.has_equations,
+        "has_diagrams": chunk.chunk_metadata.has_diagrams,
+    }
+
+    # Add book-level metadata if provided (for BOOK content type)
+    if book_metadata:
+        metadata["book_metadata"] = {
+            "book_id": book_metadata.book_id,
+            "book_title": book_metadata.book_title,
+            "book_authors": book_metadata.book_authors,
+            "book_edition": book_metadata.book_edition,
+            "book_subject": book_metadata.book_subject,
+            "total_chapters": book_metadata.total_chapters,
+            "total_pages": book_metadata.total_pages
+        }
+
+    # Add content type used for chunking (for debugging and filtering)
+    if content_type:
+        metadata["content_type"] = content_type.value
+
     return {
         "document_id": file_id,
         "chunk_id": chunk.chunk_id,
         "text": chunk.text,
         "source": file_type,
-        "metadata": {
-            "file_type": file_type,
-            "chunk_type": chunk.chunk_metadata.chunk_type.value,
-            "topic_id": chunk.chunk_metadata.topic_id,
-            "chapter_num": chunk.topic_metadata.chapter_num,
-            "chapter_title": chunk.topic_metadata.chapter_title,
-            "section_num": chunk.topic_metadata.section_num,
-            "section_title": chunk.topic_metadata.section_title,
-            "page_start": chunk.topic_metadata.page_start,
-            "page_end": chunk.topic_metadata.page_end,
-            "key_terms": chunk.chunk_metadata.key_terms,
-            "equations": chunk.chunk_metadata.equations,
-            "has_equations": chunk.chunk_metadata.has_equations,
-            "has_diagrams": chunk.chunk_metadata.has_diagrams,
-        },
+        "metadata": metadata,
         "vector": embedding
     }
 

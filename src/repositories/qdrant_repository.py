@@ -39,11 +39,6 @@ class QdrantRepository:
             return False
 
     def ensure_indexes(self, collection_name: str) -> bool:
-        """
-        Ensure all required payload indexes exist on collection.
-
-        Indexes improve query performance for filtering operations.
-        """
         try:
             logger.info(f"Ensuring payload indexes exist on collection '{collection_name}'")
 
@@ -57,24 +52,27 @@ class QdrantRepository:
             ]
 
             for field_name, field_schema in indexes_to_create:
-                try:
-                    self.client.create_payload_index(
-                        collection_name=collection_name,
-                        field_name=field_name,
-                        field_schema=field_schema
-                    )
-                    logger.debug(f"Created index for {field_name} on collection '{collection_name}'")
-                except Exception as e:
-                    if "already exists" in str(e).lower():
-                        logger.debug(f"Index for {field_name} already exists on collection '{collection_name}'")
-                    else:
-                        logger.warning(f"Could not create index for {field_name}: {str(e)}")
+                self._create_single_index(collection_name, field_name, field_schema)
 
             logger.info(f"Payload indexes ensured on collection '{collection_name}'")
             return True
         except Exception as e:
             logger.error(f"Failed to ensure indexes on collection '{collection_name}': {str(e)}")
             return False
+
+    def _create_single_index(self, collection_name: str, field_name: str, field_schema: str) -> None:
+        try:
+            self.client.create_payload_index(
+                collection_name=collection_name,
+                field_name=field_name,
+                field_schema=field_schema
+            )
+            logger.debug(f"Created index for {field_name} on collection '{collection_name}'")
+        except Exception as e:
+            if "already exists" in str(e).lower():
+                logger.debug(f"Index for {field_name} already exists on collection '{collection_name}'")
+            else:
+                logger.warning(f"Could not create index for {field_name}: {str(e)}")
 
     def create_collection(self, collection_name: str) -> bool:
         try:
@@ -123,40 +121,51 @@ class QdrantRepository:
     def link_content(self, collection_name: str, documents: List[Dict[str, Any]]) -> bool:
         try:
             logger.info(f"Linking {len(documents)} documents to collection '{collection_name}'")
-            points = []
-            for doc in documents:
-                text = doc.get("text", "")
-                vector = doc.get("vector", [])
-                doc_id = doc.get("document_id")
-                chunk_id = doc.get("chunk_id")
 
-                logger.debug(f"Processing document {doc_id}, chunk_id: {chunk_id}, text length: {len(text)}, vector length: {len(vector)}")
+            points = [self._create_point_from_document(doc) for doc in documents]
+            self._upload_points_in_batches(collection_name, points)
 
-                payload = {
-                    "document_id": doc_id,
-                    "text": text,
-                    "source": doc.get("source", ""),
-                    "metadata": doc.get("metadata", {})
-                }
-
-                if chunk_id:
-                    payload["chunk_id"] = chunk_id
-
-                point = PointStruct(
-                    id=str(uuid.uuid4()),
-                    vector=vector,
-                    payload=payload
-                )
-                points.append(point)
-
-            logger.debug(f"Upserting {len(points)} points to collection '{collection_name}'")
-            result = self.client.upsert(collection_name=collection_name, points=points)
-            logger.info(f"Successfully linked documents to collection '{collection_name}': {result}")
+            logger.info(f"Successfully linked all {len(documents)} documents to collection '{collection_name}'")
             return True
         except Exception as e:
             logger.error(f"Failed to link content to collection '{collection_name}': {str(e)}")
             logger.exception("Full exception details:")
             return False
+
+    def _create_point_from_document(self, doc: Dict[str, Any]) -> PointStruct:
+        text = doc.get("text", "")
+        vector = doc.get("vector", [])
+        doc_id = doc.get("document_id")
+        chunk_id = doc.get("chunk_id")
+
+        logger.debug(f"Processing document {doc_id}, chunk_id: {chunk_id}, text length: {len(text)}, vector length: {len(vector)}")
+
+        payload = {
+            "document_id": doc_id,
+            "text": text,
+            "source": doc.get("source", ""),
+            "metadata": doc.get("metadata", {})
+        }
+
+        if chunk_id:
+            payload["chunk_id"] = chunk_id
+
+        return PointStruct(
+            id=str(uuid.uuid4()),
+            vector=vector,
+            payload=payload
+        )
+
+    def _upload_points_in_batches(self, collection_name: str, points: List[PointStruct], batch_size: int = 500) -> None:
+        total_batches = (len(points) + batch_size - 1) // batch_size
+        logger.info(f"Uploading {len(points)} points in {total_batches} batches (batch size: {batch_size})")
+
+        for i in range(0, len(points), batch_size):
+            batch = points[i:i + batch_size]
+            batch_num = (i // batch_size) + 1
+            logger.info(f"Uploading batch {batch_num}/{total_batches} ({len(batch)} points)...")
+            result = self.client.upsert(collection_name=collection_name, points=batch)
+            logger.debug(f"Batch {batch_num} upload result: {result}")
 
     def unlink_content(self, collection_name: str, document_ids: List[str]) -> bool:
         try:
@@ -185,58 +194,50 @@ class QdrantRepository:
                     must=[FieldCondition(key="metadata.chunk_type", match={"value": chunk_type})]
                 )
 
-            results = self.client.search(
+            results = self._search_with_retry(collection_name, query_vector, limit, query_filter)
+            return self._format_search_results(results)
+        except Exception as e:
+            logger.error(f"Error querying collection: {e}")
+            return []
+
+    def _search_with_retry(self, collection_name: str, query_vector: List[float], limit: int, query_filter: Optional[Filter]) -> List[Any]:
+        try:
+            return self.client.search(
                 collection_name=collection_name,
                 query_vector=query_vector,
                 limit=limit,
                 query_filter=query_filter
             )
-
-            return [
-                {
-                    "id": hit.id,
-                    "score": hit.score,
-                    "payload": hit.payload
-                }
-                for hit in results
-            ]
         except Exception as e:
-            error_msg = str(e)
-            if "Index required" in error_msg and "metadata.chunk_type" in error_msg:
+            if "Index required" in str(e):
                 logger.warning(f"Missing index detected for collection '{collection_name}', attempting to create indexes")
                 if self.ensure_indexes(collection_name):
                     logger.info(f"Indexes created, retrying query for collection '{collection_name}'")
-                    try:
-                        results = self.client.search(
-                            collection_name=collection_name,
-                            query_vector=query_vector,
-                            limit=limit,
-                            query_filter=query_filter
-                        )
-                        return [
-                            {
-                                "id": hit.id,
-                                "score": hit.score,
-                                "payload": hit.payload
-                            }
-                            for hit in results
-                        ]
-                    except Exception as retry_error:
-                        logger.error(f"Error querying collection after creating indexes: {retry_error}")
-                        return []
+                    return self.client.search(
+                        collection_name=collection_name,
+                        query_vector=query_vector,
+                        limit=limit,
+                        query_filter=query_filter
+                    )
+            raise
 
-            logger.error(f"Error querying collection: {e}")
-            return []
+    def _format_search_results(self, results: List[Any]) -> List[Dict[str, Any]]:
+        return [
+            {
+                "id": hit.id,
+                "score": hit.score,
+                "payload": hit.payload
+            }
+            for hit in results
+        ]
 
     def get_all_embeddings(self, collection_name: str, limit: int = 100, offset: Optional[str] = None, include_vectors: bool = False) -> Dict[str, Any]:
         try:
             logger.info(f"Retrieving embeddings from collection '{collection_name}' with limit={limit}, include_vectors={include_vectors}")
 
-            # Get collection info for total count
             collection_info = self.client.get_collection(collection_name)
             total_count = collection_info.points_count
 
-            # Scroll through points with pagination
             result = self.client.scroll(
                 collection_name=collection_name,
                 limit=limit,
@@ -246,22 +247,7 @@ class QdrantRepository:
             )
 
             points, next_offset = result
-
-            # Format embeddings data
-            embeddings = []
-            for point in points:
-                embedding_item = {
-                    "id": point.id,
-                    "document_id": point.payload.get("document_id", ""),
-                    "text": point.payload.get("text", ""),
-                    "source": point.payload.get("source", ""),
-                    "metadata": point.payload.get("metadata", {})
-                }
-
-                if include_vectors and point.vector:
-                    embedding_item["vector"] = point.vector
-
-                embeddings.append(embedding_item)
+            embeddings = self._format_embeddings(points, include_vectors)
 
             logger.info(f"Retrieved {len(embeddings)} embeddings from collection '{collection_name}'")
 
@@ -289,40 +275,34 @@ class QdrantRepository:
                 "error": str(e)
             }
 
+    def _format_embeddings(self, points: List[Any], include_vectors: bool) -> List[Dict[str, Any]]:
+        embeddings = []
+        for point in points:
+            embedding_item = {
+                "id": point.id,
+                "document_id": point.payload.get("document_id", ""),
+                "text": point.payload.get("text", ""),
+                "source": point.payload.get("source", ""),
+                "metadata": point.payload.get("metadata", {})
+            }
+
+            if include_vectors and point.vector:
+                embedding_item["vector"] = point.vector
+
+            embeddings.append(embedding_item)
+        return embeddings
+
     def batch_read_files(self, collection_name: str, document_ids: List[str]) -> Dict[str, Any]:
         try:
             logger.debug(f"Checking status of {len(document_ids)} documents in collection '{collection_name}'")
-            status = {}
-            for doc_id in document_ids:
-                logger.debug(f"Checking if document {doc_id} exists in collection '{collection_name}'")
-                results = self.client.scroll(
-                    collection_name=collection_name,
-                    scroll_filter=Filter(
-                        must=[FieldCondition(key="document_id", match={"value": doc_id})]
-                    ),
-                    limit=1
-                )
-                status[doc_id] = "indexed" if results[0] else "not_found"
-                logger.debug(f"Document {doc_id} status: {status[doc_id]}")
-            return status
+            return self._check_documents_status(collection_name, document_ids)
         except Exception as e:
-            error_msg = str(e)
-            if "Index required" in error_msg and "document_id" in error_msg:
+            if "Index required" in str(e):
                 logger.warning(f"Missing index detected for collection '{collection_name}', attempting to create indexes")
                 if self.ensure_indexes(collection_name):
                     logger.info(f"Indexes created, retrying batch_read_files for collection '{collection_name}'")
                     try:
-                        status = {}
-                        for doc_id in document_ids:
-                            results = self.client.scroll(
-                                collection_name=collection_name,
-                                scroll_filter=Filter(
-                                    must=[FieldCondition(key="document_id", match={"value": doc_id})]
-                                ),
-                                limit=1
-                            )
-                            status[doc_id] = "indexed" if results[0] else "not_found"
-                        return status
+                        return self._check_documents_status(collection_name, document_ids)
                     except Exception as retry_error:
                         logger.error(f"Error checking file status after creating indexes: {retry_error}")
                         return {doc_id: "error" for doc_id in document_ids}
@@ -330,3 +310,18 @@ class QdrantRepository:
             logger.error(f"Failed to check file status in collection '{collection_name}': {str(e)}")
             logger.exception("Full exception details:")
             return {doc_id: "error" for doc_id in document_ids}
+
+    def _check_documents_status(self, collection_name: str, document_ids: List[str]) -> Dict[str, str]:
+        status = {}
+        for doc_id in document_ids:
+            logger.debug(f"Checking if document {doc_id} exists in collection '{collection_name}'")
+            results = self.client.scroll(
+                collection_name=collection_name,
+                scroll_filter=Filter(
+                    must=[FieldCondition(key="document_id", match={"value": doc_id})]
+                ),
+                limit=1
+            )
+            status[doc_id] = "indexed" if results[0] else "not_found"
+            logger.debug(f"Document {doc_id} status: {status[doc_id]}")
+        return status

@@ -259,19 +259,64 @@ class UnifiedFileService:
             result = db_connection.execute_one(query, (file_id, actual_user_id))
 
             if not result:
+                logger.warning(f"File {file_id} not found for user {actual_user_id}")
                 return False
 
             minio_path = result[0]
+            
+            # Step 1: Unlink from all collections and clean up cache
+            self._cleanup_file_associations(file_id, actual_user_id)
+            
+            # Step 2: Delete from storage
             success = self._delete_file_storage(minio_path)
 
             if success:
+                # Step 3: Delete from DB
                 delete_query = "DELETE FROM user_files WHERE id = %s AND user_id = %s"
                 db_connection.execute_query(delete_query, (file_id, actual_user_id))
+                logger.info(f"File {file_id} completely deleted for user {actual_user_id}")
 
             return success
         except Exception as e:
             logger.error(f"Delete failed: {e}")
             return False
+
+    def _cleanup_file_associations(self, file_id: str, user_id: str) -> None:
+        """Clean up all file associations before deletion"""
+        try:
+            from utils.cache_manager import CacheManager
+            from repositories.collection_repository import collection_repository
+            from repositories.qdrant_repository import QdrantRepository
+            
+            cache_manager = CacheManager()
+            qdrant_repo = QdrantRepository()
+            
+            # Get all collections for this user
+            collections = collection_repository.list_collections(user_id)
+            
+            for collection in collections:
+                collection_name = collection.get('name')
+                
+                # Check if file is linked to this collection
+                linked_files = cache_manager.get_collection_files(user_id, collection_name)
+                
+                if file_id in linked_files:
+                    logger.info(f"Unlinking file {file_id} from collection {collection_name}")
+                    
+                    # Unlink from Qdrant
+                    qdrant_collection_name = f"{user_id}_{collection_name}"
+                    qdrant_repo.unlink_content(qdrant_collection_name, [file_id])
+                    
+                    # Remove from collection mapping
+                    cache_manager.remove_file_from_collection(user_id, collection_name, file_id)
+            
+            # Clear chunk cache
+            cache_manager.clear_chunks(file_id)
+            logger.info(f"Cleaned up all associations for file {file_id}")
+            
+        except Exception as e:
+            logger.error(f"Failed to cleanup file associations for {file_id}: {e}")
+            # Don't raise - continue with file deletion even if cleanup fails
 
     def _upload_to_local_storage(self, file: UploadFile) -> FileUploadResponse:
         try:
@@ -327,6 +372,26 @@ class UnifiedFileService:
         except Exception as e:
             logger.error(f"List files failed: {e}")
             return []
+
+    def get_file_info(self, file_id: str, user_id: Optional[str]) -> Optional[Dict[str, Any]]:
+        """Get file information for a specific file"""
+        try:
+            actual_user_id = user_id if user_id else self.session_user_id
+            query = "SELECT id, filename, file_type, file_size, upload_date FROM user_files WHERE id = %s AND user_id = %s"
+            results = db_connection.execute_query(query, (file_id, actual_user_id))
+            if results and len(results) > 0:
+                row = results[0]
+                return {
+                    "file_id": str(row[0]),
+                    "filename": row[1],
+                    "file_type": row[2],
+                    "file_size": row[3],
+                    "upload_date": row[4].isoformat() if row[4] else None
+                }
+            return None
+        except Exception as e:
+            logger.error(f"Get file info failed for {file_id}: {e}")
+            return None
 
 
 file_service = UnifiedFileService()

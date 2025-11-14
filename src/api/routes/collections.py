@@ -53,6 +53,10 @@ def query_collection(collection_name: str, request: QueryRequest, background_tas
         background_tasks
     )
 
+@router.get("/{collection_name}/files")
+def get_collection_files(collection_name: str, x_user_id: str = Header(...)) -> ApiResponseWithBody:
+    return collection_service.get_collection_files(x_user_id, collection_name)
+
 @router.get("/{collection_name}/embeddings")
 def get_collection_embeddings(
     collection_name: str,

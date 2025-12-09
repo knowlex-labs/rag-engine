@@ -61,7 +61,12 @@ def get_content_disposition_filename(file_path: str) -> str:
     # Remove file_id prefix if present (format: uuid_filename)
     if '_' in filename:
         parts = filename.split('_', 1)
-        if len(parts) == 2 and len(parts[0]) > 30:  # Likely UUID prefix
-            filename = parts[1]
+        if len(parts) == 2:
+            try:
+                uuid.UUID(parts[0])
+                filename = parts[1]
+            except ValueError:
+                # Not a UUID prefix, do nothing.
+                pass
 
     return filename

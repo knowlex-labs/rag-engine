@@ -5,11 +5,12 @@ import io
 import os
 import shutil
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Iterator, Tuple
 from models.api_models import FileUploadResponse
 from models.file_types import FileExtensions, UnsupportedFileTypeError
 from services.storage.storage_factory import get_storage_service
 from database.postgres_connection import db_connection
+from utils.mime_type_detector import get_content_disposition_filename
 
 logger = logging.getLogger(__name__)
 
@@ -138,10 +139,18 @@ class UnifiedFileService:
             file_size = len(file_content)
             file_type = self.detect_file_type(file.filename)
 
-            bucket_name = f"{self.bucket_prefix}"
-            object_name = f"{user_id}/{file_id}_{file.filename}"
+            # Generate storage path based on storage type
+            from config import Config
+            if Config.storage.STORAGE_TYPE == "local":
+                # For local storage: local://absolute_path
+                local_file_path = os.path.join(self.local_storage_path, user_id, f"{file_id}_{file.filename}")
+                storage_path = f"local://{local_file_path}"
+            else:
+                # For MinIO/cloud storage: bucket/object
+                bucket_name = f"{self.bucket_prefix}"
+                object_name = f"{user_id}/{file_id}_{file.filename}"
+                storage_path = f"{bucket_name}/{object_name}"
 
-            storage_path = f"{bucket_name}/{object_name}"
             success = self.storage_service.upload_file(file_content, storage_path)
 
             if success:
@@ -391,6 +400,52 @@ class UnifiedFileService:
             return None
         except Exception as e:
             logger.error(f"Get file info failed for {file_id}: {e}")
+            return None
+
+    def stream_file_content(self, file_id: str, user_id: Optional[str]) -> Optional[Tuple[Iterator[bytes], str, str]]:
+        """
+        Stream file content for HTTP response.
+
+        Args:
+            file_id: File ID to stream
+            user_id: User ID for access control
+
+        Returns:
+            Tuple of (content_stream, content_type, filename) or None if not found/not accessible
+        """
+        try:
+            actual_user_id = user_id if user_id else self.session_user_id
+
+            # Get file metadata and storage path
+            query = "SELECT minio_path, filename FROM user_files WHERE id = %s AND user_id = %s"
+            result = db_connection.execute_one(query, (file_id, actual_user_id))
+
+            if not result:
+                logger.warning(f"File {file_id} not found for user {actual_user_id}")
+                return None
+
+            minio_path, filename = result
+
+            # Check if file exists in storage
+            if not self.storage_service.exists(minio_path):
+                logger.error(f"File not found in storage: {minio_path}")
+                return None
+
+            # Get content type and size
+            content_type, file_size = self.storage_service.get_content_type_and_size(minio_path)
+
+            # Get clean filename for Content-Disposition
+            clean_filename = get_content_disposition_filename(filename)
+
+            # Stream file content
+            content_stream = self.storage_service.stream_file(minio_path)
+
+            logger.info(f"Streaming file {file_id} ({clean_filename}) for user {actual_user_id}")
+
+            return content_stream, content_type, clean_filename
+
+        except Exception as e:
+            logger.error(f"Failed to stream file content for {file_id}: {e}")
             return None
 
 

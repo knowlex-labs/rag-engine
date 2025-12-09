@@ -1,6 +1,6 @@
 from minio import Minio
 import logging
-from typing import Optional, BinaryIO
+from typing import Optional, BinaryIO, Iterator, Tuple
 import io
 from config import Config
 
@@ -72,6 +72,30 @@ class MinioService:
         except Exception as e:
             logger.error(f"Failed to list objects in {bucket_name}: {e}")
             return []
+
+    def stream_file(self, bucket_name: str, object_name: str) -> Iterator[bytes]:
+        """Stream file content in chunks for efficient handling of large files."""
+        try:
+            response = self.client.get_object(bucket_name, object_name)
+            chunk_size = 8192  # 8KB chunks
+            while chunk := response.read(chunk_size):
+                yield chunk
+        except Exception as e:
+            logger.error(f"Failed to stream {object_name}: {e}")
+            return iter([])
+        finally:
+            if 'response' in locals():
+                response.close()
+
+    def get_object_info(self, bucket_name: str, object_name: str) -> Optional[Tuple[int, str]]:
+        """Get file size and content type from MinIO object metadata."""
+        try:
+            stat = self.client.stat_object(bucket_name, object_name)
+            # MinIO stat returns size and content_type if available
+            return stat.size, stat.content_type or 'application/octet-stream'
+        except Exception as e:
+            logger.error(f"Failed to get object info for {object_name}: {e}")
+            return None
 
 
 minio_service = MinioService()

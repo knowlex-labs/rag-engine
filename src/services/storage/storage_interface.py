@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Iterator, Tuple
 
 
 class StorageServiceInterface(ABC):
@@ -22,4 +22,14 @@ class StorageServiceInterface(ABC):
 
     @abstractmethod
     def get_file_url(self, storage_path: str) -> str:
+        pass
+
+    @abstractmethod
+    def stream_file(self, storage_path: str) -> Iterator[bytes]:
+        """Stream file content in chunks for efficient handling of large files."""
+        pass
+
+    @abstractmethod
+    def get_content_type_and_size(self, storage_path: str) -> Tuple[str, int]:
+        """Get MIME content type and file size for HTTP headers."""
         pass

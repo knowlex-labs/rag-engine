@@ -7,7 +7,7 @@ from fastapi import BackgroundTasks
 
 from repositories.qdrant_repository import QdrantRepository
 from repositories.collection_repository import collection_repository
-from utils.embedding_client import EmbeddingClient
+from utils.embedding_client import embedding_client
 from services.file_service import file_service
 from services.query_service import QueryService
 from services.hierarchical_chunking_service import HierarchicalChunkingService
@@ -34,7 +34,7 @@ class CollectionService:
         logger.info("Initializing CollectionService")
         self.qdrant_repo = QdrantRepository()
         self.collection_repo = collection_repository
-        self.embedding_client = EmbeddingClient()
+        self.embedding_client = embedding_client  # Use global cached instance
         self.file_service = file_service
         self.query_service = QueryService()
         self.chunking_service = HierarchicalChunkingService()

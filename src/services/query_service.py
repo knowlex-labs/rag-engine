@@ -1,7 +1,7 @@
 from typing import List, Dict, Any, Optional
 from repositories.qdrant_repository import QdrantRepository
 from repositories.feedback_repository import FeedbackRepository
-from utils.embedding_client import EmbeddingClient
+from utils.embedding_client import embedding_client
 from utils.llm_client import LlmClient
 from utils.response_enhancer import enhance_response_if_needed
 from models.api_models import QueryResponse, ChunkConfig, CriticEvaluation, ChunkType, QuizConfig
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 class QueryService:
     def __init__(self):
         self.qdrant_repo = QdrantRepository()
-        self.embedding_client = EmbeddingClient()
+        self.embedding_client = embedding_client  # Use global cached instance
         self.llm_client = LlmClient()
         self.feedback_repo = FeedbackRepository()
         self.quiz_mapper = QuizMapperService()

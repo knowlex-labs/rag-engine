@@ -49,7 +49,7 @@ class RerankingConfig:
     RERANKER_TOP_K: int = int(os.getenv("RERANKER_TOP_K", "5"))
 
 class CriticConfig:
-    CRITIC_ENABLED: bool = os.getenv("CRITIC_ENABLED", "true").lower() == "true"
+    CRITIC_ENABLED: bool = os.getenv("CRITIC_ENABLED", "false").lower() == "true"
     CRITIC_MODEL_NAME: str = os.getenv("CRITIC_MODEL_NAME", "models/gemini-2.5-flash")
     CRITIC_MODEL_API_KEY: str = os.getenv("CRITIC_MODEL_API_KEY", "")
     CRITIC_MODEL_TEMPERATURE: float = float(os.getenv("CRITIC_MODEL_TEMPERATURE", "0.1"))
@@ -62,7 +62,7 @@ class QueryConfig:
     RELEVANCE_THRESHOLD: float = float(os.getenv("RELEVANCE_THRESHOLD", "0.25"))
 
 class StorageConfig:
-    STORAGE_TYPE: str = os.getenv("STORAGE_TYPE", "minio").lower()
+    STORAGE_TYPE: str = os.getenv("STORAGE_TYPE", "local").lower()
 
 class MinIOConfig:
     HOST: str = os.getenv("MINIO_HOST", "localhost:9000")

@@ -72,7 +72,7 @@ class LocalStorageService(StorageServiceInterface):
     def get_content_type_and_size(self, storage_path: str) -> Tuple[str, int]:
         """Get MIME content type and file size for HTTP headers."""
         try:
-            local_path = storage_path[8:]  # Remove "local://" prefix
+            local_path = storage_path[len("local://"):]  # Remove "local://" prefix
 
             if not os.path.exists(local_path):
                 logger.error(f"Local file not found for content type detection: {local_path}")

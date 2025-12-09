@@ -76,16 +76,13 @@ class MinioService:
     def stream_file(self, bucket_name: str, object_name: str) -> Iterator[bytes]:
         """Stream file content in chunks for efficient handling of large files."""
         try:
-            response = self.client.get_object(bucket_name, object_name)
-            chunk_size = 8192  # 8KB chunks
-            while chunk := response.read(chunk_size):
-                yield chunk
+            with self.client.get_object(bucket_name, object_name) as response:
+                chunk_size = 8192  # 8KB chunks
+                while chunk := response.read(chunk_size):
+                    yield chunk
         except Exception as e:
             logger.error(f"Failed to stream {object_name}: {e}")
             return iter([])
-        finally:
-            if 'response' in locals():
-                response.close()
 
     def get_object_info(self, bucket_name: str, object_name: str) -> Optional[Tuple[int, str]]:
         """Get file size and content type from MinIO object metadata."""

@@ -105,6 +105,7 @@ class UnifiedFileService:
                 file_type VARCHAR(50) NOT NULL,
                 file_size BIGINT NOT NULL,
                 minio_path VARCHAR(1000) NOT NULL,
+                parent_folder_id UUID REFERENCES user_collections(id),
                 upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -113,6 +114,7 @@ class UnifiedFileService:
             CREATE INDEX IF NOT EXISTS idx_user_files_user_id ON user_files(user_id);
             CREATE INDEX IF NOT EXISTS idx_user_files_file_type ON user_files(file_type);
             CREATE INDEX IF NOT EXISTS idx_user_files_upload_date ON user_files(upload_date);
+            CREATE INDEX IF NOT EXISTS idx_user_files_parent_folder_id ON user_files(parent_folder_id);
             """
             db_connection.execute_query(schema_query)
             logger.info("Database schema initialized")
@@ -129,7 +131,7 @@ class UnifiedFileService:
             logger.warning(f"Unsupported file type: {e}")
             raise e
 
-    def upload_file(self, file: UploadFile, user_id: Optional[str]) -> FileUploadResponse:
+    def upload_file(self, file: UploadFile, user_id: Optional[str], parent_folder_id: Optional[str] = None) -> FileUploadResponse:
         try:
             if not user_id:
                 return self._upload_to_local_storage(file)
@@ -139,27 +141,47 @@ class UnifiedFileService:
             file_size = len(file_content)
             file_type = self.detect_file_type(file.filename)
 
-            # Generate storage path based on storage type
+            # Generate storage path based on storage type and collection
             from config import Config
-            if Config.storage.STORAGE_TYPE == "local":
+            storage_type = Config.storage.STORAGE_TYPE
+
+            # Get collection name if parent_folder_id is provided
+            folder_path = user_id
+            if parent_folder_id:
+                logger.info(f"Upload with parent_folder_id: {parent_folder_id}")
+                query = "SELECT collection_name FROM user_collections WHERE id = %s"
+                result = db_connection.execute_one(query, (parent_folder_id,))
+                if result:
+                    collection_name = result[0]
+                    clean_collection_name = collection_name.replace(' ', '_').replace('/', '_')
+                    folder_path = f"collections/{clean_collection_name}"
+                    logger.info(f"Upload folder path: {folder_path}")
+                else:
+                    logger.warning(f"Collection not found for parent_folder_id: {parent_folder_id}")
+
+            if storage_type == "local":
                 # For local storage: local://absolute_path
-                local_file_path = os.path.join(self.local_storage_path, user_id, f"{file_id}_{file.filename}")
+                local_file_path = os.path.join(self.local_storage_path, folder_path, f"{file_id}_{file.filename}")
                 storage_path = f"local://{local_file_path}"
+            elif storage_type == "gcs":
+                # For GCS: folder_path/file_id_filename
+                storage_path = f"{folder_path}/{file_id}_{file.filename}"
             else:
-                # For MinIO/cloud storage: bucket/object
+                # For MinIO/other cloud storage: bucket/object
                 bucket_name = f"{self.bucket_prefix}"
-                object_name = f"{user_id}/{file_id}_{file.filename}"
+                object_name = f"{folder_path}/{file_id}_{file.filename}"
                 storage_path = f"{bucket_name}/{object_name}"
 
+            logger.info(f"Uploading to storage path: {storage_path}")
             success = self.storage_service.upload_file(file_content, storage_path)
 
             if success:
 
                 query = """
-                INSERT INTO user_files (id, user_id, filename, file_type, file_size, minio_path)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO user_files (id, user_id, filename, file_type, file_size, minio_path, parent_folder_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """
-                db_connection.execute_query(query, (file_id, user_id, file.filename, file_type, file_size, storage_path))
+                db_connection.execute_query(query, (file_id, user_id, file.filename, file_type, file_size, storage_path, parent_folder_id))
 
                 return FileUploadResponse(
                     status="SUCCESS",
@@ -272,6 +294,7 @@ class UnifiedFileService:
                 return False
 
             minio_path = result[0]
+            logger.info(f"Deleting file {file_id} from storage path: {minio_path}")
             
             # Step 1: Unlink from all collections and clean up cache
             self._cleanup_file_associations(file_id, actual_user_id)
@@ -342,10 +365,10 @@ class UnifiedFileService:
 
             local_path = f"local://{local_file_path}"
             query = """
-            INSERT INTO user_files (id, user_id, filename, file_type, file_size, minio_path)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO user_files (id, user_id, filename, file_type, file_size, minio_path, parent_folder_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
-            db_connection.execute_query(query, (file_id, self.session_user_id, file.filename, file_type, file_size, local_path))
+            db_connection.execute_query(query, (file_id, self.session_user_id, file.filename, file_type, file_size, local_path, None))
 
             logger.info(f"File uploaded to local storage: {local_file_path}")
             return FileUploadResponse(

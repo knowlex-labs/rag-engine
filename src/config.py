@@ -70,6 +70,12 @@ class MinIOConfig:
     SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "minioadmin")
     SECURE: bool = os.getenv("MINIO_SECURE", "false").lower() == "true"
 
+class GCSConfig:
+    BUCKET_NAME: str = os.getenv("GCS_BUCKET_NAME", "library-content-dev")
+    PROJECT_ID: str = os.getenv("GCP_PROJECT_ID", "")
+    # Service account key file path (for authentication)
+    CREDENTIALS_PATH: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")
+
 class Config:
     database = DatabaseConfig()
     embedding = EmbeddingConfig()
@@ -81,3 +87,4 @@ class Config:
     query = QueryConfig()
     storage = StorageConfig()
     minio = MinIOConfig()
+    gcs = GCSConfig()

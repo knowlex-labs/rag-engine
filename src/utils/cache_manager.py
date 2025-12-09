@@ -95,3 +95,4 @@ class CacheManager:
             del mapping[collection_key]
             return self.save_collection_files_mapping(mapping)
         return True
+

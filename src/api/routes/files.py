@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Header
+from fastapi import APIRouter, HTTPException, UploadFile, File, Header, Query
 from fastapi.responses import StreamingResponse
+from typing import List, Optional
 import logging
 from api.api_constants import *
 from models.api_models import ApiResponse, ApiResponseWithBody, FileUploadResponse
@@ -15,12 +16,61 @@ def validate_user(user_id: str):
         logger.warning(f"Failed to create user {user_id}, proceeding with anonymous fallback")
 
 @router.post(FILES_BASE)
-def upload_file(file: UploadFile = File(...), x_user_id: str = Header(...)) -> FileUploadResponse:
+def upload_files(files: List[UploadFile] = File(...), collection: Optional[str] = Query(None), x_user_id: str = Header(...)):
     validate_user(x_user_id)
-    result = file_service.upload_file(file, x_user_id)
-    if result.status == "FAILURE":
-        raise HTTPException(status_code=400, detail=result.message)
-    return result
+
+    collection_id = None
+    if collection:
+        from database.postgres_connection import db_connection
+        query = "SELECT id FROM user_collections WHERE user_id = %s AND collection_name = %s"
+        result = db_connection.execute_one(query, (x_user_id, collection))
+        if result:
+            collection_id = str(result[0])
+        else:
+            raise HTTPException(status_code=404, detail=f"Collection '{collection}' not found")
+
+    results = []
+    for file in files:
+        try:
+            result = file_service.upload_file(file, x_user_id, collection_id)
+
+            # Add to collection cache if uploaded to collection
+            if result.status == "SUCCESS" and collection:
+                from utils.cache_manager import CacheManager
+                cache_manager = CacheManager()
+                file_id = result.body.get("file_id")
+                cache_manager.add_file_to_collection(x_user_id, collection, file_id)
+
+            results.append({
+                "filename": file.filename,
+                "file_id": result.body.get("file_id") if result.status == "SUCCESS" else None,
+                "status": result.status,
+                "message": result.message
+            })
+        except Exception as e:
+            results.append({
+                "filename": file.filename,
+                "file_id": None,
+                "status": "FAILURE",
+                "message": str(e)
+            })
+
+    if len(results) == 1:
+        return results[0] if results[0]["status"] == "SUCCESS" else HTTPException(status_code=400, detail=results[0]["message"])
+
+    successes = sum(1 for r in results if r["status"] == "SUCCESS")
+    failures = len(results) - successes
+
+    return {
+        "status": "SUCCESS" if failures == 0 else "PARTIAL" if successes > 0 else "FAILURE",
+        "message": f"Uploaded {successes} files successfully, {failures} failed",
+        "results": results,
+        "summary": {
+            "total": len(results),
+            "successful": successes,
+            "failed": failures
+        }
+    }
 
 @router.get(FILES_BASE)
 def list_files(x_user_id: str = Header(...)) -> ApiResponseWithBody:

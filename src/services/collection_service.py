@@ -13,6 +13,7 @@ from services.query_service import QueryService
 from services.hierarchical_chunking_service import HierarchicalChunkingService
 from services.user_service import user_service
 from services.quiz_job_service import quiz_job_service
+from services.file_organizer_service import file_organizer
 from services.quiz_generation_worker import quiz_generation_worker
 from strategies.content_strategy_selector import ContentStrategySelector
 from utils.document_builder import build_chunk_document, build_content_document
@@ -77,17 +78,26 @@ class CollectionService:
 
             qdrant_name = self._get_qdrant_collection_name(user_id, name)
 
-            logger.info(f"Getting all files in collection '{name}' for cleanup")
+            logger.info(f"Getting files in collection '{name}' for deletion")
             try:
-                embeddings_result = self.qdrant_repo.get_all_embeddings(qdrant_name, limit=1000, include_vectors=False)
-                embeddings = embeddings_result.get("embeddings", [])
-                file_ids = list(set([emb.get("document_id") for emb in embeddings if emb.get("document_id")]))
+                file_ids = self.cache_manager.get_collection_files(user_id, name)
 
                 if file_ids:
-                    logger.info(f"Found {len(file_ids)} files to unlink from collection '{name}'")
+                    logger.info(f"Found {len(file_ids)} files to delete from collection '{name}'")
+
+                    for file_id in file_ids:
+                        try:
+                            delete_success = self.file_service.delete_file(file_id, user_id)
+                            if delete_success:
+                                logger.debug(f"Successfully deleted file {file_id}")
+                            else:
+                                logger.warning(f"Failed to delete file {file_id}")
+                        except Exception as file_error:
+                            logger.error(f"Error deleting file {file_id}: {file_error}")
+
                     unlink_success = self.qdrant_repo.unlink_content(qdrant_name, file_ids)
                     if unlink_success:
-                        logger.info(f"Successfully unlinked {len(file_ids)} files from collection '{name}'")
+                        logger.info(f"Successfully removed {len(file_ids)} files from Qdrant collection '{name}'")
                     else:
                         logger.warning(f"Failed to unlink some files from collection '{name}', proceeding with deletion")
                 else:
@@ -102,7 +112,7 @@ class CollectionService:
             if qdrant_success and db_success:
                 self.cache_manager.clear_collection(user_id, name)
                 logger.debug(f"Cleared collection {name} from files mapping")
-                return ApiResponse(status="SUCCESS", message=f"Collection '{name}' and all linked files deleted successfully")
+                return ApiResponse(status="SUCCESS", message=f"Collection '{name}' and all files deleted successfully")
             else:
                 return ApiResponse(status="FAILURE", message=f"Failed to delete collection '{name}' - check server logs for details")
         except Exception as e:
@@ -362,6 +372,7 @@ class CollectionService:
                 success = self.qdrant_repo.link_content(qdrant_collection_name, documents)
                 if success:
                     self.cache_manager.add_file_to_collection(user_id, collection_name, file_item.file_id)
+                    file_organizer.move_to_collection(file_item.file_id, user_id, collection_name)
                     logger.info(f"Successfully linked file {file_item.file_id} to collection '{collection_name}'")
                     responses.append(ResponseBuilder.link_success(file_item))
                 else:
@@ -401,6 +412,7 @@ class CollectionService:
                 success = self.qdrant_repo.unlink_content(qdrant_collection_name, [file_id])
                 if success:
                     self.cache_manager.remove_file_from_collection(user_id, collection_name, file_id)
+                    file_organizer.move_to_user_folder(file_id, user_id)
                     logger.info(f"Successfully unlinked file {file_id} from collection '{collection_name}'")
                     responses.append(ResponseBuilder.unlink_response(file_id, 200, "Successfully unlinked from collection"))
                 else:
@@ -540,4 +552,5 @@ class CollectionService:
                 message=f"Internal error: {str(e)}",
                 body={}
             )
+
 

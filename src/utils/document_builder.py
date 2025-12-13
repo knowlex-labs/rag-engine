@@ -1,4 +1,5 @@
 from typing import List, Dict, Any, Optional
+from datetime import datetime
 from models.api_models import BookMetadata, ContentType
 
 
@@ -12,6 +13,9 @@ def build_chunk_document(
 ) -> Dict[str, Any]:
     """
     Build a document for Qdrant storage with chunk and metadata.
+
+    LEGACY METHOD - Used for old hierarchical chunking approach.
+    Use build_qdrant_point() for new parser-based approach.
 
     Args:
         file_id: Unique file identifier
@@ -67,6 +71,10 @@ def build_chunk_document(
 
 
 def build_content_document(file_id: str, file_type: str, content: str, embedding: List[float]) -> Dict[str, Any]:
+    """
+    LEGACY METHOD - Build simple document without hierarchical structure.
+    Use build_qdrant_point() for new parser-based approach.
+    """
     return {
         "document_id": file_id,
         "text": content,
@@ -75,4 +83,104 @@ def build_content_document(file_id: str, file_type: str, content: str, embedding
             "file_type": file_type
         },
         "vector": embedding
+    }
+
+
+def build_qdrant_point(
+    collection_id: str,
+    file_id: str,
+    chunk_id: str,
+    chunk_text: str,
+    embedding: List[float],
+    source_type: str,
+    file_name: str,
+    chunk_type: str = "other",
+    hierarchy_level: int = 1,
+    parent_chunk_id: Optional[str] = None,
+    page_number: Optional[int] = None,
+    timestamp: Optional[str] = None,
+    topic_tags: Optional[List[str]] = None,
+    youtube_channel: Optional[str] = None,
+    web_domain: Optional[str] = None,
+    extracted_at: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Build Qdrant point with new payload schema for per-user collections.
+
+    Payload Schema:
+    - collection_id: Logical folder name (for filtering within user's collection)
+    - file_id: Unique file identifier
+    - chunk_id: Unique chunk identifier
+    - chunk_text: The actual text content
+    - chunk_type: 'concept', 'example', 'question', 'other'
+    - source_type: 'pdf', 'youtube', 'web'
+    - file_name: Original filename/title
+    - hierarchy_level: 1=header, 2=section, 3=paragraph
+    - parent_chunk_id: Reference to parent chunk (for hierarchical structure)
+    - page_number: For PDFs (null for YouTube/web)
+    - timestamp: "HH:MM:SS" for YouTube (null for PDF/web)
+    - metadata: Rich metadata including Neo4j-ready fields
+
+    Args:
+        collection_id: Logical collection/folder name
+        file_id: Unique file identifier
+        chunk_id: Unique chunk identifier
+        chunk_text: Text content of the chunk
+        embedding: 1024-dim vector embedding
+        source_type: 'pdf', 'youtube', or 'web'
+        file_name: Original filename/title
+        chunk_type: Classification of chunk
+        hierarchy_level: Level in document structure
+        parent_chunk_id: Parent chunk for hierarchical structure
+        page_number: Page number for PDFs
+        timestamp: Timestamp for YouTube videos
+        topic_tags: List of topic tags
+        youtube_channel: YouTube channel name
+        web_domain: Web domain for articles
+        extracted_at: ISO timestamp of extraction
+
+    Returns:
+        Document dictionary for Qdrant with new schema
+    """
+    if extracted_at is None:
+        extracted_at = datetime.utcnow().isoformat()
+
+    return {
+        "document_id": file_id,  # Keep for backward compatibility
+        "chunk_id": chunk_id,
+        "text": chunk_text,
+        "source": source_type,
+        "vector": embedding,
+        "metadata": {
+            # 🔒 MANDATORY FIELD - Logical folder isolation within user
+            "collection_id": collection_id,
+
+            # Core Identifiers
+            "file_id": file_id,
+            "chunk_id": chunk_id,
+
+            # Content
+            "chunk_text": chunk_text,
+
+            # Type Information
+            "chunk_type": chunk_type,
+            "source_type": source_type,
+            "file_name": file_name,
+
+            # Location Information
+            "page_number": page_number,
+            "timestamp": timestamp,
+
+            # Hierarchy (for Neo4j future integration)
+            "hierarchy_level": hierarchy_level,
+            "parent_chunk_id": parent_chunk_id,
+
+            # Rich Metadata (Neo4j-ready)
+            "topic_tags": topic_tags or [],
+            "entities": [],  # PLACEHOLDER for Neo4j
+            "concepts": [],  # PLACEHOLDER for Neo4j
+            "extracted_at": extracted_at,
+            "youtube_channel": youtube_channel,
+            "web_domain": web_domain,
+        }
     }

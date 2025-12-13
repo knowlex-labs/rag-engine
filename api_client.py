@@ -73,7 +73,7 @@ class RAGAPIClient:
         return self._make_request("GET", f"/users/{user_id}")
 
     def upload_file(self, file_content: bytes, filename: str) -> Dict[str, Any]:
-        files = {"file": (filename, BytesIO(file_content), "application/octet-stream")}
+        files = [("files", (filename, BytesIO(file_content), "application/octet-stream"))]
         # x-user-id header is automatically added by _make_request
         return self._make_request("POST", "/files", files=files)
 

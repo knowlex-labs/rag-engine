@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Header, Query
 from typing import List, Optional, Dict, Any
-from models.api_models import ApiResponse, ApiResponseWithBody
+from models.api_models import ApiResponseWithBody
 from services.quiz_job_service import quiz_job_service
 from models.quiz_models import QuizResponse, QuizSubmissionRequest, QuizSubmissionResponse
 from models.quiz_job_models import QuizStatusResponse, QuizJobListItem

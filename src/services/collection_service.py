@@ -1,10 +1,12 @@
 from typing import List, Dict, Any, Optional
 import logging
+import uuid
 from fastapi import BackgroundTasks
 
 from repositories.qdrant_repository import QdrantRepository
 from services.file_service import file_service
 from services.hierarchical_chunking_service import chunking_service
+from services.query_service import QueryService
 from utils.embedding_client import embedding_client
 from utils.document_builder import build_qdrant_point
 from models.api_models import LinkContentItem, LinkContentResponse, UnlinkContentResponse, QuizConfig, QueryResponse
@@ -20,6 +22,7 @@ class CollectionService:
         logger.info("Initializing CollectionService")
         self.qdrant_repo = QdrantRepository()
         self.embedding_client = embedding_client
+        self.query_service = QueryService()
 
     def _get_qdrant_collection_name(self, user_id: str) -> str:
         """Get the per-user Qdrant collection name"""
@@ -128,8 +131,8 @@ class CollectionService:
                     # Plan Step 12 implies a `chunker.chunk(parsed_content)` exists but it was not defined in "Files to Create".
                     # I'll manually chunk the text using existing service for consistency.
                     
-                    chunks = chunking_service.chunk_text(
-                        text=parsed_content.text, 
+                    chunks = chunking_service.chunk_parsed_content(
+                        parsed_content=parsed_content, 
                         file_type=parser_type
                     )
 
@@ -138,7 +141,7 @@ class CollectionService:
                         
                         point = build_qdrant_point(
                             collection_id=collection_name, 
-                            file_id=item.file_id or str(hash(source_identifier)), # Fallback for URL
+                            file_id=item.file_id or str(uuid.uuid5(uuid.NAMESPACE_URL, source_identifier)), # Fallback for URL
                             chunk_id=chunk.chunk_id,
                             chunk_text=chunk.text,
                             embedding=embedding,
@@ -233,8 +236,7 @@ class CollectionService:
         # Typically Service uses other Services.
         # But `collection_service` logic for query was mainly wrapper.
         
-        from services.query_service import QueryService
-        query_service = QueryService() # Or dependency injection
+        # We delegate to QueryService, but we need to ensure QueryService uses correct filters.
         
         # We pass collection_name as 'collection_id' filter logic, 
         # but the query_service.search expects `collection_name` as the PHYSICAL Qdrant collection.
@@ -243,16 +245,13 @@ class CollectionService:
         
         user_collection = self._get_qdrant_collection_name(user_id)
         
-        # We need to update QueryService.search signature or logic to accept logical collection_id!
-        # I will update QueryService next. Assuming it will have `collection_id` param.
-        
-        return query_service.search(
+        return self.query_service.search(
             collection_name=user_collection, 
             query_text=query_text,
             enable_critic=enable_critic,
             structured_output=structured_output,
             quiz_config=quiz_config,
-            collection_id=collection_name # This arg needs to be added to QueryService.search
+            collection_id=collection_name
         )
 
     def purge_user_data(self, user_id: str) -> bool:

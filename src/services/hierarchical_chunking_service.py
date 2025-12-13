@@ -10,6 +10,7 @@ from models.api_models import (
     TopicMetadata,
     ChunkMetadata
 )
+from parsers.models import ParsedContent, ContentSection
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,44 @@ class HierarchicalChunkingService:
             return []
 
         logger.info(f"CHUNKING RESULT: Returning {len(chunks)} chunks for document {document_id}")
+        return chunks
+
+    def chunk_parsed_content(self, parsed_content: ParsedContent, file_type: str = "web") -> List[HierarchicalChunk]:
+        """
+        Chunk ParsedContent preserving hierarchy and metadata.
+        """
+        chunks = []
+        document_id = str(uuid.uuid4()) # Or derive from source?
+        
+        # Iterate over sections
+        # If section content is large, we might still need to split it (sub-chunking)
+        # But we try to keep sections intact if possible or split smartly.
+        
+        chunk_num = 0
+        
+        for section in parsed_content.sections:
+             # Basic handling: if section text is empty, skip
+             if not section.content.strip():
+                 continue
+                 
+             # Check size. If > chunk_size, split while keeping metadata
+             sub_chunks = self._create_basic_chunks(section.content, document_id)
+             
+             for sub_chunk in sub_chunks:
+                 # Enrich sub_chunk with Section Metadata
+                 chunk_num += 1
+                 
+                 # Update Topic Metadata
+                 sub_chunk.topic_metadata.section_title = section.header
+                 # If we had hierarchy in ParsedContent (chapter/section), we could map it here.
+                 # Currently ParsedContent is flat-ish list of sections usually.
+                 
+                 chunks.append(sub_chunk)
+                 
+        # If no sections (raw text fallback), just chunk the raw text
+        if not chunks and parsed_content.text:
+            return self.chunk_text(parsed_content.text, file_type)
+            
         return chunks
 
     def chunk_text(self, text: str, file_type: str = "text", book_metadata: Any = None) -> List[HierarchicalChunk]:

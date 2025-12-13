@@ -1,9 +1,12 @@
+import shutil
+import mimetypes
 import logging
 import os
 import io
 import uuid
 import glob
-from typing import Optional, Dict, Any, List, Tuple, Iterator
+import pdfplumber
+from typing import List, Optional, Tuple, BinaryIO, Generator
 from fastapi import UploadFile
 
 from models.api_models import FileUploadResponse
@@ -236,7 +239,8 @@ class UnifiedFileService:
             try:
                 os.remove(self.get_local_path(path))
                 return True
-            except:
+            except (FileNotFoundError, IOError, OSError) as e:
+                logger.error(f"Failed to delete file at path {path}: {e}")
                 return False
         # Remote delete not implemented blindly without full path
         return False

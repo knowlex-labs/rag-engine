@@ -100,6 +100,11 @@ class HierarchicalChunkingService:
         logger.info(f"CHUNKING RESULT: Returning {len(chunks)} chunks for document {document_id}")
         return chunks
 
+    def chunk_text(self, text: str, file_type: str = "text", book_metadata: Any = None) -> List[HierarchicalChunk]:
+        """Wrapper for basic text chunking to support generic text"""
+        document_id = str(uuid.uuid4())
+        return self._create_basic_chunks(text, document_id)
+
     def _create_basic_chunks(
         self,
         text: str,
@@ -515,3 +520,5 @@ class HierarchicalChunkingService:
         diagram_keywords = ['figure', 'diagram', 'fig.', 'illustration', 'graph', 'chart']
         text_lower = text.lower()
         return any(keyword in text_lower for keyword in diagram_keywords)
+
+chunking_service = HierarchicalChunkingService()

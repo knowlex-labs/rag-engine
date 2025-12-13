@@ -3,11 +3,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class DatabaseConfig:
-    QDRANT_HOST: str = os.getenv("QDRANT_HOST", "localhost")
-    QDRANT_PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
-    QDRANT_TIMEOUT: int = int(os.getenv("QDRANT_TIMEOUT", "30"))
-    QDRANT_API_KEY: str = os.getenv("QDRANT_API_KEY", "")
+class QdrantConfig:
+    HOST: str = os.getenv("QDRANT_HOST", "localhost")
+    PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
+    TIMEOUT: int = int(os.getenv("QDRANT_TIMEOUT", "30"))
+    API_KEY: str = os.getenv("QDRANT_API_KEY", "")
+    COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "knowledge_base")
+
+class ParserConfig:
+    WEB_SCRAPER_USER_AGENT: str = os.getenv("WEB_SCRAPER_USER_AGENT", "RAG-Engine/1.0")
+    WEB_SCRAPER_TIMEOUT: int = int(os.getenv("WEB_SCRAPER_TIMEOUT", "30"))
+    YOUTUBE_TRANSCRIPT_FALLBACK: str = os.getenv("YOUTUBE_TRANSCRIPT_FALLBACK", "gemini")
 
 class EmbeddingConfig:
     MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5")
@@ -71,7 +77,8 @@ class MinIOConfig:
     SECURE: bool = os.getenv("MINIO_SECURE", "false").lower() == "true"
 
 class Config:
-    database = DatabaseConfig()
+    qdrant = QdrantConfig()
+    parser = ParserConfig()
     embedding = EmbeddingConfig()
     llm = LlmConfig()
     app = AppConfig()

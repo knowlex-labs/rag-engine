@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 
 class QdrantRepository:
     def __init__(self):
-        host = Config.database.QDRANT_HOST
+        host = Config.qdrant.HOST
         
-        if Config.database.QDRANT_API_KEY:
+        if Config.qdrant.API_KEY:
             # When using API key, use url parameter
             # Check if host already contains a scheme (http:// or https://)
             if host.startswith(('http://', 'https://')):
@@ -22,24 +22,24 @@ class QdrantRepository:
                 url = host
             else:
                 # Host is just a hostname, construct URL with scheme and port
-                url = f"http://{host}:{Config.database.QDRANT_PORT}"
+                url = f"http://{host}:{Config.qdrant.PORT}"
             logger.info(f"Initializing Qdrant client with URL: {url}")
-            logger.info(f"API Key present: {bool(Config.database.QDRANT_API_KEY)}")
+            logger.info(f"API Key present: {bool(Config.qdrant.API_KEY)}")
             self.client = QdrantClient(
                 url=url,
-                api_key=Config.database.QDRANT_API_KEY,
-                timeout=Config.database.QDRANT_TIMEOUT
+                api_key=Config.qdrant.API_KEY,
+                timeout=Config.qdrant.TIMEOUT
             )
         else:
             # For local connections without API key, extract hostname from URL if needed
             if host.startswith(('http://', 'https://')):
                 # Extract hostname from URL (remove scheme and any path/port)
                 host = host.split('://', 1)[1].split('/')[0].split(':')[0]
-            logger.info(f"Initializing Qdrant client with host: {host}:{Config.database.QDRANT_PORT}")
+            logger.info(f"Initializing Qdrant client with host: {host}:{Config.qdrant.PORT}")
             self.client = QdrantClient(
                 host=host,
-                port=Config.database.QDRANT_PORT,
-                timeout=Config.database.QDRANT_TIMEOUT
+                port=Config.qdrant.PORT,
+                timeout=Config.qdrant.TIMEOUT
             )
 
     def collection_exists(self, collection_name: str) -> bool:

@@ -8,7 +8,6 @@ from models.quiz_job_models import (
 )
 from models.api_models import QuizConfig
 from models.quiz_models import QuizResponse, QuizSubmissionRequest, QuizSubmissionResponse, AnswerResult
-from repositories.quiz_repository import quiz_repository
 
 logger = logging.getLogger(__name__)
 

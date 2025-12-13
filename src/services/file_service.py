@@ -1,29 +1,28 @@
-from fastapi import UploadFile
-import uuid
-import logging
-import io
-import os
 import shutil
-from datetime import datetime
-from typing import Optional, Dict, Any, List, Iterator, Tuple
+import mimetypes
+import logging
+import os
+import io
+import uuid
+import glob
+import pdfplumber
+from typing import List, Optional, Tuple, BinaryIO, Generator
+from fastapi import UploadFile
+
 from models.api_models import FileUploadResponse
 from models.file_types import FileExtensions, UnsupportedFileTypeError
 from services.storage.storage_factory import get_storage_service
-from database.postgres_connection import db_connection
 from utils.mime_type_detector import get_content_disposition_filename
+from config import Config
 
 logger = logging.getLogger(__name__)
-
 
 class UnifiedFileService:
     def __init__(self):
         self.bucket_prefix = "user-files"
-        self.session_user_id = "system_session"
         self.local_storage_path = os.path.join(os.getcwd(), "uploads")
         self.storage_service = get_storage_service()
         self.ensure_local_storage()
-        self.init_database()
-        self.ensure_session_user()
 
     def ensure_local_storage(self):
         try:
@@ -32,202 +31,104 @@ class UnifiedFileService:
         except Exception as e:
             logger.error(f"Failed to create local storage directory: {e}")
 
-    def ensure_session_user(self):
-        try:
-            from services.user_service import user_service
-            if not user_service.user_exists(self.session_user_id):
-                query = "INSERT INTO users (id, name, is_anonymous) VALUES (%s, %s, %s) ON CONFLICT (id) DO NOTHING"
-                db_connection.execute_query(query, (self.session_user_id, "System Session", True))
-                logger.info(f"Session user created: {self.session_user_id}")
-        except Exception as e:
-            logger.error(f"Failed to create session user: {e}")
-
     def _is_local_storage(self, path: str) -> bool:
-        return path.startswith("local://")
+        return path and path.startswith("local://")
 
     def get_local_path(self, minio_path: str) -> str:
         return minio_path[8:]
 
-    def _read_file_data(self, storage_path: str) -> Optional[bytes]:
+    def _find_storage_path(self, user_id: str, file_id: str) -> Optional[str]:
+        """
+        Find storage path for a file_id without DB lookup.
+        Searches for files starting with {file_id}_ in the user's directory.
+        """
         try:
-            if self._is_local_storage(storage_path):
-                local_file_path = self.get_local_path(storage_path)
-                with open(local_file_path, "rb") as f:
-                    return f.read()
-            else:
-                local_temp_path = self.storage_service.download_for_processing(storage_path)
-                if local_temp_path:
-                    with open(local_temp_path, "rb") as f:
-                        data = f.read()
-                    os.remove(local_temp_path)
-                    return data
-                return None
-        except Exception as e:
-            logger.error(f"Failed to read file {storage_path}: {e}")
+            # 1. Try Local Storage Strategy
+            if Config.storage.STORAGE_TYPE == "local":
+                user_dir = os.path.join(self.local_storage_path, user_id)
+                if not os.path.exists(user_dir):
+                    return None
+                
+                # Look for {file_id}_*
+                pattern = os.path.join(user_dir, f"{file_id}_*")
+                matches = glob.glob(pattern)
+                
+                if matches:
+                    # Return the first match formatted as local:// URI
+                    return f"local://{matches[0]}"
+            
+            # 2. Remote Storage Strategy (MinIO/S3)
+            # Without DB, we can't easily guess the filename if it varies.
+            # But if we assume the standard format is preserved, we might need 'list_objects' capability
+            # which might be expensive. 
+            # Ideally, the CALLER should provide the filename or full path.
+            # For this refactor, we assume Local or that caller provides filename if we add that support.
+            # If strictly remote without listing, this will fail.
+            # Partial Mitigation: Check if storage service supports listing prefix.
+            
+            # Fallback: Check if storage has list capability
+            # For now, return None if not local.
+            logger.warning(f"Storage lookup for {file_id} not fully supported for remote storage without DB")
             return None
 
-    def _delete_file_storage(self, storage_path: str) -> bool:
-        try:
-            return self.storage_service.delete_file(storage_path)
         except Exception as e:
-            logger.error(f"Failed to delete file {storage_path}: {e}")
-            return False
+            logger.error(f"Error finding storage path for {file_id}: {e}")
+            return None
 
     def get_local_file_for_processing(self, file_id: str, user_id: Optional[str]) -> Optional[str]:
         try:
-            logger.info(f"get_local_file_for_processing called with file_id={file_id}, user_id={user_id}")
-            storage_path = self.get_file_path(file_id, user_id)
+            if not user_id: 
+                logger.error("user_id required for processing")
+                return None
+
+            logger.info(f"get_local_file_for_processing: file_id={file_id}, user_id={user_id}")
+            
+            # Find path using ID
+            storage_path = self._find_storage_path(user_id, file_id)
+            
             if not storage_path:
-                logger.error(f"CRITICAL: get_file_path returned None for file_id={file_id}, user_id={user_id}")
+                logger.error(f"File path not found for file_id={file_id}")
                 return None
 
             logger.info(f"Storage path found: {storage_path}")
+            
             if self._is_local_storage(storage_path):
                 local_path = self.get_local_path(storage_path)
-                logger.info(f"Local storage, resolved path: {local_path}")
                 return local_path
             else:
-                logger.info(f"Remote storage, downloading for processing...")
-                downloaded_path = self.storage_service.download_for_processing(storage_path)
-                logger.info(f"Downloaded to temp path: {downloaded_path}")
-                return downloaded_path
+                # Remote download
+                return self.storage_service.download_for_processing(storage_path)
+
         except Exception as e:
             logger.error(f"Failed to get local file for processing: {e}", exc_info=True)
             return None
 
-    def init_database(self):
-        try:
-            schema_query = """
-            CREATE TABLE IF NOT EXISTS user_files (
-                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                user_id VARCHAR(255) NOT NULL REFERENCES users(id),
-                filename VARCHAR(500) NOT NULL,
-                file_type VARCHAR(50) NOT NULL,
-                file_size BIGINT NOT NULL,
-                minio_path VARCHAR(1000) NOT NULL,
-                upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-
-            CREATE INDEX IF NOT EXISTS idx_user_files_user_id ON user_files(user_id);
-            CREATE INDEX IF NOT EXISTS idx_user_files_file_type ON user_files(file_type);
-            CREATE INDEX IF NOT EXISTS idx_user_files_upload_date ON user_files(upload_date);
-            """
-            db_connection.execute_query(schema_query)
-            logger.info("Database schema initialized")
-        except Exception as e:
-            logger.error(f"Failed to initialize database: {e}")
-
-    def detect_file_type(self, filename: str) -> str:
-        import os
-        file_extension = os.path.splitext(filename)[1].lower()
-        try:
-            file_type = FileExtensions.get_file_type(file_extension)
-            return file_type.value
-        except UnsupportedFileTypeError as e:
-            logger.warning(f"Unsupported file type: {e}")
-            raise e
-
-    def upload_file(self, file: UploadFile, user_id: Optional[str]) -> FileUploadResponse:
-        try:
-            if not user_id:
-                return self._upload_to_local_storage(file)
-
-            file_id = str(uuid.uuid4())
-            file_content = file.file.read()
-            file_size = len(file_content)
-            file_type = self.detect_file_type(file.filename)
-
-            # Generate storage path based on storage type
-            from config import Config
-            if Config.storage.STORAGE_TYPE == "local":
-                # For local storage: local://absolute_path
-                local_file_path = os.path.join(self.local_storage_path, user_id, f"{file_id}_{file.filename}")
-                storage_path = f"local://{local_file_path}"
-            else:
-                # For MinIO/cloud storage: bucket/object
-                bucket_name = f"{self.bucket_prefix}"
-                object_name = f"{user_id}/{file_id}_{file.filename}"
-                storage_path = f"{bucket_name}/{object_name}"
-
-            success = self.storage_service.upload_file(file_content, storage_path)
-
-            if success:
-
-                query = """
-                INSERT INTO user_files (id, user_id, filename, file_type, file_size, minio_path)
-                VALUES (%s, %s, %s, %s, %s, %s)
-                """
-                db_connection.execute_query(query, (file_id, user_id, file.filename, file_type, file_size, storage_path))
-
-                return FileUploadResponse(
-                    status="SUCCESS",
-                    message="File uploaded successfully",
-                    body={"file_id": file_id}
-                )
-            else:
-                return FileUploadResponse(
-                    status="FAILURE",
-                    message="Failed to upload file to storage",
-                    body={}
-                )
-
-        except UnsupportedFileTypeError as e:
-            return FileUploadResponse(
-                status="FAILURE",
-                message=f"Unsupported file type: {str(e)}",
-                body={}
-            )
-        except Exception as e:
-            logger.error(f"Upload failed: {e}")
-            return FileUploadResponse(
-                status="FAILURE",
-                message=f"Upload failed: {str(e)}",
-                body={}
-            )
-
-    def file_exists(self, file_id: str, user_id: Optional[str]) -> bool:
-        try:
-            actual_user_id = user_id if user_id else self.session_user_id
-            query = "SELECT id FROM user_files WHERE id = %s AND user_id = %s"
-            result = db_connection.execute_one(query, (file_id, actual_user_id))
-            return result is not None
-        except Exception:
-            return False
-
-    def get_file_path(self, file_id: str, user_id: Optional[str]) -> Optional[str]:
-        try:
-            actual_user_id = user_id if user_id else self.session_user_id
-            logger.info(f"get_file_path: file_id={file_id}, user_id={user_id}, actual_user_id={actual_user_id}")
-            query = "SELECT minio_path FROM user_files WHERE id = %s AND user_id = %s"
-            result = db_connection.execute_one(query, (file_id, actual_user_id))
-            if result:
-                logger.info(f"File path found in database: {result[0]}")
-                return result[0]
-            else:
-                logger.error(f"CRITICAL: No file found in database for file_id={file_id}, user_id={actual_user_id}")
-                return None
-        except Exception as e:
-            logger.error(f"Database error in get_file_path: {e}", exc_info=True)
-            return None
-
     def get_file_content(self, file_id: str, user_id: Optional[str]) -> Optional[str]:
         try:
-            actual_user_id = user_id if user_id else self.session_user_id
-            query = "SELECT minio_path, file_type FROM user_files WHERE id = %s AND user_id = %s"
-            result = db_connection.execute_one(query, (file_id, actual_user_id))
+            if not user_id: return None
+            
+            storage_path = self._find_storage_path(user_id, file_id)
+            if not storage_path: return None
 
-            if not result:
-                return None
+            # Read raw bytes
+            file_data = None
+            if self._is_local_storage(storage_path):
+                with open(self.get_local_path(storage_path), "rb") as f:
+                    file_data = f.read()
+            else:
+                local_temp = self.storage_service.download_for_processing(storage_path)
+                if local_temp:
+                    with open(local_temp, "rb") as f:
+                        file_data = f.read()
+                    os.remove(local_temp)
 
-            minio_path, file_type = result
-            file_data = self._read_file_data(minio_path)
+            if not file_data: return None
 
-            if not file_data:
-                return None
-
-            if file_type == "pdf":
+            # Detect type from extension in path
+            # storage_path usually ends with extension
+            # e.g. local://.../uuid_filename.pdf
+            lower_path = storage_path.lower()
+            if lower_path.endswith('.pdf'):
                 return self.extract_pdf_text(file_data)
             else:
                 return self.extract_text_content(file_data)
@@ -239,8 +140,6 @@ class UnifiedFileService:
     def extract_pdf_text(self, file_data: bytes) -> Optional[str]:
         try:
             import pdfplumber
-            import io
-
             with pdfplumber.open(io.BytesIO(file_data)) as pdf:
                 text = ""
                 for page in pdf.pages:
@@ -261,192 +160,90 @@ class UnifiedFileService:
             except Exception:
                 return None
 
-    def delete_file(self, file_id: str, user_id: Optional[str]) -> bool:
+    def detect_file_type(self, filename: str) -> str:
+        file_extension = os.path.splitext(filename)[1].lower()
         try:
-            actual_user_id = user_id if user_id else self.session_user_id
-            query = "SELECT minio_path FROM user_files WHERE id = %s AND user_id = %s"
-            result = db_connection.execute_one(query, (file_id, actual_user_id))
+            file_type = FileExtensions.get_file_type(file_extension)
+            return file_type.value
+        except UnsupportedFileTypeError as e:
+            logger.warning(f"Unsupported file type: {e}")
+            raise e
 
-            if not result:
-                logger.warning(f"File {file_id} not found for user {actual_user_id}")
-                return False
-
-            minio_path = result[0]
-            
-            # Step 1: Unlink from all collections and clean up cache
-            self._cleanup_file_associations(file_id, actual_user_id)
-            
-            # Step 2: Delete from storage
-            success = self._delete_file_storage(minio_path)
-
-            if success:
-                # Step 3: Delete from DB
-                delete_query = "DELETE FROM user_files WHERE id = %s AND user_id = %s"
-                db_connection.execute_query(delete_query, (file_id, actual_user_id))
-                logger.info(f"File {file_id} completely deleted for user {actual_user_id}")
-
-            return success
-        except Exception as e:
-            logger.error(f"Delete failed: {e}")
-            return False
-
-    def _cleanup_file_associations(self, file_id: str, user_id: str) -> None:
-        """Clean up all file associations before deletion"""
+    def upload_file(self, file: UploadFile, user_id: Optional[str]) -> FileUploadResponse:
+        # Note: This might not be used by RAG Engine anymore if Teacher handles upload.
+        # But keeping it functional for local uploads just in case.
         try:
-            from utils.cache_manager import CacheManager
-            from repositories.collection_repository import collection_repository
-            from repositories.qdrant_repository import QdrantRepository
-            
-            cache_manager = CacheManager()
-            qdrant_repo = QdrantRepository()
-            
-            # Get all collections for this user
-            collections = collection_repository.list_collections(user_id)
-            
-            for collection in collections:
-                collection_name = collection.get('name')
-                
-                # Check if file is linked to this collection
-                linked_files = cache_manager.get_collection_files(user_id, collection_name)
-                
-                if file_id in linked_files:
-                    logger.info(f"Unlinking file {file_id} from collection {collection_name}")
-                    
-                    # Unlink from Qdrant
-                    qdrant_collection_name = f"{user_id}_{collection_name}"
-                    qdrant_repo.unlink_content(qdrant_collection_name, [file_id])
-                    
-                    # Remove from collection mapping
-                    cache_manager.remove_file_from_collection(user_id, collection_name, file_id)
-            
-            # Clear chunk cache
-            cache_manager.clear_chunks(file_id)
-            logger.info(f"Cleaned up all associations for file {file_id}")
-            
-        except Exception as e:
-            logger.error(f"Failed to cleanup file associations for {file_id}: {e}")
-            # Don't raise - continue with file deletion even if cleanup fails
+            if not user_id:
+                # Fallback to simple local save if no user
+                return self._upload_to_local_storage(file, "system")
 
-    def _upload_to_local_storage(self, file: UploadFile) -> FileUploadResponse:
-        try:
             file_id = str(uuid.uuid4())
             file_content = file.file.read()
-            file_size = len(file_content)
-            file_type = self.detect_file_type(file.filename)
+            
+            # Generate storage path: uploads/{user_id}/{file_id}_{filename}
+            if Config.storage.STORAGE_TYPE == "local":
+                user_dir = os.path.join(self.local_storage_path, user_id)
+                os.makedirs(user_dir, exist_ok=True)
+                
+                local_file_path = os.path.join(user_dir, f"{file_id}_{file.filename}")
+                storage_path = f"local://{local_file_path}"
+                
+                with open(local_file_path, "wb") as f:
+                    f.write(file_content)
+                
+                success = True
+            else:
+                # Remote
+                object_name = f"{user_id}/{file_id}_{file.filename}"
+                storage_path = f"{self.bucket_prefix}/{object_name}"
+                success = self.storage_service.upload_file(file_content, storage_path)
 
+            if success:
+                # No DB insert
+                return FileUploadResponse(
+                    status="SUCCESS",
+                    message="File uploaded successfully",
+                    body={"file_id": file_id}
+                )
+            else:
+                return FileUploadResponse(status="FAILURE", message="Upload failed", body={})
+
+        except Exception as e:
+            logger.error(f"Upload failed: {e}")
+            return FileUploadResponse(status="FAILURE", message=str(e), body={})
+
+    def _upload_to_local_storage(self, file: UploadFile, user_subdir: str) -> FileUploadResponse:
+        try:
+            file_id = str(uuid.uuid4())
             local_filename = f"{file_id}_{file.filename}"
-            local_file_path = os.path.join(self.local_storage_path, local_filename)
-
+            user_dir = os.path.join(self.local_storage_path, user_subdir)
+            os.makedirs(user_dir, exist_ok=True)
+            
+            local_file_path = os.path.join(user_dir, local_filename)
             with open(local_file_path, "wb") as f:
-                f.write(file_content)
+                f.write(file.file.read())
 
-            local_path = f"local://{local_file_path}"
-            query = """
-            INSERT INTO user_files (id, user_id, filename, file_type, file_size, minio_path)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            """
-            db_connection.execute_query(query, (file_id, self.session_user_id, file.filename, file_type, file_size, local_path))
-
-            logger.info(f"File uploaded to local storage: {local_file_path}")
             return FileUploadResponse(
                 status="SUCCESS",
-                message="File uploaded to local storage successfully",
+                message="File uploaded locally",
                 body={"file_id": file_id}
             )
-
         except Exception as e:
-            logger.error(f"Local upload failed: {e}")
-            return FileUploadResponse(
-                status="FAILURE",
-                message=f"Local upload failed: {str(e)}",
-                body={}
-            )
+            return FileUploadResponse(status="FAILURE", message=str(e), body={})
 
-    def list_files(self, user_id: Optional[str]) -> List[Dict[str, Any]]:
-        try:
-            actual_user_id = user_id if user_id else self.session_user_id
-            query = "SELECT id, filename, file_type, file_size, upload_date FROM user_files WHERE user_id = %s ORDER BY upload_date DESC"
-            results = db_connection.execute_query(query, (actual_user_id,))
+    # Legacy cleanup helper
+    def delete_file(self, file_id: str, user_id: str) -> bool:
+        # Without DB, we use _find_storage_path and delete file
+        path = self._find_storage_path(user_id, file_id)
+        if path and self._is_local_storage(path):
+            try:
+                os.remove(self.get_local_path(path))
+                return True
+            except (FileNotFoundError, IOError, OSError) as e:
+                logger.error(f"Failed to delete file at path {path}: {e}")
+                return False
+        # Remote delete not implemented blindly without full path
+        return False
 
-            files = []
-            for row in results:
-                files.append({
-                    "file_id": str(row[0]),
-                    "filename": row[1],
-                    "file_type": row[2],
-                    "file_size": row[3],
-                    "upload_date": row[4].isoformat() if row[4] else None
-                })
-            return files
-        except Exception as e:
-            logger.error(f"List files failed: {e}")
-            return []
-
-    def get_file_info(self, file_id: str, user_id: Optional[str]) -> Optional[Dict[str, Any]]:
-        """Get file information for a specific file"""
-        try:
-            actual_user_id = user_id if user_id else self.session_user_id
-            query = "SELECT id, filename, file_type, file_size, upload_date FROM user_files WHERE id = %s AND user_id = %s"
-            results = db_connection.execute_query(query, (file_id, actual_user_id))
-            if results and len(results) > 0:
-                row = results[0]
-                return {
-                    "file_id": str(row[0]),
-                    "filename": row[1],
-                    "file_type": row[2],
-                    "file_size": row[3],
-                    "upload_date": row[4].isoformat() if row[4] else None
-                }
-            return None
-        except Exception as e:
-            logger.error(f"Get file info failed for {file_id}: {e}")
-            return None
-
-    def stream_file_content(self, file_id: str, user_id: Optional[str]) -> Optional[Tuple[Iterator[bytes], str, str]]:
-        """
-        Stream file content for HTTP response.
-
-        Args:
-            file_id: File ID to stream
-            user_id: User ID for access control
-
-        Returns:
-            Tuple of (content_stream, content_type, filename) or None if not found/not accessible
-        """
-        try:
-            actual_user_id = user_id if user_id else self.session_user_id
-
-            # Get file metadata and storage path
-            query = "SELECT minio_path, filename FROM user_files WHERE id = %s AND user_id = %s"
-            result = db_connection.execute_one(query, (file_id, actual_user_id))
-
-            if not result:
-                logger.warning(f"File {file_id} not found for user {actual_user_id}")
-                return None
-
-            minio_path, filename = result
-
-            # Check if file exists in storage
-            if not self.storage_service.exists(minio_path):
-                logger.error(f"File not found in storage: {minio_path}")
-                return None
-
-            # Get content type and size
-            content_type, file_size = self.storage_service.get_content_type_and_size(minio_path)
-
-            # Get clean filename for Content-Disposition
-            clean_filename = get_content_disposition_filename(filename)
-
-            # Stream file content
-            content_stream = self.storage_service.stream_file(minio_path)
-
-            logger.info(f"Streaming file {file_id} ({clean_filename}) for user {actual_user_id}")
-
-            return content_stream, content_type, clean_filename
-
-        except Exception as e:
-            logger.error(f"Failed to stream file content for {file_id}: {e}")
-            return None
-
-
+# Global instance
 file_service = UnifiedFileService()

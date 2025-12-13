@@ -9,9 +9,7 @@ from services.hierarchical_chunking_service import chunking_service
 from services.query_service import QueryService
 from utils.embedding_client import embedding_client
 from utils.document_builder import build_qdrant_point
-from models.api_models import LinkContentItem, LinkContentResponse, UnlinkContentResponse, QuizConfig, QueryResponse
-from models.quiz_models import QuizResponse
-from models.quiz_job_models import QuizJobResponse
+from models.api_models import LinkContentItem, LinkContentResponse, UnlinkContentResponse, QueryResponse
 from parsers.parser_factory import ParserFactory
 from config import Config
 
@@ -72,18 +70,15 @@ class CollectionService:
                 points = []
 
                 if parser_type == "pdf":
-                    # LEGACY PATH for PDF (Preserving existing chunking strategies)
-                    file_content = file_service.get_file_content(item.file_id, user_id) # This might fail if file_service needs DB
-                    # Actually, better to read from source_identifier path if possible
-                    # But get_file_content works on file_id.
-                    # We will rely on file_service updates.
+                    # PDF Processing
+                    file_content = file_service.get_file_content(item.file_id, user_id)
                     
                     if not file_content:
-                         # Try reading from path if get_file_content fails (redundancy)
-                         if source_identifier and str(source_identifier).endswith('.pdf'):
-                             with open(source_identifier, 'rb') as f:
-                                 raw_data = f.read()
-                                 file_content = file_service.extract_pdf_text(raw_data)
+                        # Try reading from path if get_file_content fails (redundancy)
+                        if source_identifier and str(source_identifier).endswith('.pdf'):
+                            with open(source_identifier, 'rb') as f:
+                                raw_data = f.read()
+                                file_content = file_service.extract_pdf_text(raw_data)
                     
                     if not file_content:
                         raise ValueError("Could not extract text from file")
@@ -92,12 +87,12 @@ class CollectionService:
                     chunks = chunking_service.chunk_text(
                         text=file_content,
                         file_type="pdf",
-                        book_metadata=None # Metadata not passed in link request currently
+                        book_metadata=None
                     )
 
                     # Embed & Build Points
                     for chunk in chunks:
-                        embedding = self.embedding_client.generate_embedding(chunk.text)
+                        embedding = self.embedding_client.generate_single_embedding(chunk.text)
                         
                         point = build_qdrant_point(
                             collection_id=collection_name, # Logical folder
@@ -113,23 +108,9 @@ class CollectionService:
                         points.append(point)
 
                 else:
-                    # NEW PARSER PATH (YouTube/Web)
+                    # New Parser Path (YouTube/Web)
                     parser = ParserFactory.get_parser(parser_type, gemini_api_key=Config.llm.GEMINI_API_KEY)
                     parsed_content = parser.parse(source_identifier)
-                    
-                    # Simple chunking for parsed content (since no specific chunker for them yet in plan?)
-                    # Plan says "Step 12: ... chunks = chunker.chunk(parsed_content)"
-                    # We need a chunker for ParsedContent.
-                    # reusing chunking_service.chunk_text doesn't fit ParsedContent object directly.
-                    # Implementation Gap: We need to adapt ParsedContent to chunks.
-                    # For now, let's treat parsed_content.text as plain text and use chunking_service?
-                    # Or iterate sections.
-                    
-                    # Let's iterate sections and chunk them if needed, or treat sections as chunks.
-                    # For simplicity and robustness, let's use chunking_service on the full text 
-                    # OR if sections are granular enough, use them.
-                    # Plan Step 12 implies a `chunker.chunk(parsed_content)` exists but it was not defined in "Files to Create".
-                    # I'll manually chunk the text using existing service for consistency.
                     
                     chunks = chunking_service.chunk_parsed_content(
                         parsed_content=parsed_content, 
@@ -137,20 +118,17 @@ class CollectionService:
                     )
 
                     for chunk in chunks:
-                        embedding = self.embedding_client.generate_embedding(chunk.text)
+                        embedding = self.embedding_client.generate_single_embedding(chunk.text)
                         
                         point = build_qdrant_point(
                             collection_id=collection_name, 
-                            file_id=item.file_id or str(uuid.uuid5(uuid.NAMESPACE_URL, source_identifier)), # Fallback for URL
+                            file_id=item.file_id or str(uuid.uuid5(uuid.NAMESPACE_URL, source_identifier)),
                             chunk_id=chunk.chunk_id,
                             chunk_text=chunk.text,
                             embedding=embedding,
                             source_type=parser_type,
                             file_name=item.name,
                             chunk_type=chunk.chunk_metadata.chunk_type.value,
-                            # We lose some metadata here (timestamp/page) by re-chunking plain text
-                            # But it ensures vectors are compatible.
-                            # Future: Improve chunker to respect ParsedContent structure.
                             youtube_channel=parsed_content.metadata.channel if parser_type == 'youtube' else None,
                             web_domain=parsed_content.metadata.domain if parser_type == 'web' else None
                         )
@@ -158,32 +136,45 @@ class CollectionService:
 
                 # 3. Store in Qdrant
                 if points:
-                    # Convert dict points to PointStruct handled by repo or passing dicts?
-                    # Repo `link_content` expects list of dicts with `document_id` etc, 
-                    # BUT `build_qdrant_point` returns exactly that schema!
-                    # And `qdrant_repo.link_content` calls `_create_point_from_document` which expects that dict.
-                    # Wait, `qdrant_repo.link_content` might need update if `build_qdrant_point` returns something different
-                    # `build_qdrant_point` returns { document_id, chunk_id, text, source, vector, metadata }
-                    # `qdrant_repo._create_point_from_document` uses: doc.get("text"), doc.get("vector"), doc.get("metadata")
-                    # It seems compatible.
-                    
                     # We upload to user_collection, NOT collection_name (which is just a tag now)
-                    # But repo method signature is `link_content(collection_name, ...)`
-                    # So we pass `user_collection` as the name.
                     success = self.qdrant_repo.link_content(user_collection, points)
                     
                     if success:
-                        results.append(LinkContentResponse(file_id=item.file_id or "url", status="success", message="Linked successfully"))
+                        results.append(LinkContentResponse(
+                            name=item.name,
+                            file_id=item.file_id or "url",
+                            type=parser_type,
+                            indexing_status="success",
+                            status_code=200,
+                            message="Linked successfully"
+                        ))
                     else:
-                        results.append(LinkContentResponse(file_id=item.file_id or "url", status="failed", message="Failed to store vectors"))
+                        results.append(LinkContentResponse(
+                            name=item.name,
+                            file_id=item.file_id or "url",
+                            type=parser_type,
+                            indexing_status="failed",
+                            status_code=500,
+                            message="Failed to store vectors"
+                        ))
                 else:
-                     results.append(LinkContentResponse(file_id=item.file_id or "url", status="failed", message="No content extracted"))
+                     results.append(LinkContentResponse(
+                        name=item.name,
+                        file_id=item.file_id or "url",
+                        type=parser_type,
+                        indexing_status="failed",
+                        status_code=400,
+                        message="No content extracted"
+                     ))
 
             except Exception as e:
-                logger.error(f"Error linking item {item.name}: {e}")
+                logger.error(f"Error linking item {item.name}: {e}", exc_info=True)
                 results.append(LinkContentResponse(
-                    file_id=item.file_id or "unknown", 
-                    status="failed", 
+                    name=item.name,
+                    file_id=item.file_id or "unknown",
+                    type=item.type,
+                    indexing_status="failed",
+                    status_code=500,
                     message=str(e)
                 ))
 
@@ -227,22 +218,11 @@ class CollectionService:
         query_text: str,
         enable_critic: bool = True,
         structured_output: bool = False,
-        quiz_config: Optional[QuizConfig] = None,
         background_tasks: Optional[BackgroundTasks] = None
-    ) -> Any: # Returns QueryResponse, QuizResponse or QuizJobResponse
-        
-        # We delegate to QueryService, but we need to ensure QueryService uses correct filters.
-        # Since QueryService is initialized elsewhere or we can instantiate it here?
-        # Typically Service uses other Services.
-        # But `collection_service` logic for query was mainly wrapper.
-        
-        # We delegate to QueryService, but we need to ensure QueryService uses correct filters.
-        
-        # We pass collection_name as 'collection_id' filter logic, 
-        # but the query_service.search expects `collection_name` as the PHYSICAL Qdrant collection.
-        # So we must pass `user_{user_id}` as collection_name, 
-        # and `collection_name` (logical) as `collection_id` filter.
-        
+    ) -> QueryResponse:
+        """
+        Query the user's vector store, filtering by the logical collection name.
+        """
         user_collection = self._get_qdrant_collection_name(user_id)
         
         return self.query_service.search(
@@ -250,7 +230,6 @@ class CollectionService:
             query_text=query_text,
             enable_critic=enable_critic,
             structured_output=structured_output,
-            quiz_config=quiz_config,
             collection_id=collection_name
         )
 

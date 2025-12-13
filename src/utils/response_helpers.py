@@ -1,6 +1,5 @@
 from datetime import datetime
 from models.api_models import LinkContentItem, LinkContentResponse, UnlinkContentResponse
-from models.quiz_models import QuizResponse, QuizData, QuizMetadata, QuizSource, ContentSummary, ScoringInfo, GenerationMetadata
 from models.api_models import QueryResponse
 import time
 
@@ -44,42 +43,4 @@ class ResponseBuilder:
             confidence=0.0,
             is_relevant=False,
             chunks=[]
-        )
-
-    @staticmethod
-    def quiz_error(message: str, collection_name: str) -> QuizResponse:
-        quiz_metadata = QuizMetadata(
-            quiz_id="error",
-            title="Quiz Generation Error",
-            difficulty="unknown",
-            estimated_time_minutes=0,
-            total_questions=0,
-            max_score=0,
-            created_at=time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()),
-            source=QuizSource(type="collection", collection_name=collection_name, source_count=0)
-        )
-
-        return QuizResponse(
-            quiz_data=QuizData(
-                quiz_metadata=quiz_metadata,
-                questions=[],
-                content_summary=ContentSummary(
-                    main_summary=message,
-                    key_concepts=[],
-                    topics_covered=[],
-                    prerequisite_knowledge=[]
-                ),
-                scoring_info=ScoringInfo(
-                    total_score=0,
-                    passing_score=0,
-                    time_limit_minutes=0
-                )
-            ),
-            generation_metadata=GenerationMetadata(
-                confidence=0.0,
-                is_relevant=False,
-                generation_time_ms=0,
-                model_used="unknown",
-                content_sources=[]
-            )
         )

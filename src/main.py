@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import collections, config, files, feedback, quizzes
+from api.routes import collections, config, files, feedback
 from config import Config
 
 app = FastAPI(
@@ -24,7 +24,6 @@ app.include_router(config.router, prefix="/api/v1", tags=["config"])
 app.include_router(files.router, prefix="/api/v1", tags=["files"])
 app.include_router(feedback.router, prefix="/api/v1", tags=["feedback"])
 # app.include_router(users.router, prefix="/api/v1/users", tags=["users"]) # REMOVED
-app.include_router(quizzes.router, prefix="/api/v1", tags=["quizzes"])
 
 @app.get("/")
 def read_root():

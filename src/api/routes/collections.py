@@ -2,8 +2,6 @@ from fastapi import APIRouter, HTTPException, Response, Query, Header, Backgroun
 from typing import List, Optional, Union
 from api.api_constants import *
 from models.api_models import LinkContentItem, LinkContentResponse, QueryRequest, QueryResponse, UnlinkContentResponse, ApiResponse
-from models.quiz_models import QuizResponse
-from models.quiz_job_models import QuizJobResponse
 from services.collection_service import CollectionService
 
 router = APIRouter()
@@ -28,7 +26,7 @@ def unlink_content(collection_name: str, file_ids: List[str], response: Response
     return collection_service.unlink_content(collection_name, file_ids, x_user_id)
 
 @router.post("/{collection_name}" + QUERY_COLLECTION)
-def query_collection(collection_name: str, request: QueryRequest, background_tasks: BackgroundTasks, x_user_id: str = Header(...)) -> Union[QueryResponse, QuizResponse, QuizJobResponse]:
+def query_collection(collection_name: str, request: QueryRequest, background_tasks: BackgroundTasks, x_user_id: str = Header(...)) -> QueryResponse:
     """
     Query the vector store, filtering by the logical collection name.
     """
@@ -38,7 +36,6 @@ def query_collection(collection_name: str, request: QueryRequest, background_tas
         request.query,
         request.enable_critic,
         request.structured_output,
-        request.quiz_config,
         background_tasks
     )
 

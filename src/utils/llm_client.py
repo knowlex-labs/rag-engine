@@ -21,16 +21,13 @@ class LlmClient:
             self.max_tokens = Config.llm.GEMINI_MAX_TOKENS
             self.temperature = Config.llm.GEMINI_TEMPERATURE
 
-    def generate_answer(self, query: str, context_chunks: List[str], force_json: bool = None, quiz_config: Optional[Any] = None) -> str:
+    def generate_answer(self, query: str, context_chunks: List[str], force_json: bool = None) -> str:
         if not context_chunks:
             return "No relevant context found"
 
         should_use_json = force_json if force_json is not None else Config.llm.ENABLE_JSON_RESPONSE
 
-        # Quiz mode detection
-        if quiz_config is not None:
-            return self._generate_quiz_json(query, context_chunks, quiz_config)
-        elif should_use_json and self._is_educational_query(query):
+        if should_use_json and self._is_educational_query(query):
             return self._generate_educational_json(query, context_chunks)
         else:
             return self._generate_text_response(query, context_chunks)
@@ -110,62 +107,7 @@ Important:
             logger.error(f"Error generating educational JSON: {str(e)}")
             return f"Error generating educational JSON: {str(e)}"
 
-    def _generate_quiz_json(self, query: str, context_chunks: List[str], quiz_config: Any) -> str:
-        """Generate quiz JSON with questions and content analysis based on quiz config."""
-        context = "\n\n".join(context_chunks)
 
-        prompt = f"""You are an experienced physics teacher creating a comprehensive quiz. Generate structured educational material in valid JSON format based on the provided physics content.
-
-Physics Content:
-{context}
-
-Quiz Requirements:
-- Number of questions: {quiz_config.num_questions}
-- Difficulty level: {quiz_config.difficulty}
-- Question types: {', '.join(quiz_config.question_types)}
-- Topic: Based on the physics content provided
-
-Respond with valid JSON only:
-{{
-    "questions": [
-        {{
-            "question_text": "Complete question text here",
-            "options": ["Option A text", "Option B text", "Option C text", "Option D text"],
-            "correct_answer": "Option B text",
-            "explanation": "Detailed explanation why this is correct",
-            "requires_diagram": true,
-            "contains_math": true,
-            "diagram_type": "pulley_system"
-        }}
-    ],
-    "content_analysis": {{
-        "main_summary": "Brief summary of what this quiz covers based on the physics content",
-        "key_concepts": ["Concept 1", "Concept 2", "Concept 3"],
-        "topics_covered": ["Topic 1", "Topic 2"],
-        "prerequisite_knowledge": ["Prereq 1", "Prereq 2"]
-    }}
-}}
-
-Important Guidelines:
-- Generate exactly {quiz_config.num_questions} questions
-- Base ALL questions strictly on the provided physics content
-- For difficulty level '{quiz_config.difficulty}': adjust question complexity accordingly
-- For diagram_type use: "pulley_system", "inclined_plane", "force_diagram", "circuit", or null
-- Set requires_diagram to true only if a diagram is essential for understanding
-- Set contains_math to true if equations/formulas are present
-- Ensure content_analysis reflects the actual physics content provided
-- Make sure JSON is valid and complete"""
-
-        try:
-            if self.provider == "openai":
-                return self._generate_openai_answer(prompt)
-            elif self.provider == "gemini":
-                return self._generate_gemini_answer(prompt)
-            else:
-                return f"Error: Unknown LLM provider: {self.provider}"
-        except Exception as e:
-            logger.error(f"Error generating quiz JSON: {str(e)}")
-            return f"Error generating quiz JSON: {str(e)}"
 
     def _generate_openai_answer(self, prompt: str) -> str:
         response = self.client.chat.completions.create(

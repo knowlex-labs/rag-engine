@@ -70,45 +70,17 @@ class WebParser(BaseParser):
         self.validate_source(source)
 
         url = str(source)
-        logger.info(f"[web_parser] 🌐 Starting web parsing for URL: {url}")
 
         try:
-            # Fetch HTML
-            logger.info(f"[web_parser] 📥 Fetching HTML content...")
             html = self._fetch_html(url)
-            logger.info(f"[web_parser] ✅ HTML fetched successfully, size: {len(html)} characters")
-
-            # Extract main content using readability
-            logger.info(f"[web_parser] 🔍 Extracting main content using readability...")
             doc = Document(html)
             title = doc.title()
             content_html = doc.summary()
-            logger.info(f"[web_parser] 📰 Article title: '{title}'")
-            logger.info(f"[web_parser] 📝 Main content extracted, size: {len(content_html)} characters")
-
-            # Parse with BeautifulSoup
-            logger.info(f"[web_parser] 🍲 Parsing HTML with BeautifulSoup...")
             soup = BeautifulSoup(content_html, 'lxml')
-
-            # Extract metadata
-            logger.info(f"[web_parser] 🏷️ Extracting metadata...")
             metadata = self._extract_metadata(soup, url, title)
-            logger.info(f"[web_parser] 📋 Metadata - Domain: {metadata.domain}, Author: {metadata.author}")
-
-            # Extract hierarchical sections
-            logger.info(f"[web_parser] 📑 Extracting hierarchical sections...")
             sections = self._extract_sections(soup)
-            logger.info(f"[web_parser] 🗂️ Extracted {len(sections)} sections")
-
-            # Build full text
             full_text = soup.get_text(separator='\n', strip=True)
             has_code = self._has_code_blocks(soup)
-
-            logger.info(f"[web_parser] 📊 Final content stats:")
-            logger.info(f"  - Full text length: {len(full_text)} characters")
-            logger.info(f"  - Number of sections: {len(sections)}")
-            logger.info(f"  - Has code blocks: {has_code}")
-            logger.info(f"[web_parser] ✅ Web parsing completed successfully for {url}")
 
             return ParsedContent(
                 text=full_text,
@@ -131,20 +103,10 @@ class WebParser(BaseParser):
             raise ValueError(f"Failed to parse web page: {e}")
 
     def _fetch_html(self, url: str) -> str:
-        """Fetch HTML content from URL."""
         headers = {
             'User-Agent': self.user_agent
         }
-
-        logger.info(f"[web_parser] 🔗 Making HTTP request to: {url}")
-        logger.info(f"[web_parser] 🕰️ Timeout: {self.timeout}s, User-Agent: {self.user_agent}")
-
         response = requests.get(url, headers=headers, timeout=self.timeout)
-
-        logger.info(f"[web_parser] 📡 HTTP Response: {response.status_code} {response.reason}")
-        logger.info(f"[web_parser] 📏 Content-Length: {len(response.text)} characters")
-        logger.info(f"[web_parser] 🗂️ Content-Type: {response.headers.get('content-type', 'unknown')}")
-
         response.raise_for_status()
         return response.text
 

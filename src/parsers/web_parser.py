@@ -70,28 +70,17 @@ class WebParser(BaseParser):
         self.validate_source(source)
 
         url = str(source)
-        logger.info(f"Parsing web article: {url}")
 
         try:
-            # Fetch HTML
             html = self._fetch_html(url)
-
-            # Extract main content using readability
             doc = Document(html)
             title = doc.title()
             content_html = doc.summary()
-
-            # Parse with BeautifulSoup
             soup = BeautifulSoup(content_html, 'lxml')
-
-            # Extract metadata
             metadata = self._extract_metadata(soup, url, title)
-
-            # Extract hierarchical sections
             sections = self._extract_sections(soup)
-
-            # Build full text
             full_text = soup.get_text(separator='\n', strip=True)
+            has_code = self._has_code_blocks(soup)
 
             return ParsedContent(
                 text=full_text,
@@ -100,27 +89,25 @@ class WebParser(BaseParser):
                 source_type='web',
                 has_equations=False,
                 has_diagrams=False,
-                has_code_blocks=self._has_code_blocks(soup)
+                has_code_blocks=has_code
             )
 
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"HTTP Error fetching {url}: {e.response.status_code} {e.response.reason}")
+            raise ValueError(f"Failed to fetch content: HTTP {e.response.status_code} {e.response.reason} for URL: {url}")
         except requests.RequestException as e:
             logger.error(f"Failed to fetch URL {url}: {e}")
-            raise ValueError(f"Failed to fetch web page: {e}")
+            raise ValueError(f"Failed to fetch web page: {str(e)}")
         except Exception as e:
             logger.error(f"Error parsing web page {url}: {e}", exc_info=True)
             raise ValueError(f"Failed to parse web page: {e}")
 
     def _fetch_html(self, url: str) -> str:
-        """Fetch HTML content from URL."""
         headers = {
             'User-Agent': self.user_agent
         }
-
-        logger.info(f"Fetching URL: {url}")
         response = requests.get(url, headers=headers, timeout=self.timeout)
         response.raise_for_status()
-
-        logger.info(f"Successfully fetched {len(response.text)} characters from {url}")
         return response.text
 
     def _extract_metadata(self, soup: BeautifulSoup, url: str, title: str) -> ParsedMetadata:

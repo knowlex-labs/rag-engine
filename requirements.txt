@@ -1,7 +1,7 @@
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
-qdrant-client==1.7.3
+qdrant-client[fastembed]==1.16.2
 sentence-transformers==2.7.0
 huggingface_hub==0.20.0
 python-multipart==0.0.9
@@ -12,7 +12,7 @@ openai>=1.0.0
 google-generativeai
 pdfplumber==0.10.0
 minio==7.2.9
-youtube-transcript-api==0.6.2
+youtube-transcript-api
 pytube==15.0.0
 beautifulsoup4==4.12.3
 lxml==5.1.0

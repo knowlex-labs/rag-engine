@@ -456,23 +456,25 @@ class QdrantRepository:
 
     def _search_with_retry(self, collection_name: str, query_vector: List[float], limit: int, query_filter: Optional[Filter]) -> List[Any]:
         try:
-            return self.client.search(
+            results = self.client.query_points(
                 collection_name=collection_name,
-                query_vector=query_vector,
+                query=query_vector,
                 limit=limit,
                 query_filter=query_filter
             )
+            return results.points if hasattr(results, 'points') else results
         except Exception as e:
             if "Index required" in str(e):
                 logger.warning(f"Missing index detected for collection '{collection_name}', attempting to create indexes")
                 if self.ensure_indexes(collection_name):
                     logger.info(f"Indexes created, retrying query for collection '{collection_name}'")
-                    return self.client.search(
+                    results = self.client.query_points(
                         collection_name=collection_name,
-                        query_vector=query_vector,
+                        query=query_vector,
                         limit=limit,
                         query_filter=query_filter
                     )
+                    return results.points if hasattr(results, 'points') else results
             raise
 
     def _format_search_results(self, results: List[Any]) -> List[Dict[str, Any]]:

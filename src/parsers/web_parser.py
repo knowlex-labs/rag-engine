@@ -70,28 +70,45 @@ class WebParser(BaseParser):
         self.validate_source(source)
 
         url = str(source)
-        logger.info(f"Parsing web article: {url}")
+        logger.info(f"[web_parser] 🌐 Starting web parsing for URL: {url}")
 
         try:
             # Fetch HTML
+            logger.info(f"[web_parser] 📥 Fetching HTML content...")
             html = self._fetch_html(url)
+            logger.info(f"[web_parser] ✅ HTML fetched successfully, size: {len(html)} characters")
 
             # Extract main content using readability
+            logger.info(f"[web_parser] 🔍 Extracting main content using readability...")
             doc = Document(html)
             title = doc.title()
             content_html = doc.summary()
+            logger.info(f"[web_parser] 📰 Article title: '{title}'")
+            logger.info(f"[web_parser] 📝 Main content extracted, size: {len(content_html)} characters")
 
             # Parse with BeautifulSoup
+            logger.info(f"[web_parser] 🍲 Parsing HTML with BeautifulSoup...")
             soup = BeautifulSoup(content_html, 'lxml')
 
             # Extract metadata
+            logger.info(f"[web_parser] 🏷️ Extracting metadata...")
             metadata = self._extract_metadata(soup, url, title)
+            logger.info(f"[web_parser] 📋 Metadata - Domain: {metadata.domain}, Author: {metadata.author}")
 
             # Extract hierarchical sections
+            logger.info(f"[web_parser] 📑 Extracting hierarchical sections...")
             sections = self._extract_sections(soup)
+            logger.info(f"[web_parser] 🗂️ Extracted {len(sections)} sections")
 
             # Build full text
             full_text = soup.get_text(separator='\n', strip=True)
+            has_code = self._has_code_blocks(soup)
+
+            logger.info(f"[web_parser] 📊 Final content stats:")
+            logger.info(f"  - Full text length: {len(full_text)} characters")
+            logger.info(f"  - Number of sections: {len(sections)}")
+            logger.info(f"  - Has code blocks: {has_code}")
+            logger.info(f"[web_parser] ✅ Web parsing completed successfully for {url}")
 
             return ParsedContent(
                 text=full_text,
@@ -100,12 +117,15 @@ class WebParser(BaseParser):
                 source_type='web',
                 has_equations=False,
                 has_diagrams=False,
-                has_code_blocks=self._has_code_blocks(soup)
+                has_code_blocks=has_code
             )
 
+        except requests.exceptions.HTTPError as e:
+            logger.error(f"HTTP Error fetching {url}: {e.response.status_code} {e.response.reason}")
+            raise ValueError(f"Failed to fetch content: HTTP {e.response.status_code} {e.response.reason} for URL: {url}")
         except requests.RequestException as e:
             logger.error(f"Failed to fetch URL {url}: {e}")
-            raise ValueError(f"Failed to fetch web page: {e}")
+            raise ValueError(f"Failed to fetch web page: {str(e)}")
         except Exception as e:
             logger.error(f"Error parsing web page {url}: {e}", exc_info=True)
             raise ValueError(f"Failed to parse web page: {e}")
@@ -116,11 +136,16 @@ class WebParser(BaseParser):
             'User-Agent': self.user_agent
         }
 
-        logger.info(f"Fetching URL: {url}")
-        response = requests.get(url, headers=headers, timeout=self.timeout)
-        response.raise_for_status()
+        logger.info(f"[web_parser] 🔗 Making HTTP request to: {url}")
+        logger.info(f"[web_parser] 🕰️ Timeout: {self.timeout}s, User-Agent: {self.user_agent}")
 
-        logger.info(f"Successfully fetched {len(response.text)} characters from {url}")
+        response = requests.get(url, headers=headers, timeout=self.timeout)
+
+        logger.info(f"[web_parser] 📡 HTTP Response: {response.status_code} {response.reason}")
+        logger.info(f"[web_parser] 📏 Content-Length: {len(response.text)} characters")
+        logger.info(f"[web_parser] 🗂️ Content-Type: {response.headers.get('content-type', 'unknown')}")
+
+        response.raise_for_status()
         return response.text
 
     def _extract_metadata(self, soup: BeautifulSoup, url: str, title: str) -> ParsedMetadata:

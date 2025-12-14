@@ -83,49 +83,42 @@ class QueryService:
         query_vector: List[float],
         query_text: str,
         limit: int = 10,
-        collection_id: Optional[str] = None
+        collection_ids: Optional[List[str]] = None,
+        file_ids: Optional[List[str]] = None
     ) -> List[Dict]:
-        """
-        Intelligently retrieve chunks based on query intent.
-
-        For concept queries: Prioritize concepts, then examples
-        For example queries: Prioritize examples, then concepts
-        For problem queries: Prioritize questions and examples
-        For general queries: Mix all types
-        """
         intent = self._detect_query_intent(query_text)
 
+        filter_kwargs = {}
+        if collection_ids:
+             filter_kwargs['collection_ids'] = collection_ids
+        if file_ids:
+             filter_kwargs['file_ids'] = file_ids
+
         if not intent:
-            # No specific intent - get diverse results
             return self.qdrant_repo.query_collection(
-                collection_name, query_vector, limit, collection_id=collection_id
+                collection_name, query_vector, limit, **filter_kwargs
             )
 
-        # Get chunks of the prioritized type
         primary_results = self.qdrant_repo.query_collection(
-            collection_name, query_vector, limit=limit//2, chunk_type=intent, collection_id=collection_id
+            collection_name, query_vector, limit=limit//2, chunk_type=intent, **filter_kwargs
         )
 
-        # Get supporting chunks based on intent
         if intent == ChunkType.CONCEPT.value:
-            # For concept queries, also get examples to illustrate
-            secondary_results = self.qdrant_repo.query_collection(
-                collection_name, query_vector, limit=limit//2, chunk_type=ChunkType.EXAMPLE.value, collection_id=collection_id
-            )
+            secondary_type = ChunkType.EXAMPLE.value
         elif intent == ChunkType.EXAMPLE.value:
-            # For example queries, also get concepts for context
-            secondary_results = self.qdrant_repo.query_collection(
-                collection_name, query_vector, limit=limit//2, chunk_type=ChunkType.CONCEPT.value, collection_id=collection_id
-            )
+            secondary_type = ChunkType.CONCEPT.value
         elif intent == ChunkType.QUESTION.value:
-            # For problem queries, get examples showing solutions
+            secondary_type = ChunkType.EXAMPLE.value
+        else:
+            secondary_type = None
+
+        if secondary_type:
             secondary_results = self.qdrant_repo.query_collection(
-                collection_name, query_vector, limit=limit//2, chunk_type=ChunkType.EXAMPLE.value, collection_id=collection_id
+                collection_name, query_vector, limit=limit//2, chunk_type=secondary_type, **filter_kwargs
             )
         else:
             secondary_results = []
 
-        # Combine and sort by relevance
         combined = primary_results + secondary_results
         combined.sort(key=lambda x: x.get("score", 0), reverse=True)
         return combined[:limit]
@@ -248,36 +241,28 @@ class QueryService:
                 result["feedback_score"] = feedback_score
 
             results.sort(key=lambda x: x.get("score", 0), reverse=True)
-            return results
-
         except Exception:
             return results
 
-    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False, collection_id: Optional[str] = None) -> QueryResponse:
-        """
-        Search with smart chunking - automatically detects query intent and retrieves
-        appropriate chunk types (concepts, examples, or questions).
+    def get_all_embeddings(self, collection_name: str, limit: int = 100) -> Dict[str, Any]:
+        return self.qdrant_repo.get_all_embeddings(collection_name, limit=limit, include_vectors=False)
 
-        Args:
-            collection_name: Physical Qdrant collection name (user_{user_id})
-            query_text: The user's query
-            limit: Max results
-            enable_critic: enable llm critic
-            structured_output: json output
-            collection_id: Logical collection/folder filter
-        """
+    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False, collection_ids: Optional[List[str]] = None, file_ids: Optional[List[str]] = None) -> QueryResponse:
         try:
-            # Generate embedding
             query_vector = self.embedding_client.generate_single_embedding(query_text)
 
-            # Use smart retrieval to get relevant chunks based on query intent
-            results = self._smart_chunk_retrieval(collection_name, query_vector, query_text, limit, collection_id=collection_id)
+            results = self._smart_chunk_retrieval(
+                collection_name,
+                query_vector,
+                query_text,
+                limit,
+                collection_ids=collection_ids,
+                file_ids=file_ids
+            )
 
-            # Apply reranking if available and enabled
             if reranker.is_available() and results:
                 results = reranker.rerank(query_text, results)
 
-            # Apply feedback scoring if enabled
             results = self._apply_feedback_scoring(results, query_vector, collection_name)
 
             return self._create_query_response(results, query_text, enable_critic, structured_output)

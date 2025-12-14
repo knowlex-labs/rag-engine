@@ -1,15 +1,16 @@
-from typing import List, Dict, Any, Optional
+
+from typing import List, Optional
 import logging
+import asyncio
 import uuid
-from fastapi import BackgroundTasks
+from datetime import datetime
 
 from repositories.qdrant_repository import QdrantRepository
-from services.file_service import file_service
+from services.storage.gcs_storage_service import GCSStorageService
 from services.hierarchical_chunking_service import chunking_service
-from services.query_service import QueryService
 from utils.embedding_client import embedding_client
 from utils.document_builder import build_qdrant_point
-from models.api_models import LinkContentItem, LinkContentResponse, UnlinkContentResponse, QueryResponse
+from models.api_models import BatchLinkRequest, LinkItem, IndexingStatus
 from parsers.parser_factory import ParserFactory
 from config import Config
 
@@ -17,225 +18,170 @@ logger = logging.getLogger(__name__)
 
 class CollectionService:
     def __init__(self):
-        logger.info("Initializing CollectionService")
         self.qdrant_repo = QdrantRepository()
         self.embedding_client = embedding_client
-        self.query_service = QueryService()
+        self.storage_service = GCSStorageService()
 
-    def _get_qdrant_collection_name(self, user_id: str) -> str:
-        """Get the per-user Qdrant collection name"""
+    def _get_user_collection(self, user_id: str) -> str:
         return f"user_{user_id}"
 
-    async def link_content(self, collection_name: str, files: List[LinkContentItem], user_id: str) -> List[LinkContentResponse]:
-        """
-        Link content (files, URLs) to a logical collection (folder).
-        Content is stored in user_{user_id} collection with collection_id=collection_name.
-        """
+    async def process_batch(self, request: BatchLinkRequest, tenant_id: str):
+        self.qdrant_repo.create_user_collection(tenant_id)
+
         results = []
-        user_collection = self._get_qdrant_collection_name(user_id)
-
-        # Ensure user's Qdrant collection exists
-        self.qdrant_repo.create_user_collection(user_id)
-
-        for item in files:
+        for item in request.items:
             try:
-                # 1. Determine Source & Parser
-                source_content = None
-                parser_type = "pdf" # Default
-                source_identifier = item.file_id
+                source = item.url or item.gcs_url
+                parser = ParserFactory.get_parser(item.type)
+                parsed = parser.parse(source)
 
-                if item.youtube_url:
-                    parser_type = "youtube"
-                    source_identifier = item.youtube_url
-                elif item.web_url:
-                    parser_type = "web"
-                    source_identifier = item.web_url
-                elif item.file_id:
-                     # For files, we need to get the local path
-                     # Assuming item.name is the filename, pass it to file_service
-                     # Note: file_service needs update to accept optional filename or we rely on file_id
-                     # if file_service is stateless, we might need to rely on convention or item.name
-                     # using get_local_file_for_processing which currently might use DB.
-                     # We'll update file_service later to handle this gracefully.
-                     source_identifier = file_service.get_local_file_for_processing(item.file_id, user_id)
-                     if not source_identifier:
-                         raise ValueError(f"File not found: {item.file_id}")
-                else:
-                    raise ValueError("No valid source provided (file_id, youtube_url, or web_url)")
+                chunks = chunking_service.chunk_parsed_content(parsed, item.type)
 
-                # 2. Parse Content
-                # PDF uses legacy chunking_service for now (as per plan to preserve strategies)
-                # YouTube/Web use new ParserFactory
-                
                 points = []
-
-                if parser_type == "pdf":
-                    # PDF Processing
-                    file_content = file_service.get_file_content(item.file_id, user_id)
-                    
-                    if not file_content:
-                        # Try reading from path if get_file_content fails (redundancy)
-                        if source_identifier and str(source_identifier).endswith('.pdf'):
-                            with open(source_identifier, 'rb') as f:
-                                raw_data = f.read()
-                                file_content = file_service.extract_pdf_text(raw_data)
-                    
-                    if not file_content:
-                        raise ValueError("Could not extract text from file")
-
-                    # Chunking
-                    chunks = chunking_service.chunk_text(
-                        text=file_content,
-                        file_type="pdf",
-                        book_metadata=None
+                for chunk in chunks:
+                    emb = self.embedding_client.generate_single_embedding(chunk.text)
+                    point = build_qdrant_point(
+                        collection_id=item.collection_id or "default",
+                        file_id=item.file_id,
+                        chunk_id=chunk.chunk_id,
+                        chunk_text=chunk.text,
+                        embedding=emb,
+                        source_type=item.type,
+                        file_name=parsed.metadata.title or "Unknown",
+                        chunk_type=chunk.chunk_metadata.chunk_type.value,
+                        youtube_channel=None,
+                        web_domain=None
                     )
+                    points.append(point)
 
-                    # Embed & Build Points
-                    for chunk in chunks:
-                        embedding = self.embedding_client.generate_single_embedding(chunk.text)
-                        
-                        point = build_qdrant_point(
-                            collection_id=collection_name, # Logical folder
-                            file_id=item.file_id,
-                            chunk_id=chunk.chunk_id,
-                            chunk_text=chunk.text,
-                            embedding=embedding,
-                            source_type="pdf",
-                            file_name=item.name,
-                            chunk_type=chunk.chunk_metadata.chunk_type.value,
-                            page_number=chunk.topic_metadata.page_start
-                        )
-                        points.append(point)
+                user_col = f"user_{tenant_id}"
+                self.qdrant_repo.link_content(user_col, points)
 
-                else:
-                    # New Parser Path (YouTube/Web)
-                    parser = ParserFactory.get_parser(parser_type, gemini_api_key=Config.llm.GEMINI_API_KEY)
-                    parsed_content = parser.parse(source_identifier)
-                    
-                    chunks = chunking_service.chunk_parsed_content(
-                        parsed_content=parsed_content, 
-                        file_type=parser_type
-                    )
-
-                    for chunk in chunks:
-                        embedding = self.embedding_client.generate_single_embedding(chunk.text)
-                        
-                        point = build_qdrant_point(
-                            collection_id=collection_name, 
-                            file_id=item.file_id or str(uuid.uuid5(uuid.NAMESPACE_URL, source_identifier)),
-                            chunk_id=chunk.chunk_id,
-                            chunk_text=chunk.text,
-                            embedding=embedding,
-                            source_type=parser_type,
-                            file_name=item.name,
-                            chunk_type=chunk.chunk_metadata.chunk_type.value,
-                            youtube_channel=parsed_content.metadata.channel if parser_type == 'youtube' else None,
-                            web_domain=parsed_content.metadata.domain if parser_type == 'web' else None
-                        )
-                        points.append(point)
-
-                # 3. Store in Qdrant
-                if points:
-                    # We upload to user_collection, NOT collection_name (which is just a tag now)
-                    success = self.qdrant_repo.link_content(user_collection, points)
-                    
-                    if success:
-                        results.append(LinkContentResponse(
-                            name=item.name,
-                            file_id=item.file_id or "url",
-                            type=parser_type,
-                            indexing_status="success",
-                            status_code=200,
-                            message="Linked successfully"
-                        ))
-                    else:
-                        results.append(LinkContentResponse(
-                            name=item.name,
-                            file_id=item.file_id or "url",
-                            type=parser_type,
-                            indexing_status="failed",
-                            status_code=500,
-                            message="Failed to store vectors"
-                        ))
-                else:
-                     results.append(LinkContentResponse(
-                        name=item.name,
-                        file_id=item.file_id or "url",
-                        type=parser_type,
-                        indexing_status="failed",
-                        status_code=400,
-                        message="No content extracted"
-                     ))
+                results.append({
+                    "file_id": item.file_id,
+                    "status": "INDEXING_SUCCESS",
+                    "error": None
+                })
 
             except Exception as e:
-                logger.error(f"Error linking item {item.name}: {e}", exc_info=True)
-                results.append(LinkContentResponse(
-                    name=item.name,
-                    file_id=item.file_id or "unknown",
-                    type=item.type,
-                    indexing_status="failed",
-                    status_code=500,
-                    message=str(e)
-                ))
+                logger.error(f"Failed to process {item.file_id}: {e}")
+                results.append({
+                    "file_id": item.file_id,
+                    "status": "INDEXING_FAILED",
+                    "error": str(e)
+                })
 
         return results
 
-    def unlink_content(self, collection_name: str, file_ids: List[str], user_id: str) -> List[UnlinkContentResponse]:
-        """
-        Unlink content from a logical collection.
-        Deletes points from user_{user_id} where collection_id=collection_name AND file_id IN file_ids.
-        """
-        results = []
-        user_collection = self._get_qdrant_collection_name(user_id)
+    def _resolve_source(self, item: LinkItem) -> str:
+        if item.type == 'file':
+            if not item.gcs_url:
+                raise ValueError("Missing gcs_url")
+            return self._download_from_gcs(item.gcs_url)
+        return item.url
+
+    def _download_from_gcs(self, gcs_path: str) -> str:
+        if gcs_path.startswith("gs://"):
+            parts = gcs_path.replace("gs://", "").split("/", 1)
+            if len(parts) > 1:
+                return self.storage_service.download_for_processing(parts[1])
+        raise ValueError(f"Invalid GCS URL: {gcs_path}")
+
+    def _parse_content(self, source: str, item_type: str):
+        parser = ParserFactory.get_parser(item_type)
+        return parser.parse(source)
+
+    def _chunk_content(self, parsed_content, item_type: str):
+        return chunking_service.chunk_parsed_content(parsed_content, item_type)
+
+    def _embed_and_build_points(self, chunks, item: LinkItem, parsed_content):
+        points = []
+        for chunk in chunks:
+            embedding = self.embedding_client.generate_single_embedding(chunk.text)
+            
+            meta_channel = parsed_content.metadata.channel if item.type == 'youtube' else None
+            meta_domain = parsed_content.metadata.domain if item.type == 'web' else None
+            
+            point = build_qdrant_point(
+                collection_id=item.collection_id or "default", 
+                file_id=item.file_id,
+                chunk_id=chunk.chunk_id,
+                chunk_text=chunk.text,
+                embedding=embedding,
+                source_type=item.type,
+                file_name=parsed_content.metadata.title or "Unknown",
+                chunk_type=chunk.chunk_metadata.chunk_type.value,
+                youtube_channel=meta_channel,
+                web_domain=meta_domain
+            )
+            points.append(point)
+        
+        if not points:
+            raise ValueError("No chunks generated")
+        return points
+
+    def _index_points(self, tenant_id: str, points: List):
+        user_col = self._get_user_collection(tenant_id)
+        self.qdrant_repo.link_content(user_col, points)
+
+    def _set_status(self, tenant_id: str, file_id: str, status: IndexingStatus, error: Optional[str] = None, item_name: Optional[str] = None, source_type: Optional[str] = None):
+        user_col = self._get_user_collection(tenant_id)
+        status_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{file_id}_status"))
+
+        payload = {
+            "type": "status",
+            "file_id": file_id,
+            "name": item_name,
+            "source": source_type,
+            "status": status.value,
+            "error": error,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+
+        logger.info(f"[_set_status] Setting status for file_id={file_id}, status={status.value}, name={item_name}, source={source_type}")
+
+        from qdrant_client.models import PointStruct
+        vector_size = Config.embedding.VECTOR_SIZE
+        point = PointStruct(id=status_id, vector=[0.0]*vector_size, payload=payload)
+
+        try:
+            self.qdrant_repo.client.upsert(user_col, points=[point])
+            logger.info(f"[_set_status] Successfully upserted status point for file_id={file_id}")
+        except Exception as e:
+            logger.error(f"[_set_status] Failed to upsert status for file_id={file_id}: {e}", exc_info=True)
+
+    def get_status(self, tenant_id: str, file_id: str) -> dict:
+        user_col = self._get_user_collection(tenant_id)
+        status_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{file_id}_status"))
+        try:
+            res = self.qdrant_repo.client.retrieve(user_col, ids=[status_id])
+            return res[0].payload if res else {"status": "UNKNOWN", "file_id": file_id}
+        except Exception as e:
+            return {"status": "UNKNOWN", "error": str(e)}
+
+
+
+    def unlink_content(self, collection_name: Optional[str], file_ids: List[str], user_id: str) -> bool:
+        user_col = self._get_user_collection(user_id)
+        all_success = True
 
         for file_id in file_ids:
             try:
-                # Use filtered delete in Qdrant
-                # We need to delete where metadata.collection_id == collection_name AND metadata.file_id == file_id
-                
-                # We can use qdrant_repo.unlink_content with new filters
-                success = self.qdrant_repo.unlink_content(
-                    collection_name=user_collection,
-                    file_id=file_id,
-                    collection_id=collection_name
-                )
+                if collection_name is None:
+                     status_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{file_id}_status"))
+                     self.qdrant_repo.client.delete(user_col, points_selector=[status_id])
 
-                if success:
-                    results.append(UnlinkContentResponse(file_id=file_id, status="success", message="Unlinked successfully"))
-                else:
-                    results.append(UnlinkContentResponse(file_id=file_id, status="failed", message="Failed to delete vectors"))
-
-            except Exception as e:
-                logger.error(f"Error unlinking file {file_id}: {e}")
-                results.append(UnlinkContentResponse(file_id=file_id, status="failed", message=str(e)))
+                success = self.qdrant_repo.unlink_content(user_col, file_id=file_id, collection_id=collection_name)
+                if not success:
+                    all_success = False
+            except Exception:
+                all_success = False
         
-        return results
+        return all_success
 
-    def query_collection(
-        self,
-        user_id: str,
-        collection_name: str,
-        query_text: str,
-        enable_critic: bool = True,
-        structured_output: bool = False,
-        background_tasks: Optional[BackgroundTasks] = None
-    ) -> QueryResponse:
-        """
-        Query the user's vector store, filtering by the logical collection name.
-        """
-        user_collection = self._get_qdrant_collection_name(user_id)
-        
-        return self.query_service.search(
-            collection_name=user_collection, 
-            query_text=query_text,
-            enable_critic=enable_critic,
-            structured_output=structured_output,
-            collection_id=collection_name
-        )
+    def delete_collection(self, user_id: str, collection_id: str) -> bool:
+        return self.qdrant_repo.delete_logical_collection(user_id, collection_id)
 
     def purge_user_data(self, user_id: str) -> bool:
-        """
-        Delete the entire Qdrant collection for a user.
-        """
-        user_collection = self._get_qdrant_collection_name(user_id)
-        return self.qdrant_repo.delete_collection(user_collection)
+        user_col = self._get_user_collection(user_id)
+        return self.qdrant_repo.delete_collection(user_col)

@@ -1,6 +1,3 @@
-"""
-YouTube parser with transcript API and Gemini fallback.
-"""
 
 import re
 import logging
@@ -13,26 +10,11 @@ from .models import ParsedContent, ParsedMetadata, ContentSection
 
 logger = logging.getLogger(__name__)
 
-
 class YouTubeParser(BaseParser):
-    """
-    YouTube video parser that extracts transcripts.
-
-    Strategy:
-    1. Primary: Use youtube-transcript-api (no API key needed)
-    2. Fallback: Use Gemini 2.5 Flash to transcribe (if transcript API blocked)
-
-    Features:
-    - Extracts timestamp-based segments
-    - Preserves video metadata (title, channel, duration)
-    - Creates clickable timestamp references
-    """
-
     def __init__(self, gemini_api_key: Optional[str] = None):
         super().__init__()
         self.gemini_api_key = gemini_api_key
 
-        # YouTube URL patterns
         self.youtube_patterns = [
             r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})',
             r'(?:https?://)?(?:www\.)?youtu\.be/([a-zA-Z0-9_-]{11})',
@@ -40,7 +22,6 @@ class YouTubeParser(BaseParser):
         ]
 
     def can_handle(self, source: str | Path) -> bool:
-        """Check if source is a YouTube URL."""
         if isinstance(source, Path):
             return False
 
@@ -48,59 +29,56 @@ class YouTubeParser(BaseParser):
         return video_id is not None
 
     def parse(self, source: str | Path) -> ParsedContent:
-        """
-        Parse YouTube video and extract transcript.
-
-        Args:
-            source: YouTube URL
-
-        Returns:
-            ParsedContent with timestamp-based sections
-
-        Raises:
-            ValueError: If URL is invalid or transcript unavailable
-        """
         if isinstance(source, Path):
             raise ValueError(f"YouTube parser requires a URL, not a file path: {source}")
 
         self.validate_source(source)
 
+        logger.info(f"[youtube_parser] 🎬 Starting YouTube video parsing")
+        logger.info(f"[youtube_parser] 🔗 Source URL: {source}")
+
         video_id = self._extract_video_id(source)
         if not video_id:
+            logger.error(f"[youtube_parser] ❌ Could not extract video ID from URL: {source}")
             raise ValueError(f"Invalid YouTube URL: {source}")
 
-        logger.info(f"Parsing YouTube video: {video_id}")
+        logger.info(f"[youtube_parser] 🆔 Extracted video ID: {video_id}")
 
-        # Try to get transcript
+        logger.info(f"[youtube_parser] 📝 Starting transcript extraction...")
         transcript = self._get_transcript(video_id, source)
+        logger.info(f"[youtube_parser] ✅ Transcript extracted: {len(transcript)} entries")
 
-        # Extract metadata
+        logger.info(f"[youtube_parser] 🏷️ Extracting metadata...")
         metadata = self._extract_metadata(video_id, source)
+        logger.info(f"[youtube_parser] 📋 Metadata extracted - Title: {metadata.title}")
 
-        # Build full text
+        logger.info(f"[youtube_parser] 🔗 Building full text and sections...")
         full_text = "\n".join([entry['text'] for entry in transcript])
-
-        # Build timestamp-based sections
         sections = self._build_timestamp_sections(transcript)
+
+        logger.info(f"[youtube_parser] 📊 Final stats:")
+        logger.info(f"  - Full text length: {len(full_text)} characters")
+        logger.info(f"  - Number of sections: {len(sections)}")
+        logger.info(f"  - Video title: {metadata.title}")
+        logger.info(f"  - Channel: {metadata.channel}")
+        logger.info(f"[youtube_parser] ✅ YouTube parsing completed successfully")
 
         return ParsedContent(
             text=full_text,
             metadata=metadata,
             sections=sections,
             source_type='youtube',
-            has_equations=False,  # YouTube transcripts unlikely to have equations
+            has_equations=False,
             has_diagrams=False,
             has_code_blocks=False
         )
 
     def _extract_video_id(self, url: str) -> Optional[str]:
-        """Extract YouTube video ID from URL."""
         for pattern in self.youtube_patterns:
             match = re.search(pattern, url)
             if match:
                 return match.group(1)
 
-        # Try query parameter
         parsed = urlparse(url)
         if 'youtube.com' in parsed.netloc:
             query = parse_qs(parsed.query)
@@ -110,53 +88,59 @@ class YouTubeParser(BaseParser):
         return None
 
     def _get_transcript(self, video_id: str, url: str) -> List[dict]:
-        """
-        Get transcript using youtube-transcript-api with Gemini fallback.
+        logger.info(f"[youtube_parser] 🎬 Starting transcript extraction for video_id: {video_id}")
+        logger.info(f"[youtube_parser] 🔗 Video URL: {url}")
 
-        Returns:
-            List of transcript entries with format:
-            [{'text': '...', 'start': 0.0, 'duration': 2.5}, ...]
-        """
-        # Try youtube-transcript-api first
         try:
             from youtube_transcript_api import YouTubeTranscriptApi
 
-            logger.info(f"Attempting to fetch transcript via youtube-transcript-api for {video_id}")
-            transcript = YouTubeTranscriptApi.get_transcript(video_id)
-            logger.info(f"Successfully fetched transcript with {len(transcript)} entries")
+            logger.info(f"[youtube_parser] 📥 Attempting to fetch transcript via youtube-transcript-api...")
+            ytt_api = YouTubeTranscriptApi()
+
+            logger.info(f"[youtube_parser] 🔍 Calling ytt_api.fetch({video_id})")
+            transcript_obj = ytt_api.fetch(video_id)
+            logger.info(f"[youtube_parser] ✅ YouTube Transcript API call successful!")
+
+            # Convert FetchedTranscript to list of dicts (expected by downstream code)
+            logger.info(f"[youtube_parser] 🔄 Converting FetchedTranscript object to list of dicts...")
+            transcript = [
+                {
+                    'text': snippet.text,
+                    'start': snippet.start,
+                    'duration': snippet.duration
+                }
+                for snippet in transcript_obj
+            ]
+
+            logger.info(f"[youtube_parser] ✅ Successfully fetched transcript with {len(transcript)} entries")
+            logger.info(f"[youtube_parser] 📝 First entry: {transcript[0] if transcript else 'No entries'}")
             return transcript
 
         except Exception as e:
-            logger.warning(f"youtube-transcript-api failed for {video_id}: {e}")
+            logger.error(f"[youtube_parser] ❌ youtube-transcript-api failed for {video_id}: {e}", exc_info=True)
+            logger.warning(f"[youtube_parser] 💡 This could be due to: no transcript available, video is private, or age-restricted")
 
-            # Fallback to Gemini if API key provided
             if self.gemini_api_key:
-                logger.info("Falling back to Gemini 2.5 Flash transcription")
+                logger.info(f"[youtube_parser] 🤖 Gemini API key found, falling back to Gemini 2.5 Flash transcription")
                 return self._transcribe_with_gemini(url, video_id)
             else:
+                logger.error(f"[youtube_parser] 🚫 No Gemini API key provided for fallback")
                 raise ValueError(
                     f"Failed to get transcript for {video_id}. "
                     f"youtube-transcript-api failed and no Gemini API key provided for fallback."
                 )
 
     def _transcribe_with_gemini(self, url: str, video_id: str) -> List[dict]:
-        """
-        Fallback: Use Gemini 2.5 Flash to transcribe YouTube video.
-
-        Note: This is a simplified implementation. In production, you would:
-        1. Download the video audio using pytube
-        2. Upload to Gemini API for transcription
-        3. Parse the response into transcript format
-        """
+        logger.info(f"[youtube_parser] 🤖 Starting Gemini transcription for video_id: {video_id}")
         try:
             from utils.llm_client import LlmClient
             import json
 
-            logger.info(f"Transcribing YouTube video {video_id} with Gemini 2.5 Flash")
+            logger.info(f"[youtube_parser] 🚀 Initializing Gemini 2.5 Flash for video transcription")
+            logger.info(f"[youtube_parser] 🎯 Target video URL: {url}")
 
             llm_client = LlmClient()
 
-            # Prompt Gemini to transcribe
             prompt = f"""
             Please transcribe the YouTube video at this URL: {url}
 
@@ -171,42 +155,44 @@ class YouTubeParser(BaseParser):
             Break the transcript into natural segments (paragraphs or sentences) with approximate timestamps.
             """
 
-            response = llm_client.generate_response(
+            logger.info(f"[youtube_parser] 🗣️ Sending transcription prompt to Gemini...")
+            response = llm_client.generate_answer(
                 query=prompt,
-                context="",
-                enable_json=True
+                context_chunks=[],
+                force_json=True
             )
+            logger.info(f"[youtube_parser] 📤 Gemini response received, length: {len(response)} characters")
 
-            # Parse JSON response
             try:
+                logger.info(f"[youtube_parser] 🔍 Parsing JSON response from Gemini...")
                 data = json.loads(response)
                 transcript = data.get('transcript', [])
 
                 if not transcript:
+                    logger.error(f"[youtube_parser] ❌ Gemini returned empty transcript")
                     raise ValueError("Gemini returned empty transcript")
 
-                logger.info(f"Gemini transcription successful: {len(transcript)} segments")
+                logger.info(f"[youtube_parser] ✅ Gemini transcription successful: {len(transcript)} segments")
+                logger.info(f"[youtube_parser] 📝 First segment: {transcript[0] if transcript else 'No segments'}")
                 return transcript
 
-            except json.JSONDecodeError:
-                # Fallback: Create single entry if JSON parsing fails
-                logger.warning("Failed to parse Gemini JSON response, creating single segment")
-                return [{
-                    'text': response,
-                    'start': 0.0,
-                    'duration': 0.0
-                }]
+            except json.JSONDecodeError as json_e:
+                logger.error(f"[youtube_parser] ❌ Failed to parse Gemini JSON response: {json_e}")
+                logger.error(f"[youtube_parser] 💥 Both YouTube Transcript API and Gemini transcription failed")
+                raise ValueError(f"Failed to parse Gemini JSON response and YouTube transcript API also failed for {video_id}")
+
+                # NOTE: Removed the fallback single segment as it creates false successes
+                # return [{
+                #     'text': response,
+                #     'start': 0.0,
+                #     'duration': 0.0
+                # }]
 
         except Exception as e:
-            logger.error(f"Gemini transcription failed for {video_id}: {e}")
+            logger.error(f"[youtube_parser] ❌ Gemini transcription failed for {video_id}: {e}", exc_info=True)
             raise ValueError(f"All transcription methods failed for {video_id}: {e}")
 
     def _extract_metadata(self, video_id: str, url: str) -> ParsedMetadata:
-        """
-        Extract YouTube video metadata.
-
-        Uses pytube to get title, channel, and duration.
-        """
         try:
             from pytube import YouTube
 
@@ -216,7 +202,6 @@ class YouTubeParser(BaseParser):
             channel = yt.author
             duration_seconds = yt.length
 
-            # Convert duration to HH:MM:SS
             hours = duration_seconds // 3600
             minutes = (duration_seconds % 3600) // 60
             seconds = duration_seconds % 60
@@ -237,7 +222,6 @@ class YouTubeParser(BaseParser):
         except Exception as e:
             logger.warning(f"Failed to extract metadata for {video_id}: {e}")
 
-            # Return minimal metadata
             return ParsedMetadata(
                 title=f"YouTube Video {video_id}",
                 url=url,
@@ -247,11 +231,6 @@ class YouTubeParser(BaseParser):
             )
 
     def _build_timestamp_sections(self, transcript: List[dict]) -> List[ContentSection]:
-        """
-        Build ContentSection objects from transcript with timestamps.
-
-        Groups transcript entries into larger sections (60-120 seconds each).
-        """
         sections = []
 
         if not transcript:
@@ -260,7 +239,7 @@ class YouTubeParser(BaseParser):
         current_section_text = ""
         current_section_start = 0.0
         section_duration = 0.0
-        target_duration = 90.0  # Target ~90 seconds per section
+        target_duration = 90.0
 
         for entry in transcript:
             text = entry['text']
@@ -268,21 +247,18 @@ class YouTubeParser(BaseParser):
             duration = entry.get('duration', 0.0)
 
             if not current_section_text:
-                # Start new section
                 current_section_start = start
                 current_section_text = text
                 section_duration = duration
             else:
-                # Add to current section
                 current_section_text += " " + text
                 section_duration += duration
 
-                # If section is long enough, save it
                 if section_duration >= target_duration:
                     timestamp = self._format_timestamp(current_section_start)
 
                     sections.append(ContentSection(
-                        level=2,  # All sections are same level
+                        level=2,
                         text=current_section_text.strip(),
                         title=None,
                         parent_id=None,
@@ -291,11 +267,9 @@ class YouTubeParser(BaseParser):
                         section_id=f"timestamp_{timestamp}"
                     ))
 
-                    # Reset for next section
                     current_section_text = ""
                     section_duration = 0.0
 
-        # Add remaining text as final section
         if current_section_text.strip():
             timestamp = self._format_timestamp(current_section_start)
 
@@ -313,7 +287,6 @@ class YouTubeParser(BaseParser):
         return sections
 
     def _format_timestamp(self, seconds: float) -> str:
-        """Format seconds as HH:MM:SS or MM:SS."""
         total_seconds = int(seconds)
         hours = total_seconds // 3600
         minutes = (total_seconds % 3600) // 60
@@ -325,7 +298,6 @@ class YouTubeParser(BaseParser):
             return f"{minutes:02d}:{secs:02d}"
 
     def validate_source(self, source: str | Path) -> None:
-        """Validate YouTube URL."""
         super().validate_source(source)
 
         if isinstance(source, Path):

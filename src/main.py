@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import collections, config, files, feedback
+from api.routes import rag, config, feedback
 from config import Config
 
 app = FastAPI(
@@ -19,9 +19,8 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(collections.router, prefix="/api/v1", tags=["collections"])
+app.include_router(rag.router, prefix="/api/v1", tags=["rag"])
 app.include_router(config.router, prefix="/api/v1", tags=["config"])
-app.include_router(files.router, prefix="/api/v1", tags=["files"])
 app.include_router(feedback.router, prefix="/api/v1", tags=["feedback"])
 # app.include_router(users.router, prefix="/api/v1/users", tags=["users"]) # REMOVED
 

@@ -60,46 +60,114 @@ class ChunkingStrategy(BaseModel):
 
 # Request/Response models
 # Request/Response models
-class LinkContentItem(BaseModel):
-    name: str
-    file_id: Optional[str] = None
+# New RAG API Models (per RAG_API_DOC.md)
+
+class IndexingStatus(str, Enum):
+    PENDING = "INDEXING_PENDING"
+    RUNNING = "INDEXING_RUNNING"
+    SUCCESS = "INDEXING_SUCCESS"
+    FAILED = "INDEXING_FAILED"
+
+class LinkItem(BaseModel):
     type: str # 'file', 'youtube', 'web'
-    web_url: Optional[str] = None
-    youtube_url: Optional[str] = None
-    content_type: Optional[ContentType] = ContentType.AUTO  # NEW: Auto-detect by default
-    book_metadata: Optional[BookMetadata] = None            # NEW: For book indexing
+    file_id: str
+    collection_id: Optional[str] = None
+    url: Optional[str] = None      # For web/youtube
+    gcs_url: Optional[str] = None  # For file
 
     @model_validator(mode='before')
     @classmethod
-    def check_source_consistency(cls, values):
+    def check_source(cls, values):
         if isinstance(values, dict):
             type_val = values.get('type')
-            file_id = values.get('file_id')
-            web_url = values.get('web_url')
-            youtube_url = values.get('youtube_url')
+            url = values.get('url')
+            gcs_url = values.get('gcs_url')
             
-            # Skip validation if type is not present (might be partial update? unlikely for this model)
-            if not type_val:
-                return values
-
-            provided_sources = [v for v in [file_id, web_url, youtube_url] if v is not None]
-            if len(provided_sources) != 1:
-                raise ValueError("Exactly one of 'file_id', 'web_url', or 'youtube_url' must be provided.")
-
-            if (type_val == 'file' and not file_id) or \
-               (type_val == 'web' and not web_url) or \
-               (type_val == 'youtube' and not youtube_url):
-                raise ValueError(f"Mismatch between type '{type_val}' and provided source URL/ID.")
+            if type_val in ['youtube', 'web'] and not url:
+                raise ValueError(f"{type_val} requires 'url'")
+            if type_val == 'file' and not gcs_url:
+                raise ValueError("file requires 'gcs_url'")
         return values
 
-class LinkContentResponse(BaseModel):
-    name: str
+class BatchLinkRequest(BaseModel):
+    items: List[LinkItem]
+
+class BatchItemResponse(BaseModel):
     file_id: str
-    type: str
-    created_at: Optional[str] = None
-    indexing_status: str
-    status_code: int
-    message: Optional[str] = None
+    status: str
+    error: Optional[str] = None
+
+class IngestionResponse(BaseModel):
+    message: str
+    batch_id: str
+    results: List[BatchItemResponse]
+
+class RetrieveFilters(BaseModel):
+    collection_ids: Optional[List[str]] = None
+    file_ids: Optional[List[str]] = None
+
+class RetrieveRequest(BaseModel):
+    query: str
+    filters: Optional[RetrieveFilters] = None
+    top_k: int = 5
+    include_graph_context: bool = True
+
+class EnrichedChunk(BaseModel):
+    chunk_id: str
+    chunk_text: str
+    relevance_score: float
+    file_id: str
+    page_number: Optional[int] = None
+    timestamp: Optional[str] = None
+    concepts: List[str] = []
+    # prerequisites: List[str] = [] # Graph feature, can implement if graph is ready, else omit or empty
+
+class RetrieveResponse(BaseModel):
+    success: bool
+    results: List[EnrichedChunk]
+
+class QueryAnswerRequest(BaseModel):
+    query: str
+    filters: Optional[RetrieveFilters] = None
+    top_k: int = 5
+    include_sources: bool = False
+
+class QueryAnswerResponse(BaseModel):
+    success: bool
+    answer: str
+    sources: Optional[List[EnrichedChunk]] = None
+
+class DeleteFileRequest(BaseModel):
+    file_ids: List[str]
+
+class DeleteCollectionRequest(BaseModel):
+    collection_id: str
+
+class IndexingStatusResponse(BaseModel):
+    file_id: str
+    status: IndexingStatus
+    error: Optional[str] = None
+
+class BatchStatusRequest(BaseModel):
+    file_ids: List[str]
+
+class StatusItemResponse(BaseModel):
+    file_id: str
+    name: Optional[str] = None
+    source: Optional[str] = None
+    status: str
+    error: Optional[str] = None
+
+class BatchStatusResponse(BaseModel):
+    message: str
+    results: List[StatusItemResponse]
+
+
+
+
+
+
+# --- Internal Models for Query Service ---
 
 class ChunkConfig(BaseModel):
     source: str
@@ -136,6 +204,7 @@ class CriticEvaluation(BaseModel):
     enrichment_suggestions: List[str]
 
 class QueryRequest(BaseModel):
+    # Legacy wrapper if needed, rag.py uses RetrieveRequest now
     query: str
     enable_critic: bool = True
     structured_output: bool = False
@@ -147,15 +216,6 @@ class QueryResponse(BaseModel):
     chunks: List[ChunkConfig]
     critic: Optional[CriticEvaluation] = None
 
-class FileUploadResponse(BaseModel):
-    status: str
-    message: str
-    body: Dict[str, str]
-
-class UnlinkContentResponse(BaseModel):
-    file_id: str
-    status_code: int
-    message: str
 
 class CreateConfigRequest(BaseModel):
     pass

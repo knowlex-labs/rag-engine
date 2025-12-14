@@ -143,12 +143,38 @@ class QueryService:
 
         for result in results:
             payload = result.get("payload", {})
-            text = payload.get("text", "")
-            source = payload.get("document_id", "unknown")
+            metadata = payload.get("metadata", {})
+            
+            # Handle both flag structures (flat payload vs nested metadata)
+            # Old/Simple structure might have text at top level
+            text = payload.get("text") or payload.get("chunk_text") or metadata.get("chunk_text")
+            
+            # Map document_id/file_id
+            source = payload.get("document_id") or metadata.get("file_id") or "unknown"
+            file_id = metadata.get("file_id") or payload.get("document_id")
+            chunk_id = metadata.get("chunk_id") or payload.get("chunk_id")
+            
+            # Get other metadata
+            page_number = metadata.get("page_number")
+            timestamp = metadata.get("timestamp")
+            concepts = metadata.get("concepts", [])
+            if isinstance(concepts, str):
+                 concepts = [concepts] # Handle potential string format
+            
+            score = result.get("score", 0.0)
 
             if text and self._is_valid_text(text) and text not in seen_texts:
                 seen_texts.add(text)
-                chunks.append(ChunkConfig(source=source, text=text))
+                chunks.append(ChunkConfig(
+                    source=source, 
+                    text=text,
+                    chunk_id=chunk_id,
+                    relevance_score=score,
+                    file_id=file_id,
+                    page_number=page_number,
+                    timestamp=timestamp,
+                    concepts=concepts
+                ))
 
         return chunks[:5]
 

@@ -52,19 +52,19 @@ async def query(
             sources = []
             for chunk in response.chunks:
                 sources.append({
-                    "chunk_id": "unknown",
+                    "chunk_id": chunk.chunk_id or "unknown",
                     "chunk_text": chunk.text,
-                    "relevance_score": 0.0,
-                    "file_id": chunk.source,
-                    "page_number": None,
-                    "timestamp": None,
-                    "concepts": []
+                    "relevance_score": chunk.relevance_score or 0.0,
+                    "file_id": chunk.file_id or chunk.source,
+                    "page_number": chunk.page_number,
+                    "timestamp": chunk.timestamp,
+                    "concepts": chunk.concepts
                 })
 
         return QueryAnswerResponse(success=True, answer=response.answer, sources=sources)
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        import logging
+        logging.error("Error processing query", exc_info=True)
         return QueryAnswerResponse(success=False, answer="Error processing query", sources=None)
 
 @router.post("/retrieve", response_model=RetrieveResponse)
@@ -87,19 +87,19 @@ async def retrieve(
         results = []
         for chunk in response.chunks:
              results.append({
-                 "chunk_id": "unknown",
+                 "chunk_id": chunk.chunk_id or "unknown",
                  "chunk_text": chunk.text,
-                 "relevance_score": 0.0,
-                 "file_id": chunk.source,
-                 "page_number": None,
-                 "timestamp": None,
-                 "concepts": []
+                 "relevance_score": chunk.relevance_score or 0.0,
+                 "file_id": chunk.file_id or chunk.source,
+                 "page_number": chunk.page_number,
+                 "timestamp": chunk.timestamp,
+                 "concepts": chunk.concepts
              })
 
         return RetrieveResponse(success=True, results=results)
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        import logging
+        logging.error("Error retrieving results", exc_info=True)
         return RetrieveResponse(success=False, results=[])
 
 @router.post("/status", response_model=BatchStatusResponse)

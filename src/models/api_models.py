@@ -172,6 +172,12 @@ class BatchStatusResponse(BaseModel):
 class ChunkConfig(BaseModel):
     source: str
     text: str
+    chunk_id: Optional[str] = None
+    relevance_score: Optional[float] = None
+    file_id: Optional[str] = None
+    page_number: Optional[int] = None
+    timestamp: Optional[str] = None
+    concepts: List[str] = []
 
 class TopicMetadata(BaseModel):
     chapter_num: Optional[int] = None

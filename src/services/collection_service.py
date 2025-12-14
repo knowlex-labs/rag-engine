@@ -31,31 +31,20 @@ class CollectionService:
         results = []
         for item in request.items:
             try:
-                source = item.url or item.gcs_url
-                parser = ParserFactory.get_parser(item.type)
-                parsed = parser.parse(source)
-
-                chunks = chunking_service.chunk_parsed_content(parsed, item.type)
-
-                points = []
-                for chunk in chunks:
-                    emb = self.embedding_client.generate_single_embedding(chunk.text)
-                    point = build_qdrant_point(
-                        collection_id=item.collection_id or "default",
-                        file_id=item.file_id,
-                        chunk_id=chunk.chunk_id,
-                        chunk_text=chunk.text,
-                        embedding=emb,
-                        source_type=item.type,
-                        file_name=parsed.metadata.title or "Unknown",
-                        chunk_type=chunk.chunk_metadata.chunk_type.value,
-                        youtube_channel=None,
-                        web_domain=None
-                    )
-                    points.append(point)
-
-                user_col = f"user_{tenant_id}"
-                self.qdrant_repo.link_content(user_col, points)
+                # 1. Resolve Source
+                source = self._resolve_source(item)
+                
+                # 2. Parse Content
+                parsed = self._parse_content(source, item.type)
+                
+                # 3. Chunk Content
+                chunks = self._chunk_content(parsed, item.type)
+                
+                # 4. Embed & Build Points
+                points = self._embed_and_build_points(chunks, item, parsed)
+                
+                # 5. Index Points
+                self._index_points(tenant_id, points)
 
                 results.append({
                     "file_id": item.file_id,

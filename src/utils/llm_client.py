@@ -161,8 +161,10 @@ Important:
             )
         )
 
+
         try:
             return response.text.strip()
+        except Exception:
         except Exception:
             # Handle the case where response.text is not available (e.g., blocked for safety)
             return "I'm unable to generate a response for this request. This might be due to content safety filters. Please try rephrasing your question or request in a different way."
@@ -227,4 +229,4 @@ Important:
                 return response.choices[0].message.content.strip()
         except Exception as e:
             logger.error(f"Error extracting legal graph triplets: {e}")
-            raise
+            return "{}"

@@ -15,11 +15,13 @@ from models.api_models import (
 from services.collection_service import CollectionService
 from services.query_service import QueryService
 
+from api.api_constants import LINK_CONTENT, QUERY_COLLECTION, COLLECTION_STATUS, UNLINK_CONTENT
+
 router = APIRouter()
 collection_service = CollectionService()
 query_service = QueryService()
 
-@router.post("/link-content", response_model=IngestionResponse, status_code=207)
+@router.post(LINK_CONTENT, response_model=IngestionResponse, status_code=207)
 async def link_content(
     request: BatchLinkRequest,
     x_user_id: str = Header(...)
@@ -32,7 +34,7 @@ async def link_content(
         results=results
     )
 
-@router.post("/query", response_model=QueryAnswerResponse)
+@router.post(QUERY_COLLECTION, response_model=QueryAnswerResponse)
 async def query(
     request: QueryAnswerRequest,
     x_user_id: str = Header(...)
@@ -104,7 +106,7 @@ async def retrieve(
         logging.error("Error retrieving results", exc_info=True)
         return RetrieveResponse(success=False, results=[])
 
-@router.post("/status", response_model=BatchStatusResponse)
+@router.post(COLLECTION_STATUS, response_model=BatchStatusResponse)
 async def get_status(
     request: BatchStatusRequest,
     x_user_id: str = Header(...)
@@ -129,7 +131,7 @@ async def get_status(
         results=results
     )
 
-@router.delete("/delete/file")
+@router.delete(UNLINK_CONTENT)
 async def delete_file(
     request: DeleteFileRequest,
     x_user_id: str = Header(...)

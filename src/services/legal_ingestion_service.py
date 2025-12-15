@@ -102,9 +102,15 @@ class LegalIngestionService:
         logger.info(f"Persisting {len(nodes)} nodes and {len(edges)} edges to Neo4j")
         
         # Merge Nodes
+        ALLOWED_LABELS = {"Case", "Ruling", "Statute", "Section", "LegalConcept", "Condition", "Judge", "LegalSystem"}
         for node in nodes:
+            label = node.get('label')
+            if not label or label not in ALLOWED_LABELS:
+                logger.warning(f"Skipping node with invalid or missing label: {label}")
+                continue
+
             query = f"""
-            MERGE (n:{node['label']} {{id: $id}})
+            MERGE (n:{label} {{id: $id}})
             SET n.text = $text, n.file_id = $file_id
             """
             graph_service.execute_query(query, {

@@ -168,9 +168,8 @@ async def ingest_legal_document_graph(file: UploadFile = File(...)):
         file_id = str(uuid.uuid4())
         # Sanitizing filename to avoid path traversal issues, simpler way for now
         safe_filename = os.path.basename(file.filename)
-        temp_file_path = f"temp_{safe_filename}"
-        
-        with open(temp_file_path, "wb") as buffer:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{safe_filename}", mode="wb") as buffer:
+            temp_file_path = buffer.name
             shutil.copyfileobj(file.file, buffer)
             
         try:

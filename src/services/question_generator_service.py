@@ -103,7 +103,7 @@ class QuestionGeneratorService:
             # Clean response if markdown blocks exist
             valid_json = response.replace('```json', '').replace('```', '').strip()
             return json.loads(valid_json)
-        except:
+        except json.JSONDecodeError:
             return {"error": "Failed to generate valid JSON", "raw_response": response}
 
 question_generator = QuestionGeneratorService()

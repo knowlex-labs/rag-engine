@@ -11,6 +11,7 @@ from llama_parse import LlamaParse
 from services.graph_service import graph_service
 from utils.llm_client import LlmClient
 from config import Config
+from llama_index.core.node_parser import SentenceSplitter
 
 logger = logging.getLogger(__name__)
 
@@ -93,10 +94,6 @@ class LegalIngestionService:
         except Exception as e:
             logger.error(f"Legal Ingestion failed: {e}", exc_info=True)
             raise e
-
-from llama_index.core.node_parser import SentenceSplitter
-
-# ...
 
     def _chunk_text_for_graph(self, text: str, chunk_size=3000) -> List[str]:
         splitter = SentenceSplitter(chunk_size=chunk_size, chunk_overlap=200)

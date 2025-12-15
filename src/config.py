@@ -90,7 +90,7 @@ class LlamaCloudConfig:
 class Neo4jConfig:
     URI: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
     USER: str = os.getenv("NEO4J_USER", "neo4j")
-    PASSWORD: str = os.getenv("NEO4J_PASSWORD", "password")
+    PASSWORD: str = os.getenv("NEO4J_PASSWORD")
     DATABASE: str = os.getenv("NEO4J_DATABASE", "neo4j")
 
 class LlamaCloudConfig:

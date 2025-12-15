@@ -94,9 +94,13 @@ class LegalIngestionService:
             logger.error(f"Legal Ingestion failed: {e}", exc_info=True)
             raise e
 
+from llama_index.core.node_parser import SentenceSplitter
+
+# ...
+
     def _chunk_text_for_graph(self, text: str, chunk_size=3000) -> List[str]:
-        # Basic chunker, ideally use semantic chunking
-        return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+        splitter = SentenceSplitter(chunk_size=chunk_size, chunk_overlap=200)
+        return splitter.split_text(text)
 
     def _persist_to_neo4j(self, nodes: List[Dict], edges: List[Dict], file_id: str):
         logger.info(f"Persisting {len(nodes)} nodes and {len(edges)} edges to Neo4j")
@@ -114,20 +118,27 @@ class LegalIngestionService:
             SET n.text = $text, n.file_id = $file_id
             """
             graph_service.execute_query(query, {
-                "id": self._make_global_id(node['id'], file_id), # Scope IDs per file to satisfy unique constraint locally, or use name for global merging
+                "id": self._make_global_id(node['id'], file_id), 
                 "text": node.get('text', ''),
                 "file_id": file_id
             })
 
         # Merge Edges
+        ALLOWED_RELATIONS = {"ESTABLISHED", "DEFINES", "HAS_EXCEPTION", "SUPPORTS", "CONTRADICTS", "ALLOWS", "REJECTS"}
         for edge in edges:
+            relation = edge.get('relation')
+            normalized_relation = relation.upper().replace(" ", "_") if relation else None
+
+            if not normalized_relation or normalized_relation not in ALLOWED_RELATIONS:
+                logger.warning(f"Skipping edge with invalid or missing relation: {relation}")
+                continue
+
             source_id = self._make_global_id(edge['source'], file_id)
             target_id = self._make_global_id(edge['target'], file_id)
-            relation = edge['relation'].upper().replace(" ", "_")
             
             query = f"""
             MATCH (s {{id: $source_id}}), (t {{id: $target_id}})
-            MERGE (s)-[r:{relation}]->(t)
+            MERGE (s)-[r:{normalized_relation}]->(t)
             """
             graph_service.execute_query(query, {
                 "source_id": source_id,

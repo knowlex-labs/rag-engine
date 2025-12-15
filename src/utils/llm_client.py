@@ -198,4 +198,4 @@ Important:
                 return response.choices[0].message.content.strip()
         except Exception as e:
             logger.error(f"Error extracting legal graph triplets: {e}")
-            return "{}"
+            raise

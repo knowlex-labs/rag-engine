@@ -112,13 +112,8 @@ from config import Config
 logger = logging.getLogger(__name__)
 
 class GraphService:
-    _instance = None
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(GraphService, cls).__new__(cls)
-            cls._instance._init_driver()
-        return cls._instance
+    def __init__(self):
+        self._init_driver()
 
     def _init_driver(self):
         uri = Config.neo4j.URI

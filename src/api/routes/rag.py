@@ -136,14 +136,12 @@ async def delete_file(
     request: DeleteFileRequest,
     x_user_id: str = Header(...)
 ):
-    success = collection_service.unlink_content(
+    count = collection_service.unlink_content(
         collection_name=None,
         file_ids=request.file_ids,
         user_id=x_user_id
     )
-    if not success:
-         raise HTTPException(status_code=500, detail="Failed to delete one or more files")
-    return {"message": f"Deleted {len(request.file_ids)} file(s)"}
+    return {"message": f"Deleted {count} file(s)"}
 
 
 @router.delete("/delete/collection")

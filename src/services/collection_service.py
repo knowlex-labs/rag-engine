@@ -1,4 +1,7 @@
 
+import requests
+import os
+import tempfile
 from typing import List, Optional
 import logging
 import asyncio
@@ -66,8 +69,31 @@ class CollectionService:
         if item.type == 'file':
             if not item.gcs_url:
                 raise ValueError("Missing gcs_url")
+            
+            if item.gcs_url.startswith(('http://', 'https://')):
+                return self._download_from_url(item.gcs_url)
+                
             return self._download_from_gcs(item.gcs_url)
         return item.url
+
+    def _download_from_url(self, url: str) -> str:
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            
+            # Extract filename from URL or header if possible, else default
+            # Simple approach: temp file with generic suffix or try to guess from Content-Disposition
+            # For now, we'll just fetch and assume pdf/text based on subsequent parser logic or just use a safe suffix
+            suffix = ".pdf" # Defaulting for now, parser might auto-detect or fail if mismatch. 
+            # ideally item.type='file' is vague. But parsing logic usually handles magic numbers or just needs bytes.
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    tmp_file.write(chunk)
+                return tmp_file.name
+        except Exception as e:
+            logger.error(f"Failed to download file from URL {url}: {e}")
+            raise ValueError(f"Failed to download file: {str(e)}")
 
     def _download_from_gcs(self, gcs_path: str) -> str:
         if gcs_path.startswith("gs://"):
@@ -150,23 +176,33 @@ class CollectionService:
 
 
 
-    def unlink_content(self, collection_name: Optional[str], file_ids: List[str], user_id: str) -> bool:
+    def unlink_content(self, collection_name: Optional[str], file_ids: List[str], user_id: str) -> int:
         user_col = self._get_user_collection(user_id)
-        all_success = True
+        
+        if not self.qdrant_repo.collection_exists(user_col):
+            return 0
+
+        deleted_count = 0
 
         for file_id in file_ids:
             try:
+                # If deleting globally (collection_name is None), check if file exists via status point
                 if collection_name is None:
                      status_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{file_id}_status"))
+                     existing = self.qdrant_repo.client.retrieve(user_col, ids=[status_id])
+                     
+                     if not existing:
+                         continue # File already deleted or doesn't exist
+                         
                      self.qdrant_repo.client.delete(user_col, points_selector=[status_id])
 
                 success = self.qdrant_repo.unlink_content(user_col, file_id=file_id, collection_id=collection_name)
-                if not success:
-                    all_success = False
+                if success:
+                    deleted_count += 1
             except Exception:
-                all_success = False
+                logger.error(f"Error unlinking file {file_id}", exc_info=True)
         
-        return all_success
+        return deleted_count
 
     def delete_collection(self, user_id: str, collection_id: str) -> bool:
         return self.qdrant_repo.delete_logical_collection(user_id, collection_id)

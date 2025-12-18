@@ -21,9 +21,11 @@ class LlmClient:
             self.max_tokens = Config.llm.GEMINI_MAX_TOKENS
             self.temperature = Config.llm.GEMINI_TEMPERATURE
 
+
     def generate_answer(self, query: str, context_chunks: List[str], force_json: bool = None) -> str:
-        if not context_chunks:
-            return "No relevant context found"
+        # Context is optional if query is self-contained
+        if context_chunks is None:
+            context_chunks = []
 
         should_use_json = force_json if force_json is not None else Config.llm.ENABLE_JSON_RESPONSE
 
@@ -129,8 +131,71 @@ Important:
                 temperature=self.temperature
             )
         )
+
         try:
             return response.text.strip()
-        except:
+        except Exception:
             # Handle the case where response.text is not available (e.g., blocked for safety)
             return "I'm unable to generate a response for this request. This might be due to content safety filters. Please try rephrasing your question or request in a different way."
+
+
+    def extract_legal_graph_triplets(self, text: str) -> str:
+        """
+        Extracts legal relationship triplets from text using Gemini/OpenAI.
+        Returns a JSON string with 'nodes' and 'edges'.
+        """
+        prompt = f"""
+        You are a Legal Knowledge Graph builder. Extract logical relationships from this legal text as structured triplets.
+        
+        # Schema
+        - Nodes: Case, Ruling, Statute, Section, LegalConcept, Condition, Judge, LegalSystem
+        - Relations: 
+          - (Case)-[:ESTABLISHED]->(LegalConcept/Ruling)
+          - (Section)-[:DEFINES]->(LegalConcept)
+          - (Section)-[:HAS_EXCEPTION]->(Condition)
+          - (Judge)-[:SUPPORTS|CONTRADICTS]->(LegalConcept/Argument)
+          - (LegalSystem)-[:ALLOWS|REJECTS]->(LegalConcept)
+
+        # Task
+        Analyze the text below. Return a single VALID JSON object with 'nodes' and 'edges'.
+        - Nodes have 'id' (unique), 'label', 'text'.
+        - Edges have 'source' (id), 'target' (id), 'relation' (uppercase).
+
+        # Text
+        {text}
+        
+        # Output JSON:
+        """
+        
+        # Force JSON mode logic could be enhanced here, but prompt usually suffices with 2.5 Flash
+        should_use_json = True 
+        
+        try:
+            if self.provider == "gemini":
+                # Ensure we ask for JSON response mime type if possible, or just parse text
+                # Ideally pass generation_config={"response_mime_type": "application/json"} if supported
+                response = self.model.generate_content(
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
+                        max_output_tokens=4000,
+                        temperature=0.1,
+                        response_mime_type="application/json"
+                    )
+                )
+                return response.text.strip()
+            elif self.provider == "openai":
+                # OpenAI JSON mode implementation
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": "You are a Legal Knowledge Graph builder. Output valid JSON only."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=self.max_tokens,
+                    temperature=0.1,
+                    response_format={ "type": "json_object" }
+                )
+                return response.choices[0].message.content.strip()
+        except Exception as e:
+            logger.error(f"Error extracting legal graph triplets: {e}")
+            raise

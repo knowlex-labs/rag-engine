@@ -3,24 +3,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class QdrantConfig:
-    HOST: str = os.getenv("QDRANT_HOST", "localhost")
-    PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
-    TIMEOUT: int = int(os.getenv("QDRANT_TIMEOUT", "30"))
-    API_KEY: str = os.getenv("QDRANT_API_KEY", "")
-    COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "knowledge_base")
-
 class ParserConfig:
     WEB_SCRAPER_USER_AGENT: str = os.getenv("WEB_SCRAPER_USER_AGENT", "RAG-Engine/1.0")
     WEB_SCRAPER_TIMEOUT: int = int(os.getenv("WEB_SCRAPER_TIMEOUT", "30"))
     YOUTUBE_TRANSCRIPT_FALLBACK: str = os.getenv("YOUTUBE_TRANSCRIPT_FALLBACK", "gemini")
 
 class EmbeddingConfig:
-    MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5")
+    MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "Snowflake/snowflake-arctic-embed-l-v2.0")
+    PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "huggingface")
     VECTOR_SIZE: int = int(os.getenv("VECTOR_SIZE", "1024"))
     DISTANCE_METRIC: str = os.getenv("DISTANCE_METRIC", "COSINE")
-    CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "512"))
-    CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "50"))
+    CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "800"))
+    CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "100"))
+    MAX_CHUNK_SIZE: int = int(os.getenv("MAX_CHUNK_SIZE", "1200"))
 
 class LlmConfig:
     PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini")
@@ -80,8 +75,19 @@ class GCSConfig:
     BUCKET_NAME: str = os.getenv("GCS_BUCKET_NAME", "library-content-dev")
     PROJECT_ID: str = os.getenv("GCP_PROJECT_ID", "")
 
+
+class Neo4jConfig:
+    URI: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+    USER: str = os.getenv("NEO4J_USER", "neo4j")
+    PASSWORD: str = os.getenv("NEO4J_PASSWORD")
+    DATABASE: str = os.getenv("NEO4J_DATABASE", "neo4j")
+    VECTOR_INDEX_NAME: str = os.getenv("NEO4J_VECTOR_INDEX_NAME", "legal_chunks_index")
+
+class LlamaCloudConfig:
+    API_KEY: str = os.getenv("LLAMA_CLOUD_API_KEY", "")
+
 class Config:
-    qdrant = QdrantConfig()
+
     parser = ParserConfig()
     embedding = EmbeddingConfig()
     llm = LlmConfig()
@@ -91,5 +97,8 @@ class Config:
     feedback = FeedbackConfig()
     query = QueryConfig()
     storage = StorageConfig()
+
     minio = MinIOConfig()
     gcs = GCSConfig()
+    neo4j = Neo4jConfig()
+    llama_cloud = LlamaCloudConfig()

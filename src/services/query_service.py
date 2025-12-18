@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from repositories.qdrant_repository import QdrantRepository
+from repositories.neo4j_repository import neo4j_repository
 from repositories.feedback_repository import FeedbackRepository
 from utils.embedding_client import embedding_client
 from utils.llm_client import LlmClient
@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 class QueryService:
     def __init__(self):
-        self.qdrant_repo = QdrantRepository()
-        self.embedding_client = embedding_client  # Use global cached instance
+        self.neo4j_repo = neo4j_repository
+        self.embedding_client = embedding_client
         self.llm_client = LlmClient()
         self.feedback_repo = FeedbackRepository()
 
@@ -88,39 +88,27 @@ class QueryService:
     ) -> List[Dict]:
         intent = self._detect_query_intent(query_text)
 
-        filter_kwargs = {}
-        if collection_ids:
-             filter_kwargs['collection_ids'] = collection_ids
-        if file_ids:
-             filter_kwargs['file_ids'] = file_ids
-
-        if not intent:
-            return self.qdrant_repo.query_collection(
-                collection_name, query_vector, limit, **filter_kwargs
-            )
-
-        primary_results = self.qdrant_repo.query_collection(
-            collection_name, query_vector, limit=limit//2, chunk_type=intent, **filter_kwargs
+        results = self.neo4j_repo.vector_search(
+            query_embedding=query_vector,
+            collection_ids=collection_ids,
+            file_ids=file_ids,
+            top_k=limit
         )
 
-        if intent == ChunkType.CONCEPT.value:
-            secondary_type = ChunkType.EXAMPLE.value
-        elif intent == ChunkType.EXAMPLE.value:
-            secondary_type = ChunkType.CONCEPT.value
-        elif intent == ChunkType.QUESTION.value:
-            secondary_type = ChunkType.EXAMPLE.value
-        else:
-            secondary_type = None
+        if not intent:
+            return results
 
-        if secondary_type:
-            secondary_results = self.qdrant_repo.query_collection(
-                collection_name, query_vector, limit=limit//2, chunk_type=secondary_type, **filter_kwargs
-            )
-        else:
-            secondary_results = []
+        prioritized = []
+        secondary = []
 
-        combined = primary_results + secondary_results
-        combined.sort(key=lambda x: x.get("score", 0), reverse=True)
+        for result in results:
+            chunk_type = result.get("chunk_type", "")
+            if chunk_type == intent:
+                prioritized.append(result)
+            else:
+                secondary.append(result)
+
+        combined = prioritized + secondary
         return combined[:limit]
 
     def _filter_relevant_results(self, results: List[Dict], threshold: float = None) -> List[Dict]:
@@ -142,38 +130,24 @@ class QueryService:
         seen_texts = set()
 
         for result in results:
-            payload = result.get("payload", {})
-            metadata = payload.get("metadata", {})
-            
-            # Handle both flag structures (flat payload vs nested metadata)
-            # Old/Simple structure might have text at top level
-            text = payload.get("text") or payload.get("chunk_text") or metadata.get("chunk_text")
-            
-            # Map document_id/file_id
-            source = payload.get("document_id") or metadata.get("file_id") or "unknown"
-            file_id = metadata.get("file_id") or payload.get("document_id")
-            chunk_id = metadata.get("chunk_id") or payload.get("chunk_id")
-            
-            # Get other metadata
-            page_number = metadata.get("page_number")
-            timestamp = metadata.get("timestamp")
-            concepts = metadata.get("concepts", [])
-            if isinstance(concepts, str):
-                 concepts = [concepts] # Handle potential string format
-            
+            text = result.get("text", "")
+            file_id = result.get("file_id", "unknown")
+            chunk_id = result.get("chunk_id", "")
+            page_start = result.get("page_start")
             score = result.get("score", 0.0)
+            key_terms = result.get("key_terms", [])
 
             if text and self._is_valid_text(text) and text not in seen_texts:
                 seen_texts.add(text)
                 chunks.append(ChunkConfig(
-                    source=source, 
+                    source=file_id,
                     text=text,
                     chunk_id=chunk_id,
                     relevance_score=score,
                     file_id=file_id,
-                    page_number=page_number,
-                    timestamp=timestamp,
-                    concepts=concepts
+                    page_number=page_start,
+                    timestamp=None,
+                    concepts=key_terms if isinstance(key_terms, list) else []
                 ))
 
         return chunks[:5]
@@ -183,8 +157,7 @@ class QueryService:
         seen_texts = set()
 
         for result in results:
-            payload = result.get("payload", {})
-            text = payload.get("text", "")
+            text = result.get("text", "")
 
             if text and self._is_valid_text(text) and text not in seen_texts:
                 seen_texts.add(text)
@@ -271,7 +244,7 @@ class QueryService:
             return results
 
     def get_all_embeddings(self, collection_name: str, limit: int = 100) -> Dict[str, Any]:
-        return self.qdrant_repo.get_all_embeddings(collection_name, limit=limit, include_vectors=False)
+        return {"message": "Get all embeddings not implemented for Neo4j"}
 
     def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False, collection_ids: Optional[List[str]] = None, file_ids: Optional[List[str]] = None) -> QueryResponse:
         try:

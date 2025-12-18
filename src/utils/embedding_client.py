@@ -1,33 +1,57 @@
-from sentence_transformers import SentenceTransformer
 from typing import List
 from config import Config
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
 class EmbeddingClient:
-    _model = None
+    _embeddings = None
 
     def __init__(self):
-        if EmbeddingClient._model is None:
-            logger.info(f"Loading embedding model: {Config.embedding.MODEL_NAME}")
-            EmbeddingClient._model = SentenceTransformer(Config.embedding.MODEL_NAME)
-            logger.info("Embedding model loaded successfully!")
+        if EmbeddingClient._embeddings is None:
+            provider = Config.embedding.PROVIDER
+
+            if provider == "openai":
+                logger.info("Using OpenAI embeddings: text-embedding-3-large")
+                from langchain_openai import OpenAIEmbeddings
+
+                api_key = Config.llm.OPENAI_API_KEY
+                if not api_key:
+                    raise ValueError("OPENAI_API_KEY not found in environment variables")
+
+                EmbeddingClient._embeddings = OpenAIEmbeddings(
+                    model="text-embedding-ada-002",
+                    openai_api_key=api_key
+                )
+                logger.info("OpenAI embeddings initialized successfully (1536D)")
+
+            else:
+                logger.info(f"Using HuggingFace embeddings: {Config.embedding.MODEL_NAME}")
+                from langchain_community.embeddings import HuggingFaceEmbeddings
+
+                cache_dir = os.getenv('HF_HOME', os.path.expanduser('~/.cache/huggingface'))
+                os.makedirs(cache_dir, exist_ok=True)
+
+                EmbeddingClient._embeddings = HuggingFaceEmbeddings(
+                    model_name=Config.embedding.MODEL_NAME,
+                    model_kwargs={'device': 'cpu'},
+                    encode_kwargs={'normalize_embeddings': True},
+                    cache_folder=cache_dir
+                )
+                logger.info(f"HuggingFace embeddings loaded successfully ({Config.embedding.VECTOR_SIZE}D)")
         else:
             logger.debug("Using cached embedding model")
 
     @property
-    def model(self):
-        return EmbeddingClient._model
+    def embeddings(self):
+        return EmbeddingClient._embeddings
 
     def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
-        embeddings = self.model.encode(texts)
-        return [embedding.tolist() for embedding in embeddings]
+        return self.embeddings.embed_documents(texts)
 
     def generate_single_embedding(self, text: str) -> List[float]:
-        embedding = self.model.encode([text])[0]
-        return embedding.tolist()
+        return self.embeddings.embed_query(text)
 
 
-# Create a global instance for reuse
 embedding_client = EmbeddingClient()

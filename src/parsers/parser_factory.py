@@ -20,6 +20,11 @@ class ParserFactory:
         if source_type == "pdf":
             return PDFParser()
 
+        elif source_type == "file":
+            # For file content type, we need to detect the actual file format
+            # This will be called with the downloaded file path, so we can detect from extension
+            return PDFParser()  # Default to PDF for now, could be enhanced to detect format
+
         elif source_type == "youtube":
             return YouTubeParser(
                 gemini_api_key=Config.llm.GEMINI_API_KEY

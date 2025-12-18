@@ -92,12 +92,12 @@ class Neo4jConfig:
     USER: str = os.getenv("NEO4J_USER", "neo4j")
     PASSWORD: str = os.getenv("NEO4J_PASSWORD")
     DATABASE: str = os.getenv("NEO4J_DATABASE", "neo4j")
+    VECTOR_INDEX_NAME: str = os.getenv("NEO4J_VECTOR_INDEX_NAME", "legal_chunks_index")
 
 class LlamaCloudConfig:
     API_KEY: str = os.getenv("LLAMA_CLOUD_API_KEY", "")
 
 class Config:
-
     parser = ParserConfig()
     embedding = EmbeddingConfig()
     llm = LlmConfig()

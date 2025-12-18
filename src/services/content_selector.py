@@ -65,55 +65,56 @@ class ContentSelector:
         base_conditions = self._build_base_conditions(filters)
 
         if difficulty == DifficultyLevel.EASY:
-            # Easy: Simple concept-definition relationships
+            # Easy: Simple concept chunks with basic content
             query = f"""
             MATCH (c:Chunk)
             WHERE {base_conditions}
             AND c.chunk_type = 'concept'
             AND size(c.text) > 200
-            AND size(c.text) < 800
-            AND (c.text CONTAINS 'define' OR c.text CONTAINS 'means' OR c.text CONTAINS 'refers to')
             WITH c
             ORDER BY rand()
             LIMIT {min(count * 3, 15)}
             RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
-            strategy = "easy_concept_definitions"
+            strategy = "easy_concept_chunks"
 
         elif difficulty == DifficultyLevel.MODERATE:
-            # Moderate: Chunks with some contradictory language or exceptions
+            # Moderate: Chunks with moderate length and complexity
             query = f"""
             MATCH (c:Chunk)
             WHERE {base_conditions}
-            AND c.chunk_type IN ['concept', 'example']
+            AND c.chunk_type = 'concept'
             AND size(c.text) > 300
-            AND (c.text CONTAINS 'however' OR c.text CONTAINS 'but' OR c.text CONTAINS 'exception'
-                 OR c.text CONTAINS 'although' OR c.text CONTAINS 'while')
+            AND size(c.text) < 1200
             WITH c
             ORDER BY rand()
             LIMIT {min(count * 3, 15)}
             RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
-            strategy = "moderate_contradictory_concepts"
+            strategy = "moderate_concept_chunks"
 
         else:  # DIFFICULT
-            # Difficult: Complex legal relationships with entities
+            # Difficult: Longer, more complex chunks
             query = f"""
-            MATCH (c:Chunk)-[:MENTIONS]->(e:LegalEntity)
+            MATCH (c:Chunk)
             WHERE {base_conditions}
-            AND size(c.text) > 400
-            WITH c, collect(e.text) as entities
-            WHERE size(entities) >= 2
-            AND (c.text CONTAINS 'exception' OR c.text CONTAINS 'limitation'
-                 OR c.text CONTAINS 'notwithstanding' OR c.text CONTAINS 'provided that')
+            AND c.chunk_type = 'concept'
+            AND size(c.text) > 500
+            WITH c
             ORDER BY rand()
             LIMIT {min(count * 2, 10)}
             RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title, entities
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
-            strategy = "difficult_complex_legal_relationships"
+            strategy = "difficult_complex_chunks"
 
         # Execute query and process results
         params = self._build_query_params(filters)
@@ -138,55 +139,56 @@ class ContentSelector:
         base_conditions = self._build_base_conditions(filters)
 
         if difficulty == DifficultyLevel.EASY:
-            # Easy: Direct entity-definition pairs
+            # Easy: Simple concept chunks for matching
             query = f"""
-            MATCH (c:Chunk)-[:MENTIONS]->(e:LegalEntity)
+            MATCH (c:Chunk)
             WHERE {base_conditions}
             AND c.chunk_type = 'concept'
             AND size(c.text) > 200
-            AND (c.text CONTAINS 'define' OR c.text CONTAINS 'mean' OR c.text CONTAINS 'refer')
-            WITH c, collect(e.text) as entities
-            WHERE size(entities) >= 1
+            WITH c
             ORDER BY rand()
             LIMIT {min(count * 8, 24)}
             RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title, entities
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
-            strategy = "easy_entity_definitions"
+            strategy = "easy_concept_matching"
 
         elif difficulty == DifficultyLevel.MODERATE:
-            # Moderate: Cases, statutes, and their applications
+            # Moderate: Medium-length chunks for matching
             query = f"""
-            MATCH (c:Chunk)-[:MENTIONS]->(e:LegalEntity)
+            MATCH (c:Chunk)
             WHERE {base_conditions}
-            AND c.chunk_type IN ['concept', 'example']
-            AND size(c.text) > 250
-            AND e.text IN ['Case', 'Statute', 'Ruling', 'Section']
-            WITH c, collect(e.text) as entities
-            WHERE size(entities) >= 1
+            AND c.chunk_type = 'concept'
+            AND size(c.text) > 300
+            AND size(c.text) < 1000
+            WITH c
             ORDER BY rand()
             LIMIT {min(count * 6, 18)}
             RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title, entities
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
-            strategy = "moderate_legal_applications"
+            strategy = "moderate_concept_matching"
 
         else:  # DIFFICULT
-            # Difficult: Complex relationships between multiple entities
+            # Difficult: Longer chunks for complex matching
             query = f"""
-            MATCH (c:Chunk)-[:MENTIONS]->(e1:LegalEntity)
-            MATCH (c)-[:MENTIONS]->(e2:LegalEntity)
+            MATCH (c:Chunk)
             WHERE {base_conditions}
-            AND size(c.text) > 400
-            AND e1 <> e2
-            WITH c, collect(DISTINCT e1.text + ': ' + e2.text) as entity_pairs
-            WHERE size(entity_pairs) >= 2
+            AND c.chunk_type = 'concept'
+            AND size(c.text) > 500
+            WITH c
             ORDER BY rand()
             LIMIT {min(count * 4, 12)}
             RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title, entity_pairs
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
-            strategy = "difficult_multi_entity_relationships"
+            strategy = "difficult_concept_matching"
 
         params = self._build_query_params(filters)
         chunks = self._execute_and_process_chunks(query, params)
@@ -297,14 +299,14 @@ class ContentSelector:
 
             for record in records:
                 chunk = ContentChunk(
-                    chunk_id=record['chunk_id'],
-                    text=record['text'][:2000],  # Limit text length
-                    file_id=record['file_id'],
-                    collection_id=record['collection_id'],
-                    chunk_type=record.get('chunk_type', 'concept'),
-                    key_terms=record.get('key_terms', []),
-                    chapter_title=record.get('chapter_title'),
-                    section_title=record.get('section_title'),
+                    chunk_id=record.get('c.chunk_id') or record.get('chunk_id'),
+                    text=(record.get('c.text') or record.get('text', ''))[:2000],  # Limit text length
+                    file_id=record.get('c.file_id') or record.get('file_id'),
+                    collection_id=record.get('c.collection_id') or record.get('collection_id'),
+                    chunk_type=record.get('c.chunk_type') or record.get('chunk_type', 'concept'),
+                    key_terms=record.get('c.key_terms') or record.get('key_terms', []),
+                    chapter_title=record.get('c.chapter_title') or record.get('chapter_title', ''),
+                    section_title=record.get('c.section_title') or record.get('section_title', ''),
                     entities=record.get('entities', [])
                 )
                 chunks.append(chunk)

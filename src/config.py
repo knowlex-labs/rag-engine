@@ -78,7 +78,7 @@ class GCSConfig:
 
 class Neo4jConfig:
     URI: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-    USER: str = os.getenv("NEO4J_USER", "neo4j")
+    USER: str = os.getenv("NEO4J_USERNAME", "neo4j")
     PASSWORD: str = os.getenv("NEO4J_PASSWORD")
     DATABASE: str = os.getenv("NEO4J_DATABASE", "neo4j")
     VECTOR_INDEX_NAME: str = os.getenv("NEO4J_VECTOR_INDEX_NAME", "legal_chunks_index")

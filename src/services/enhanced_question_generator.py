@@ -175,17 +175,28 @@ class EnhancedQuestionGenerator:
 
             try:
                 response = self.llm_client.generate_answer(prompt, [], force_json=True)
+                logger.info(f"Raw LLM response: {response[:500]}...")
                 question_data = self._parse_json_response(response)
 
-                if question_data and not self._is_duplicate(question_data):
+                if not question_data:
+                    logger.error(f"Failed to parse JSON from LLM response: {response[:200]}...")
+                    continue
+
+                logger.info(f"Parsed question data keys: {question_data.keys()}")
+
+                if not self._is_duplicate(question_data):
                     question = self._create_assertion_reasoning_question(
                         question_data, request.difficulty, chunk_group
                     )
                     questions.append(question)
                     self.generated_questions_cache.add(self._get_question_hash(question_data))
+                else:
+                    logger.info("Question was duplicate, skipping")
 
             except Exception as e:
                 logger.error(f"Failed to generate assertion-reasoning question: {e}")
+                import traceback
+                traceback.print_exc()
 
         return questions
 

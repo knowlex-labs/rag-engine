@@ -6,7 +6,7 @@ RESTful endpoints for intelligent question generation using Neo4j knowledge grap
 import logging
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from models.question_models import (
     QuestionGenerationRequest,
@@ -15,7 +15,7 @@ from models.question_models import (
     DifficultyLevel,
     QuestionType
 )
-from services.enhanced_question_generator import enhanced_question_generator
+from services.neo4j_question_builder import neo4j_question_builder
 from services.content_selector import content_selector
 from api.api_constants import API_PREFIX
 
@@ -64,8 +64,8 @@ async def generate_questions(
         if validation_error:
             raise HTTPException(status_code=400, detail=validation_error)
 
-        # Generate questions
-        response = enhanced_question_generator.generate_questions(request)
+        # Generate questions using Neo4j intelligence
+        response = neo4j_question_builder.build_questions(request)
 
         # Log response statistics
         logger.info(
@@ -134,63 +134,26 @@ async def get_content_statistics(
 @router.get(
     "/supported-types",
     summary="Get Supported Question Types",
-    description="Get list of supported question types and difficulty levels"
+    description="Get comprehensive information about Neo4j-driven question generation capabilities"
 )
 async def get_supported_types() -> Dict[str, Any]:
     """
-    Get information about supported question types and difficulty levels
+    Get information about supported question types and Neo4j generation capabilities
     """
-    return {
-        "question_types": [
-            {
-                "type": "assertion_reasoning",
-                "name": "Assertion-Reasoning",
-                "description": "Questions with assertion and reason statements following UGC NET format",
-                "typical_time": "2-4 minutes"
-            },
-            {
-                "type": "match_following",
-                "name": "Match the Following",
-                "description": "Match items from List I with List II based on legal relationships",
-                "typical_time": "2-4 minutes"
-            },
-            {
-                "type": "comprehension",
-                "name": "Comprehension",
-                "description": "Passage-based questions testing understanding and analysis",
-                "typical_time": "5-10 minutes"
-            }
-        ],
-        "difficulty_levels": [
-            {
-                "level": "easy",
-                "name": "Easy",
-                "description": "Basic concepts, direct relationships, factual recall",
-                "characteristics": ["Clear language", "Direct concept-definition", "Factual accuracy"]
-            },
-            {
-                "level": "moderate",
-                "name": "Moderate",
-                "description": "Moderate complexity, some analysis required",
-                "characteristics": ["Conditional language", "Application-based", "Some legal terminology"]
-            },
-            {
-                "level": "difficult",
-                "name": "Difficult",
-                "description": "Complex legal principles, deep analysis required",
-                "characteristics": ["Complex terminology", "Exception handling", "Nuanced reasoning"]
-            }
-        ],
-        "filters": [
-            "collection_ids",
-            "file_ids",
-            "entities",
-            "relationships",
-            "chunk_types",
-            "chapters",
-            "key_terms"
-        ]
-    }
+    try:
+        capabilities = neo4j_question_builder.get_generation_capabilities()
+        return {
+            "success": True,
+            "capabilities": capabilities,
+            "neo4j_driven": True,
+            "message": "Neo4j intelligent question generation capabilities"
+        }
+    except Exception as e:
+        logger.error(f"Failed to get generation capabilities: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get capabilities: {str(e)}"
+        )
 
 
 @router.post(

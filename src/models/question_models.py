@@ -60,7 +60,7 @@ class GenerationContext(BaseModel):
 class QuestionGenerationRequest(BaseModel):
     """Main request model for question generation API"""
     questions: List[QuestionRequest] = Field(..., min_items=1, max_items=5, description="List of question generation requests")
-    context: Optional[GenerationContext] = Field(default_factory=GenerationContext, description="Generation context")
+    context: Optional[GenerationContext] = Field(default_factory=lambda: GenerationContext(), description="Generation context")
 
     @validator('questions')
     def validate_total_questions(cls, v):

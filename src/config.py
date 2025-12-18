@@ -60,7 +60,7 @@ class FeedbackConfig:
     FEEDBACK_SIMILARITY_THRESHOLD: float = float(os.getenv("FEEDBACK_SIMILARITY_THRESHOLD", "0.8"))
 
 class QueryConfig:
-    RELEVANCE_THRESHOLD: float = float(os.getenv("RELEVANCE_THRESHOLD", "0.25"))
+    RELEVANCE_THRESHOLD: float = float(os.getenv("RELEVANCE_THRESHOLD", "0.7"))
 
 class StorageConfig:
     STORAGE_TYPE: str = os.getenv("STORAGE_TYPE", "local").lower()

@@ -44,16 +44,26 @@ class LlmClient:
 
     def _generate_text_response(self, query: str, context_chunks: List[str]) -> str:
         context = "\n\n".join(context_chunks)
-        prompt = f"""You are an experienced physics teacher with advanced expertise who helps students prepare for examinations. You have deep knowledge of physics concepts and can create educational content including questions, explanations, and practice materials.
 
-Based on the following physics content, respond to the student's request. Whether they ask for explanations, practice questions, MCQs, or any other educational assistance, provide comprehensive and accurate help.
+        # CRITICAL: Only answer based on provided context, never use general knowledge
+        if not context or not context.strip():
+            return "Context not found. I can only answer questions based on the documents that have been indexed in the system."
 
-Physics Content:
+        prompt = f"""You are an AI assistant that STRICTLY answers questions based ONLY on the provided context.
+
+IMPORTANT RULES:
+1. ONLY use information from the provided context below
+2. If the context doesn't contain information to answer the query, respond with "Context not found"
+3. NEVER use your general knowledge or training data
+4. NEVER make up or infer information not explicitly stated in the context
+5. If the query asks about something not covered in the context, say "Context not found"
+
+Context from indexed documents:
 {context}
 
-Student Request: {query}
+User Query: {query}
 
-Your Response:"""
+Response (based ONLY on the provided context):"""
 
         try:
             if self.provider == "openai":
@@ -68,12 +78,23 @@ Your Response:"""
 
     def _generate_educational_json(self, query: str, context_chunks: List[str]) -> str:
         context = "\n\n".join(context_chunks)
-        prompt = f"""You are an experienced physics teacher creating educational content. Generate structured educational material in valid JSON format based on the provided physics content.
 
-Physics Content:
+        # CRITICAL: Only answer based on provided context, never use general knowledge
+        if not context or not context.strip():
+            return '{"error": "Context not found. Cannot generate educational content without indexed documents."}'
+
+        prompt = f"""You are an AI assistant that creates educational content based STRICTLY on the provided context.
+
+IMPORTANT RULES:
+1. ONLY use information from the provided context below
+2. If the context doesn't contain sufficient information, return {{"error": "Context not found"}}
+3. NEVER use your general knowledge or training data
+4. NEVER make up questions or content not based on the provided context
+
+Context from indexed documents:
 {context}
 
-Student Request: {query}
+User Request: {query}
 
 Respond with valid JSON only:
 {{
@@ -115,7 +136,7 @@ Important:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": "You are an experienced physics teacher with advanced expertise who helps students prepare for examinations. You have deep knowledge of physics concepts and excel at creating educational content including detailed explanations, practice questions, MCQs, and examination materials. Always provide comprehensive, accurate, and pedagogically sound responses."},
+                {"role": "system", "content": "You are an AI assistant that STRICTLY answers questions based ONLY on provided context. NEVER use your general knowledge. If the context doesn't contain the information needed to answer a question, respond with 'Context not found'."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=self.max_tokens,

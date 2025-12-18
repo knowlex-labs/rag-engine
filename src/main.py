@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import rag, config, feedback
+from api.routes import rag, config, feedback, question_generation
 from config import Config
 
 app = FastAPI(
@@ -22,6 +22,7 @@ app.add_middleware(
 app.include_router(rag.router, prefix="/api/v1", tags=["rag"])
 app.include_router(config.router, prefix="/api/v1", tags=["config"])
 app.include_router(feedback.router, prefix="/api/v1", tags=["feedback"])
+app.include_router(question_generation.router)  # Question generation routes
 # app.include_router(users.router, prefix="/api/v1/users", tags=["users"]) # REMOVED
 
 @app.get("/")

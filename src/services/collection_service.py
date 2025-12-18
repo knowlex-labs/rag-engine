@@ -27,16 +27,22 @@ class CollectionService:
 
     async def process_batch(self, request: BatchLinkRequest, tenant_id: str):
         collection_id = request.items[0].collection_id if request.items else "default"
+        logger.info(f"Starting batch process for tenant {tenant_id}, collection {collection_id}")
         self.neo4j_repo.create_user_collection(tenant_id, collection_id)
 
         results = []
         for item in request.items:
             try:
+                logger.info(f"Processing item {item.file_id} (type: {item.type})")
                 source = self._resolve_source(item)
+                logger.info(f"Parsing content for {item.file_id}")
                 parsed = self._parse_content(source, item.type)
+                logger.info(f"Chunking content for {item.file_id}")
                 chunks = self._chunk_content(parsed, item.type)
+                logger.info(f"Generating embeddings for {len(chunks)} chunks of {item.file_id}")
                 embeddings = self._generate_embeddings(chunks)
 
+                logger.info(f"Indexing chunks to Neo4j for {item.file_id}")
                 self.neo4j_repo.index_chunks(
                     chunks=chunks,
                     embeddings=embeddings,
@@ -46,6 +52,7 @@ class CollectionService:
                     file_name=parsed.metadata.title or item.title or "Unknown",
                     source_type=item.type
                 )
+                logger.info(f"Successfully processed {item.file_id}")
 
                 results.append({
                     "file_id": item.file_id,
@@ -64,14 +71,24 @@ class CollectionService:
         return results
 
     def _resolve_source(self, item: LinkItem) -> str:
+        from urllib.parse import unquote
         if item.type == 'file':
             if not item.gcs_url:
                 raise ValueError("Missing gcs_url")
             
-            if item.gcs_url.startswith(('http://', 'https://')):
-                return self._download_from_url(item.gcs_url)
+            # Unquote in case of %20 etc
+            gcs_url = unquote(item.gcs_url)
+            
+            # If it's a GCS HTTPS URL for our bucket, use native GCS client
+            bucket_prefix = f'https://storage.googleapis.com/{Config.gcs.BUCKET_NAME}/'
+            if gcs_url.startswith(bucket_prefix):
+                storage_path = gcs_url[len(bucket_prefix):]
+                return self.storage_service.download_for_processing(storage_path)
+            
+            if gcs_url.startswith(('http://', 'https://')):
+                return self._download_from_url(gcs_url)
                 
-            return self._download_from_gcs(item.gcs_url)
+            return self._download_from_gcs(gcs_url)
         return item.url
 
     def _download_from_url(self, url: str) -> str:
@@ -94,6 +111,8 @@ class CollectionService:
             raise ValueError(f"Failed to download file: {str(e)}")
 
     def _download_from_gcs(self, gcs_path: str) -> str:
+        from urllib.parse import unquote
+        gcs_path = unquote(gcs_path)
         if gcs_path.startswith("gs://"):
             parts = gcs_path.replace("gs://", "").split("/", 1)
             if len(parts) > 1:

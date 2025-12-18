@@ -3,6 +3,7 @@ from typing import Optional, List
 import shutil
 import uuid
 import os
+import logging
 
 from models.api_models import (
     BatchLinkRequest, IngestionResponse,
@@ -18,6 +19,7 @@ from services.query_service import QueryService
 from api.api_constants import LINK_CONTENT, QUERY_COLLECTION, COLLECTION_STATUS, UNLINK_CONTENT
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 collection_service = CollectionService()
 query_service = QueryService()
 
@@ -26,6 +28,7 @@ async def link_content(
     request: BatchLinkRequest,
     x_user_id: str = Header(...)
 ):
+    logger.info(f"Linking content for user {x_user_id}: {len(request.items)} items")
     results = await collection_service.process_batch(request, x_user_id)
     
     return IngestionResponse(

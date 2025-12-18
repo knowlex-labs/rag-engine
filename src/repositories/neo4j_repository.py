@@ -236,7 +236,7 @@ class Neo4jRepository:
             OPTIONAL MATCH (col)-[:CONTAINS]->(d:Document)
             OPTIONAL MATCH (d)-[:HAS_CHUNK]->(c:Chunk)
             OPTIONAL MATCH (c)-[:MENTIONS]->(e)
-            WHERE e.file_id IN [chunk IN collect(c) | chunk.file_id]
+            WHERE e IS NULL OR e.file_id = d.file_id
             DETACH DELETE col, d, c, e
             RETURN count(*) as deleted_count
             """
@@ -288,8 +288,8 @@ class Neo4jRepository:
                    c.chunk_type as chunk_type,
                    c.chapter_title as chapter_title,
                    c.section_title as section_title,
-                   c.page_start as page_start,
-                   c.page_end as page_end,
+                   CASE WHEN c.page_start IS NOT NULL THEN c.page_start ELSE null END as page_start,
+                   CASE WHEN c.page_end IS NOT NULL THEN c.page_end ELSE null END as page_end,
                    c.key_terms as key_terms,
                    score
             ORDER BY score DESC

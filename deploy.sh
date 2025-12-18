@@ -6,11 +6,11 @@
 set -e  # Exit on error
 
 # Configuration
-PROJECT_ID="parkhoai-864b2"
-REGION="us-central1"
+PROJECT_ID="nyayamind-dev"
+REGION="asia-south1"
 SERVICE_NAME="rag-engine-api"
 IMAGE_NAME="gcr.io/${PROJECT_ID}/${SERVICE_NAME}"
-GCS_BUCKET_NAME="${PROJECT_ID}-rag-files"
+GCS_BUCKET_NAME="nyayamind-content-storage"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -53,9 +53,9 @@ else
     echo -e "${GREEN}✅ Bucket created${NC}"
 fi
 
-# Build Docker image with caching for faster rebuilds
-echo -e "${YELLOW}🐳 Building Docker image (with layer caching)...${NC}"
-gcloud builds submit --tag ${IMAGE_NAME} .
+# Build Docker image with BuildKit enabled (required for --mount=type=cache)
+echo -e "${YELLOW}🐳 Building Docker image with BuildKit...${NC}"
+gcloud builds submit --config cloudbuild.yaml --substitutions=_IMAGE_NAME=${IMAGE_NAME} .
 
 # Deploy to Cloud Run
 echo -e "${YELLOW}🚀 Deploying to Cloud Run...${NC}"

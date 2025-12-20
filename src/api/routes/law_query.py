@@ -18,12 +18,14 @@ from models.law_query_models import (
     LegalDocumentType,
     AnswerStyle
 )
-from services.law_query_service import LawQueryService, BatchLawQueryService
+from models.api_models import RetrieveRequest, RetrieveResponse
+from services.legal_query import LegalQueryService
+from services.query_service import QueryService
 
 # Initialize router and services
 router = APIRouter(prefix="/api/v1/law", tags=["Legal Query"])
-law_query_service = LawQueryService()
-batch_query_service = BatchLawQueryService()
+law_query_service = LegalQueryService()
+query_service = QueryService()
 logger = logging.getLogger(__name__)
 
 
@@ -290,3 +292,68 @@ async def get_query_examples() -> dict:
             "Include context for better understanding (e.g., 'in the context of emergency')"
         ]
     }
+
+
+@router.post("/retrieve", response_model=RetrieveResponse, status_code=200)
+async def retrieve_legal_content(
+    request: RetrieveRequest,
+    x_user_id: str = Header(..., description="User ID for context isolation")
+) -> RetrieveResponse:
+    """
+    Direct constitutional content retrieval for legal research.
+
+    **Features:**
+    - Search through constitutional content
+    - Relevance scoring for retrieved chunks
+    - Source attribution with page numbers
+    - Concept extraction from legal text
+
+    **Use Cases:**
+    - Legal research and case preparation
+    - Constitutional law reference lookup
+    - Citation finding for academic work
+    - Content discovery for legal education
+
+    **Example Usage:**
+    - "fundamental rights Article 21"
+    - "emergency provisions Constitution"
+    - "directive principles state policy"
+    - "Article 356 President's Rule"
+    """
+    try:
+        collection_name = f"user_{x_user_id}"
+
+        response = query_service.search(
+            collection_name=collection_name,
+            query_text=request.query,
+            collection_ids=request.filters.collection_ids if request.filters else None,
+            file_ids=request.filters.file_ids if request.filters else None,
+            limit=request.top_k,
+            enable_critic=False
+        )
+
+        results = []
+        for chunk in response.chunks:
+             results.append({
+                 "chunk_id": chunk.chunk_id or "unknown",
+                 "chunk_text": chunk.text,
+                 "relevance_score": chunk.relevance_score or 0.0,
+                 "file_id": chunk.file_id or chunk.source,
+                 "page_number": chunk.page_number,
+                 "timestamp": chunk.timestamp,
+                 "concepts": chunk.concepts
+             })
+
+        logger.info(
+            f"Legal content retrieval successful for user {x_user_id}: "
+            f"'{request.query[:50]}...' - {len(results)} results"
+        )
+
+        return RetrieveResponse(success=True, results=results)
+
+    except Exception as e:
+        logger.error(f"Error retrieving legal content: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error while retrieving legal content"
+        )

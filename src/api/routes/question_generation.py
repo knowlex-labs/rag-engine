@@ -21,16 +21,16 @@ from api.api_constants import API_PREFIX
 
 logger = logging.getLogger(__name__)
 
-# Create router for question generation endpoints
-router = APIRouter(prefix=f"{API_PREFIX}/questions", tags=["Question Generation"])
+# Create router for law question generation endpoints
+router = APIRouter(prefix=f"{API_PREFIX}/law/questions", tags=["Law Questions"])
 
 
 @router.post(
-    "/generate",
+    "",
     response_model=QuestionGenerationResponse,
-    summary="Generate UGC NET Questions",
+    summary="Generate Legal Questions",
     description="""
-    Generate intelligent UGC NET exam questions using Neo4j knowledge graphs.
+    Generate intelligent legal exam questions using Neo4j knowledge graphs.
 
     Supports:
     - Assertion-Reasoning questions
@@ -49,7 +49,7 @@ async def generate_questions(
     background_tasks: BackgroundTasks
 ) -> QuestionGenerationResponse:
     """
-    Generate UGC NET questions based on the provided specifications
+    Generate legal exam questions based on the provided specifications
     """
     try:
         # Log request for monitoring

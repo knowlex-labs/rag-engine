@@ -81,7 +81,7 @@ class ParsedContent:
 
     def __post_init__(self):
         """Validate source type."""
-        valid_types = ['pdf', 'youtube', 'web']
+        valid_types = ['pdf', 'youtube', 'web', 'constitution']
         if self.source_type not in valid_types:
             raise ValueError(f"Invalid source_type: {self.source_type}. Must be one of {valid_types}")
 

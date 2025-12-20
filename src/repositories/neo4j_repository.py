@@ -1,14 +1,21 @@
 import logging
 from typing import List, Dict, Any, Optional
 from config import Config
-from services.graph_service import graph_service
+from services.graph_service import get_graph_service
 
 logger = logging.getLogger(__name__)
 
 class Neo4jRepository:
     def __init__(self):
-        self.graph_service = graph_service
-        self._ensure_indexes()
+        # Use lazy initialization - graph service will be created when first accessed
+        self._graph_service = None
+
+    @property
+    def graph_service(self):
+        if self._graph_service is None:
+            self._graph_service = get_graph_service()
+            self._ensure_indexes()
+        return self._graph_service
 
     def _ensure_indexes(self):
         try:

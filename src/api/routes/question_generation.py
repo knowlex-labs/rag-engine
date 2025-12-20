@@ -6,7 +6,7 @@ RESTful endpoints for intelligent question generation using Neo4j knowledge grap
 import logging
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from models.question_models import (
     QuestionGenerationRequest,
@@ -257,10 +257,10 @@ async def health_check() -> Dict[str, Any]:
     """
     try:
         # Test basic functionality
-        from services.graph_service import graph_service
+        from services.graph_service import get_graph_service
 
         # Check Neo4j connection
-        graph_service.verify_connection()
+        get_graph_service().verify_connection()
 
         # Check content availability
         stats = content_selector.get_content_statistics()

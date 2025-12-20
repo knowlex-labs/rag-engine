@@ -2,7 +2,7 @@
 import logging
 import json
 from typing import Dict, List
-from services.graph_service import graph_service
+from services.graph_service import get_graph_service
 from utils.llm_client import LlmClient
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class QuestionGeneratorService:
         RETURN c.text as chunk_text, c.key_terms as key_terms, c.chapter_title as chapter_title
         """
         params = {"file_id": file_id} if file_id else {"file_id": None}
-        records = graph_service.execute_query(query, params)
+        records = get_graph_service().execute_query(query, params)
 
         if not records or len(records) < 4:
             return {"error": "Not enough chunk data to generate a Match List question."}
@@ -84,7 +84,7 @@ class QuestionGeneratorService:
         RETURN c.text as chunk_text, c.key_terms as key_terms, c.chapter_title as chapter_title
         """
         params = {"file_id": file_id} if file_id else {"file_id": None}
-        records = graph_service.execute_query(query, params)
+        records = get_graph_service().execute_query(query, params)
 
         if not records:
             # Fallback to any concept chunks if no contradictory language found
@@ -98,7 +98,7 @@ class QuestionGeneratorService:
             LIMIT 5
             RETURN c.text as chunk_text, c.key_terms as key_terms, c.chapter_title as chapter_title
             """
-            records = graph_service.execute_query(fallback_query, params)
+            records = get_graph_service().execute_query(fallback_query, params)
 
         if not records:
             return {"error": "No suitable content found for Assertion-Reason question generation."}

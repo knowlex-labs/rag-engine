@@ -7,7 +7,7 @@ set -e  # Exit on error
 
 # Configuration
 PROJECT_ID="nyayamind-dev"
-REGION="asia-south1"
+REGION="asia-south2"
 SERVICE_NAME="rag-engine-api"
 IMAGE_NAME="gcr.io/${PROJECT_ID}/${SERVICE_NAME}"
 GCS_BUCKET_NAME="nyayamind-content-storage"
@@ -44,6 +44,14 @@ gcloud services enable \
     secretmanager.googleapis.com \
     --quiet
 
+# Grant Secret Manager access to Cloud Run service account
+echo -e "${YELLOW}🔐 Setting up Secret Manager permissions...${NC}"
+PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+    --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor" \
+    --quiet
+
 # Create GCS bucket if it doesn't exist
 echo -e "${YELLOW}🪣 Creating GCS bucket: ${GCS_BUCKET_NAME}${NC}"
 if gsutil ls -b gs://${GCS_BUCKET_NAME} 2>/dev/null; then
@@ -67,7 +75,7 @@ gcloud run deploy ${SERVICE_NAME} \
     --memory 2Gi \
     --cpu 1 \
     --timeout 300 \
-    --set-env-vars="GCS_BUCKET_NAME=${GCS_BUCKET_NAME},EMBEDDING_PROVIDER=openai,EMBEDDING_MODEL=text-embedding-ada-002,VECTOR_SIZE=1536,LLM_PROVIDER=openai,OPENAI_MODEL=gpt-4o,GEMINI_MODEL=models/gemini-2.5-flash,NEO4J_URI=neo4j+s://15980118.databases.neo4j.io,NEO4J_USERNAME=neo4j,RERANKER_ENABLED=true,CRITIC_ENABLED=true,FEEDBACK_ENABLED=true,DEBUG=false,LOG_LEVEL=INFO" \
+    --set-env-vars="GCS_BUCKET_NAME=${GCS_BUCKET_NAME},EMBEDDING_PROVIDER=openai,EMBEDDING_MODEL=text-embedding-ada-002,VECTOR_SIZE=1536,LLM_PROVIDER=openai,OPENAI_MODEL=gpt-4o,GEMINI_MODEL=models/gemini-2.5-flash,NEO4J_URI=neo4j+s://15980118.databases.neo4j.io,NEO4J_USER=neo4j,RERANKER_ENABLED=true,CRITIC_ENABLED=true,FEEDBACK_ENABLED=true,DEBUG=false,LOG_LEVEL=INFO" \
     --set-secrets="OPENAI_API_KEY=OPENAI_API_KEY:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,LLAMA_CLOUD_API_KEY=LLAMA_CLOUD_API_KEY:latest,NEO4J_PASSWORD=NEO4J_PASSWORD:latest,CRITIC_MODEL_API_KEY=GEMINI_API_KEY:latest" \
     --max-instances 10 \
     --min-instances 0

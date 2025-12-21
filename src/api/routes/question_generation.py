@@ -7,13 +7,17 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse
 from typing import Dict, Any, Optional, List
+from pydantic import BaseModel, Field
 
 from models.question_models import (
     QuestionGenerationRequest,
     QuestionGenerationResponse,
     QuestionGenerationError,
     DifficultyLevel,
-    QuestionType
+    QuestionType,
+    QuestionRequest,
+    QuestionFilters,
+    SimpleQuestionGenerationRequest
 )
 from services.enhanced_question_generator import enhanced_question_generator
 from services.content_selector import content_selector
@@ -30,61 +34,109 @@ router = APIRouter(prefix=f"{API_PREFIX}/law/questions", tags=["Law Questions"])
     response_model=QuestionGenerationResponse,
     summary="Generate Legal Questions",
     description="""
-    Generate intelligent legal exam questions using Neo4j knowledge graphs.
+    Generate legal exam questions using simplified format.
 
-    Supports:
-    - Assertion-Reasoning questions
-    - Match the Following questions
-    - Comprehension-based questions
+    Request Format:
+    {
+        "title": "Quiz for BNS acts",
+        "scope": ["bns"],
+        "num_questions": 10,
+        "difficulty": "easy",
+        "question_data": [
+            {
+                "question_type": "Assertion_reason",
+                "num_questions": 5
+            },
+            {
+                "question_type": "Match the following",
+                "num_questions": 5
+            }
+        ]
+    }
 
-    Features:
-    - 3-tier difficulty levels (Easy/Moderate/Difficult)
-    - Graph-based smart content selection
-    - Mixed question type batches
-    - Quality validation and duplicate prevention
+    Question Types:
+    - "Assertion_reason": Assertion-reasoning format
+    - "MCQ": Multiple choice (uses assertion format)
+    - "Match the following": Match items format
+
+    Scope Options:
+    - ["bns"]: BNS questions only
+    - ["constitution"]: Constitution questions only
+    - ["bns", "constitution"]: Mixed questions
+
+    Difficulty Levels: "easy", "medium", "hard"
     """
 )
 async def generate_questions(
-    request: QuestionGenerationRequest,
+    request: SimpleQuestionGenerationRequest,
     background_tasks: BackgroundTasks
 ) -> QuestionGenerationResponse:
     """
-    Generate legal exam questions based on the provided specifications
+    Generate legal exam questions using simplified request format
     """
     try:
-        # Log request for monitoring
-        logger.info(
-            f"Question generation request: "
-            f"types={[q.type.value for q in request.questions]}, "
-            f"total_count={sum(q.count for q in request.questions)}"
-        )
+        logger.info(f"Simple question generation request: {request.title}, {request.num_questions} questions, scope: {request.scope}")
 
-        # Validate request
-        validation_error = await _validate_generation_request(request)
-        if validation_error:
-            raise HTTPException(status_code=400, detail=validation_error)
+        # Map scope to collection IDs
+        collection_ids = []
+        for scope in request.scope:
+            if scope == "bns":
+                collection_ids.append("bns-golden-source")
+            elif scope == "constitution":
+                collection_ids.append("constitution-golden-source")
+
+        if not collection_ids:
+            raise HTTPException(status_code=400, detail="Invalid scope. Use 'bns' and/or 'constitution'")
+
+        # Map difficulty
+        difficulty_map = {
+            "easy": DifficultyLevel.EASY,
+            "medium": DifficultyLevel.MODERATE,
+            "hard": DifficultyLevel.DIFFICULT
+        }
+        internal_difficulty = difficulty_map[request.difficulty]
+
+        # Map question types and create internal requests
+        question_type_map = {
+            "assertion_reason": QuestionType.ASSERTION_REASONING,
+            "mcq": QuestionType.ASSERTION_REASONING,  # Use assertion format for MCQ
+            "match the following": QuestionType.MATCH_FOLLOWING
+        }
+
+        internal_questions = []
+        for q_data in request.question_data:
+            q_type_key = q_data.question_type.lower()
+            if q_type_key not in question_type_map:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unsupported question type: {q_data.question_type}. Use: 'Assertion_reason', 'MCQ', 'Match the following'"
+                )
+
+            internal_questions.append(QuestionRequest(
+                type=question_type_map[q_type_key],
+                count=q_data.num_questions,
+                difficulty=internal_difficulty,
+                filters=QuestionFilters(collection_ids=collection_ids)
+            ))
+
+        # Create internal request format
+        internal_request = QuestionGenerationRequest(questions=internal_questions)
 
         # Generate questions
-        response = enhanced_question_generator.generate_questions(request)
+        response = enhanced_question_generator.generate_questions(internal_request)
 
-        # Log response statistics
-        logger.info(
-            f"Question generation completed: "
-            f"success={response.success}, "
-            f"generated={response.total_generated}, "
-            f"errors={len(response.errors)}"
-        )
+        logger.info(f"Generated {response.total_generated}/{request.num_questions} questions successfully")
 
         # Add background task for cleanup/analytics if needed
         if response.success:
-            background_tasks.add_task(_log_generation_analytics, request, response)
+            background_tasks.add_task(_log_simple_generation_analytics, request, response)
 
         return response
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Question generation failed: {e}")
+        logger.error(f"Simple question generation failed: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Question generation failed: {str(e)}"
@@ -338,17 +390,19 @@ def _get_content_recommendations(content_result, question_request) -> List[str]:
     return recommendations
 
 
-async def _log_generation_analytics(request: QuestionGenerationRequest, response: QuestionGenerationResponse):
+async def _log_simple_generation_analytics(request: SimpleQuestionGenerationRequest, response: QuestionGenerationResponse):
     """
-    Background task to log generation analytics
+    Background task to log simplified generation analytics
     """
     try:
         analytics_data = {
             "timestamp": datetime.now().isoformat(),
             "request_summary": {
-                "total_requested": sum(q.count for q in request.questions),
-                "types_requested": [q.type.value for q in request.questions],
-                "difficulties": [q.difficulty.value for q in request.questions]
+                "title": request.title,
+                "total_requested": request.num_questions,
+                "scope": request.scope,
+                "difficulty": request.difficulty,
+                "question_types": [q.question_type for q in request.question_data]
             },
             "response_summary": {
                 "success": response.success,
@@ -358,7 +412,7 @@ async def _log_generation_analytics(request: QuestionGenerationRequest, response
             }
         }
 
-        logger.info(f"Question generation analytics: {analytics_data}")
+        logger.info(f"Simple question generation analytics: {analytics_data}")
 
     except Exception as e:
         logger.error(f"Failed to log analytics: {e}")

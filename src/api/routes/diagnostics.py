@@ -67,3 +67,41 @@ async def test_neo4j_connection() -> Dict[str, Any]:
             "debug_info": debug_info,
             "message": "Failed to connect to Neo4j"
         }
+
+@router.get("/api/v1/diagnostics/indexes")
+async def check_neo4j_indexes() -> Dict[str, Any]:
+    """Check what indexes exist in Neo4j database"""
+    from services.graph_service import get_graph_service
+    import traceback
+
+    try:
+        graph_service = get_graph_service()
+
+        # List all indexes
+        indexes_query = "SHOW INDEXES"
+        indexes = graph_service.execute_query(indexes_query)
+
+        # Check for specific vector index
+        vector_index_name = Config.neo4j.VECTOR_INDEX_NAME
+        vector_index_exists = any(
+            record.get("name") == vector_index_name 
+            for record in indexes
+        )
+
+        return {
+            "status": "success",
+            "expected_vector_index": vector_index_name,
+            "vector_index_exists": vector_index_exists,
+            "total_indexes": len(indexes),
+            "indexes": [dict(record) for record in indexes],
+            "message": f"Found {len(indexes)} indexes"
+        }
+    except Exception as e:
+        return {
+            "status": "failed",
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "error_traceback": traceback.format_exc(),
+            "expected_vector_index": Config.neo4j.VECTOR_INDEX_NAME,
+            "message": "Failed to query indexes"
+        }

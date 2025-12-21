@@ -8,7 +8,7 @@ import time
 from typing import List, Dict, Any
 # ...
 from llama_parse import LlamaParse
-from services.graph_service import graph_service
+from services.graph_service import get_graph_service
 from utils.llm_client import LlmClient
 from config import Config
 from llama_index.core.node_parser import SentenceSplitter
@@ -38,7 +38,7 @@ class LegalIngestionService:
 
         # 0. Check if file already exists
         check_query = "MATCH (f:File {id: $file_id}) RETURN f"
-        existing = graph_service.execute_query(check_query, {"file_id": file_id})
+        existing = get_graph_service().execute_query(check_query, {"file_id": file_id})
         if existing:
             logger.info(f"File {file_id} already ingested. Skipping.")
             return "Already ingested."
@@ -84,7 +84,7 @@ class LegalIngestionService:
             self._persist_to_neo4j(all_nodes, all_edges, file_id)
             
             # Create File Node to mark completion
-            graph_service.execute_query(
+            get_graph_service().execute_query(
                 "MERGE (f:File {id: $file_id}) SET f.ingested_at = timestamp()", 
                 {"file_id": file_id}
             )
@@ -114,7 +114,7 @@ class LegalIngestionService:
             MERGE (n:{label} {{id: $id}})
             SET n.text = $text, n.file_id = $file_id
             """
-            graph_service.execute_query(query, {
+            get_graph_service().execute_query(query, {
                 "id": self._make_global_id(node['id'], file_id), 
                 "text": node.get('text', ''),
                 "file_id": file_id
@@ -137,7 +137,7 @@ class LegalIngestionService:
             MATCH (s {{id: $source_id}}), (t {{id: $target_id}})
             MERGE (s)-[r:{normalized_relation}]->(t)
             """
-            graph_service.execute_query(query, {
+            get_graph_service().execute_query(query, {
                 "source_id": source_id,
                 "target_id": target_id
             })

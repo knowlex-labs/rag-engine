@@ -6,7 +6,7 @@ Leverages knowledge graph relationships to intelligently select content for diff
 import logging
 import random
 from typing import List, Dict, Any, Optional, Tuple
-from services.graph_service import graph_service
+from services.graph_service import get_graph_service
 from models.question_models import (
     QuestionFilters, DifficultyLevel, QuestionType,
     ContentChunk, EntityRelationship, ContentSelectionResult
@@ -69,49 +69,44 @@ class ContentSelector:
             query = f"""
             MATCH (c:Chunk)
             WHERE {base_conditions}
-            AND c.chunk_type = 'concept'
             AND size(c.text) > 200
-            AND size(c.text) < 800
-            AND (c.text CONTAINS 'define' OR c.text CONTAINS 'means' OR c.text CONTAINS 'refers to')
-            WITH c
             ORDER BY rand()
             LIMIT {min(count * 3, 15)}
-            RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title
+            RETURN c.chunk_id, c.text, c.file_id, c.collection_id,
+                   coalesce(c.chunk_type, 'concept') as chunk_type,
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
             strategy = "easy_concept_definitions"
 
         elif difficulty == DifficultyLevel.MODERATE:
-            # Moderate: Chunks with some contradictory language or exceptions
             query = f"""
             MATCH (c:Chunk)
             WHERE {base_conditions}
-            AND c.chunk_type IN ['concept', 'example']
             AND size(c.text) > 300
-            AND (c.text CONTAINS 'however' OR c.text CONTAINS 'but' OR c.text CONTAINS 'exception'
-                 OR c.text CONTAINS 'although' OR c.text CONTAINS 'while')
-            WITH c
             ORDER BY rand()
             LIMIT {min(count * 3, 15)}
-            RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title
+            RETURN c.chunk_id, c.text, c.file_id, c.collection_id,
+                   coalesce(c.chunk_type, 'concept') as chunk_type,
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
             strategy = "moderate_contradictory_concepts"
 
         else:  # DIFFICULT
-            # Difficult: Complex legal relationships with entities
             query = f"""
-            MATCH (c:Chunk)-[:MENTIONS]->(e:LegalEntity)
+            MATCH (c:Chunk)
             WHERE {base_conditions}
             AND size(c.text) > 400
-            WITH c, collect(e.text) as entities
-            WHERE size(entities) >= 2
-            AND (c.text CONTAINS 'exception' OR c.text CONTAINS 'limitation'
-                 OR c.text CONTAINS 'notwithstanding' OR c.text CONTAINS 'provided that')
             ORDER BY rand()
             LIMIT {min(count * 2, 10)}
-            RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title, entities
+            RETURN c.chunk_id, c.text, c.file_id, c.collection_id,
+                   coalesce(c.chunk_type, 'concept') as chunk_type,
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
             strategy = "difficult_complex_legal_relationships"
 
@@ -138,53 +133,47 @@ class ContentSelector:
         base_conditions = self._build_base_conditions(filters)
 
         if difficulty == DifficultyLevel.EASY:
-            # Easy: Direct entity-definition pairs
             query = f"""
-            MATCH (c:Chunk)-[:MENTIONS]->(e:LegalEntity)
+            MATCH (c:Chunk)
             WHERE {base_conditions}
-            AND c.chunk_type = 'concept'
             AND size(c.text) > 200
-            AND (c.text CONTAINS 'define' OR c.text CONTAINS 'mean' OR c.text CONTAINS 'refer')
-            WITH c, collect(e.text) as entities
-            WHERE size(entities) >= 1
             ORDER BY rand()
             LIMIT {min(count * 8, 24)}
-            RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title, entities
+            RETURN c.chunk_id, c.text, c.file_id, c.collection_id,
+                   coalesce(c.chunk_type, 'concept') as chunk_type,
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
             strategy = "easy_entity_definitions"
 
         elif difficulty == DifficultyLevel.MODERATE:
-            # Moderate: Cases, statutes, and their applications
             query = f"""
-            MATCH (c:Chunk)-[:MENTIONS]->(e:LegalEntity)
+            MATCH (c:Chunk)
             WHERE {base_conditions}
-            AND c.chunk_type IN ['concept', 'example']
             AND size(c.text) > 250
-            AND e.text IN ['Case', 'Statute', 'Ruling', 'Section']
-            WITH c, collect(e.text) as entities
-            WHERE size(entities) >= 1
             ORDER BY rand()
             LIMIT {min(count * 6, 18)}
-            RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title, entities
+            RETURN c.chunk_id, c.text, c.file_id, c.collection_id,
+                   coalesce(c.chunk_type, 'concept') as chunk_type,
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
             strategy = "moderate_legal_applications"
 
         else:  # DIFFICULT
-            # Difficult: Complex relationships between multiple entities
             query = f"""
-            MATCH (c:Chunk)-[:MENTIONS]->(e1:LegalEntity)
-            MATCH (c)-[:MENTIONS]->(e2:LegalEntity)
+            MATCH (c:Chunk)
             WHERE {base_conditions}
             AND size(c.text) > 400
-            AND e1 <> e2
-            WITH c, collect(DISTINCT e1.text + ': ' + e2.text) as entity_pairs
-            WHERE size(entity_pairs) >= 2
             ORDER BY rand()
             LIMIT {min(count * 4, 12)}
-            RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-                   c.key_terms, c.chapter_title, c.section_title, entity_pairs
+            RETURN c.chunk_id, c.text, c.file_id, c.collection_id,
+                   coalesce(c.chunk_type, 'concept') as chunk_type,
+                   coalesce(c.key_terms, []) as key_terms,
+                   coalesce(c.chapter_title, '') as chapter_title,
+                   coalesce(c.section_title, '') as section_title
             """
             strategy = "difficult_multi_entity_relationships"
 
@@ -230,15 +219,14 @@ class ContentSelector:
         query = f"""
         MATCH (c:Chunk)
         WHERE {base_conditions}
-        AND size(c.text) >= {min_length}
-        AND size(c.text) <= {max_length}
-        AND c.chunk_type IN ['concept', 'example']
-        WITH c, size(split(c.text, '.')) as sentence_count
-        WHERE sentence_count >= 4
+        AND size(c.text) >= 200
         ORDER BY rand()
         LIMIT {min(count * 2, 6)}
-        RETURN c.chunk_id, c.text, c.file_id, c.collection_id, c.chunk_type,
-               c.key_terms, c.chapter_title, c.section_title, sentence_count
+        RETURN c.chunk_id, c.text, c.file_id, c.collection_id,
+               coalesce(c.chunk_type, 'concept') as chunk_type,
+               coalesce(c.key_terms, []) as key_terms,
+               coalesce(c.chapter_title, '') as chapter_title,
+               coalesce(c.section_title, '') as section_title
         """
 
         params = self._build_query_params(filters)
@@ -252,7 +240,6 @@ class ContentSelector:
         )
 
     def _build_base_conditions(self, filters: Optional[QuestionFilters]) -> str:
-        """Build base WHERE conditions for content selection queries"""
         conditions = ["c.chunk_id IS NOT NULL"]
 
         if filters:
@@ -290,21 +277,21 @@ class ContentSelector:
         return params
 
     def _execute_and_process_chunks(self, query: str, params: Dict[str, Any]) -> List[ContentChunk]:
-        """Execute Neo4j query and convert results to ContentChunk objects"""
         try:
-            records = graph_service.execute_query(query, params)
+            records = get_graph_service().execute_query(query, params)
             chunks = []
+            logger.info(f"Neo4j returned {len(records)} chunks")
 
             for record in records:
                 chunk = ContentChunk(
-                    chunk_id=record['chunk_id'],
-                    text=record['text'][:2000],  # Limit text length
-                    file_id=record['file_id'],
-                    collection_id=record['collection_id'],
-                    chunk_type=record.get('chunk_type', 'concept'),
-                    key_terms=record.get('key_terms', []),
-                    chapter_title=record.get('chapter_title'),
-                    section_title=record.get('section_title'),
+                    chunk_id=record['c.chunk_id'],
+                    text=record['c.text'],
+                    file_id=record['c.file_id'],
+                    collection_id=record['c.collection_id'],
+                    chunk_type=record.get('c.chunk_type', 'concept'),
+                    key_terms=record.get('c.key_terms', []),
+                    chapter_title=record.get('c.chapter_title'),
+                    section_title=record.get('c.section_title'),
                     entities=record.get('entities', [])
                 )
                 chunks.append(chunk)
@@ -312,112 +299,20 @@ class ContentSelector:
             return chunks
 
         except Exception as e:
-            logger.error(f"Failed to execute content selection query: {e}")
+            logger.error(f"Neo4j query failed: {e}")
             return []
 
     def _find_related_entities(self, chunks: List[ContentChunk], difficulty: DifficultyLevel) -> List[EntityRelationship]:
-        """Find entity relationships relevant for assertion-reasoning questions"""
-        if not chunks:
-            return []
-
-        chunk_ids = [chunk.chunk_id for chunk in chunks]
-
-        # Query for entity relationships
-        query = """
-        MATCH (c:Chunk)-[:MENTIONS]->(e1:LegalEntity)
-        MATCH (e1)-[r]->(e2:LegalEntity)
-        WHERE c.chunk_id IN $chunk_ids
-        AND type(r) IN ['CONTRADICTS', 'SUPPORTS', 'DEFINES', 'HAS_EXCEPTION']
-        RETURN e1.text as source, type(r) as relationship, e2.text as target,
-               c.text as context
-        LIMIT 10
-        """
-
-        try:
-            records = graph_service.execute_query(query, {'chunk_ids': chunk_ids})
-            relationships = []
-
-            for record in records:
-                rel = EntityRelationship(
-                    source_entity=record['source'],
-                    target_entity=record['target'],
-                    relationship_type=record['relationship'],
-                    context=record['context'][:200]
-                )
-                relationships.append(rel)
-
-            return relationships
-
-        except Exception as e:
-            logger.error(f"Failed to find entity relationships: {e}")
-            return []
+        # Return empty for now since we don't have LegalEntity relationships
+        return []
 
     def _find_entity_definition_pairs(self, chunks: List[ContentChunk], difficulty: DifficultyLevel) -> List[EntityRelationship]:
-        """Find entity-definition pairs for match-following questions"""
-        if not chunks:
-            return []
-
-        chunk_ids = [chunk.chunk_id for chunk in chunks]
-
-        query = """
-        MATCH (c:Chunk)-[:MENTIONS]->(e:LegalEntity)
-        WHERE c.chunk_id IN $chunk_ids
-        AND (c.text CONTAINS 'define' OR c.text CONTAINS 'mean' OR c.text CONTAINS 'refer')
-        RETURN e.text as entity, c.text as definition
-        LIMIT 8
-        """
-
-        try:
-            records = graph_service.execute_query(query, {'chunk_ids': chunk_ids})
-            relationships = []
-
-            for record in records:
-                rel = EntityRelationship(
-                    source_entity=record['entity'],
-                    target_entity="definition",
-                    relationship_type="DEFINES",
-                    context=record['definition'][:300]
-                )
-                relationships.append(rel)
-
-            return relationships
-
-        except Exception as e:
-            logger.error(f"Failed to find entity definition pairs: {e}")
-            return []
+        # Return empty for now since we don't have LegalEntity relationships
+        return []
 
     def _find_passage_entities(self, chunks: List[ContentChunk]) -> List[EntityRelationship]:
-        """Find key entities mentioned in comprehension passages"""
-        if not chunks:
-            return []
-
-        chunk_ids = [chunk.chunk_id for chunk in chunks]
-
-        query = """
-        MATCH (c:Chunk)-[:MENTIONS]->(e:LegalEntity)
-        WHERE c.chunk_id IN $chunk_ids
-        RETURN c.chunk_id as chunk, collect(e.text) as entities
-        """
-
-        try:
-            records = graph_service.execute_query(query, {'chunk_ids': chunk_ids})
-            relationships = []
-
-            for record in records:
-                for entity in record.get('entities', []):
-                    rel = EntityRelationship(
-                        source_entity=record['chunk'],
-                        target_entity=entity,
-                        relationship_type="MENTIONS",
-                        context=""
-                    )
-                    relationships.append(rel)
-
-            return relationships
-
-        except Exception as e:
-            logger.error(f"Failed to find passage entities: {e}")
-            return []
+        # Return empty for now since we don't have LegalEntity relationships
+        return []
 
     def get_content_statistics(self, filters: Optional[QuestionFilters] = None) -> Dict[str, Any]:
         """Get statistics about available content for question generation"""
@@ -437,7 +332,7 @@ class ContentSelector:
 
         try:
             params = self._build_query_params(filters)
-            records = graph_service.execute_query(query, params)
+            records = get_graph_service().execute_query(query, params)
 
             if records:
                 return dict(records[0])

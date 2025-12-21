@@ -40,6 +40,45 @@ class QuestionFilters(BaseModel):
     exclude_file_ids: Optional[List[str]] = Field(None, description="Exclude specific files")
 
 
+# New simplified models for user-friendly API
+
+class QuestionTypeData(BaseModel):
+    """Simplified question type specification"""
+    question_type: str = Field(..., description="Question type: 'Assertion_reason', 'MCQ', 'Match the following'")
+    num_questions: int = Field(..., ge=1, le=20, description="Number of questions of this type")
+
+class SimpleQuestionGenerationRequest(BaseModel):
+    """Simplified question generation request"""
+    title: str = Field(..., min_length=1, max_length=100, description="Quiz title")
+    scope: List[str] = Field(..., description="Scope: ['bns'], ['constitution'], or ['bns', 'constitution']")
+    num_questions: int = Field(..., ge=1, le=50, description="Total number of questions")
+    difficulty: str = Field("medium", description="Difficulty: 'easy', 'medium', 'hard'")
+    question_data: List[QuestionTypeData] = Field(..., description="Question type breakdown")
+
+    @validator('question_data')
+    def validate_question_totals(cls, v, values):
+        total_requested = sum(q.num_questions for q in v)
+        num_questions = values.get('num_questions', 0)
+
+        if total_requested != num_questions:
+            raise ValueError(f"Sum of question_data num_questions ({total_requested}) must equal num_questions ({num_questions})")
+        return v
+
+    @validator('scope')
+    def validate_scope(cls, v):
+        valid_scopes = {'bns', 'constitution'}
+        for scope in v:
+            if scope.lower() not in valid_scopes:
+                raise ValueError(f"Invalid scope '{scope}'. Use: 'bns', 'constitution'")
+        return [s.lower() for s in v]
+
+    @validator('difficulty')
+    def validate_difficulty(cls, v):
+        valid_difficulties = {'easy', 'medium', 'hard'}
+        if v.lower() not in valid_difficulties:
+            raise ValueError(f"Invalid difficulty '{v}'. Use: 'easy', 'medium', 'hard'")
+        return v.lower()
+
 class QuestionRequest(BaseModel):
     """Individual question generation request"""
     type: QuestionType = Field(..., description="Type of question to generate")

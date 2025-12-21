@@ -125,6 +125,8 @@ class EnhancedQuestionGenerator:
             logger.warning(f"No content found for {question_request.type.value} questions")
             return questions
 
+        logger.info(f"Found {len(content_result.selected_chunks)} chunks for {question_request.type.value} questions")
+
         # Generate questions based on type
         start_time = datetime.now()
 
@@ -174,7 +176,9 @@ class EnhancedQuestionGenerator:
             )
 
             try:
-                response = self.llm_client.generate_answer(prompt, [], force_json=True)
+                # Pass chunk content as context
+                context_chunks = [chunk.text for chunk in chunk_group]
+                response = self.llm_client.generate_answer(prompt, context_chunks, force_json=True)
                 question_data = self._parse_json_response(response)
 
                 if question_data and not self._is_duplicate(question_data):
@@ -211,7 +215,9 @@ class EnhancedQuestionGenerator:
             )
 
             try:
-                response = self.llm_client.generate_answer(prompt, [], force_json=True)
+                # Pass chunk content as context
+                context_chunks = [chunk.text for chunk in chunk_group]
+                response = self.llm_client.generate_answer(prompt, context_chunks, force_json=True)
                 question_data = self._parse_json_response(response)
 
                 if question_data and not self._is_duplicate(question_data):
@@ -244,7 +250,9 @@ class EnhancedQuestionGenerator:
             )
 
             try:
-                response = self.llm_client.generate_answer(prompt, [], force_json=True)
+                # Pass chunk content as context
+                context_chunks = [chunk.text]
+                response = self.llm_client.generate_answer(prompt, context_chunks, force_json=True)
                 question_data = self._parse_json_response(response)
 
                 if question_data and not self._is_duplicate(question_data):

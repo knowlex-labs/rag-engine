@@ -49,14 +49,20 @@ class LlmClient:
         if not context or not context.strip():
             return "Context not found. I can only answer questions based on the documents that have been indexed in the system."
 
-        prompt = f"""You are an AI assistant that STRICTLY answers questions based ONLY on the provided context.
+        prompt = f"""You are an AI assistant that answers questions based ONLY on the provided context.
 
 IMPORTANT RULES:
 1. ONLY use information from the provided context below
-2. If the context doesn't contain information to answer the query, respond with "Context not found"
-3. NEVER use your general knowledge or training data
-4. NEVER make up or infer information not explicitly stated in the context
-5. If the query asks about something not covered in the context, say "Context not found"
+2. If the context contains relevant information, provide a helpful answer even if it's partial
+3. If the context has specific cases or examples related to the question, use those to answer
+4. NEVER use your general knowledge or training data
+5. NEVER make up information not in the context
+6. Only say "Context not found" if the context is completely unrelated to the question
+
+Instructions for Legal Questions:
+- If asking about general law but context shows specific cases, explain what the specific cases say
+- If context has partial information, provide what information is available
+- Always specify which sections/articles your answer comes from
 
 Context from indexed documents:
 {context}
@@ -127,8 +133,10 @@ Important:
             else:
                 return f"Error: Unknown LLM provider: {self.provider}"
         except Exception as e:
-            logger.error(f"Error generating educational JSON: {str(e)}")
-            return f"Error generating educational JSON: {str(e)}"
+            import traceback
+            logger.error(f"Error generating educational JSON: {type(e).__name__}: {e}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return f"Error generating educational JSON: {type(e).__name__}: {e}"
 
 
 

@@ -1,7 +1,7 @@
 COLLECTIONS_BASE = "/collection"
 COLLECTION_STATUS = "/collection/status"
 LINK_CONTENT = "/link-content"
-UNLINK_CONTENT = "/unlink-content"
+UNLINK_CONTENT = "/delete/file"
 QUERY_COLLECTION = "/query"
 BATCH_READ_FILES = "/files/batch-read"
 CONFIG_BASE = "/config"

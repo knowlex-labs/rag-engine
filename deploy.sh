@@ -75,7 +75,7 @@ gcloud run deploy ${SERVICE_NAME} \
     --memory 2Gi \
     --cpu 1 \
     --timeout 300 \
-    --set-env-vars="GCS_BUCKET_NAME=${GCS_BUCKET_NAME},EMBEDDING_PROVIDER=openai,EMBEDDING_MODEL=text-embedding-ada-002,VECTOR_SIZE=1536,LLM_PROVIDER=openai,OPENAI_MODEL=gpt-4o,GEMINI_MODEL=models/gemini-2.5-flash,NEO4J_URI=neo4j+s://15980118.databases.neo4j.io,NEO4J_USER=neo4j,RERANKER_ENABLED=true,CRITIC_ENABLED=true,FEEDBACK_ENABLED=true,DEBUG=false,LOG_LEVEL=INFO" \
+    --set-env-vars="GCS_BUCKET_NAME=${GCS_BUCKET_NAME},EMBEDDING_PROVIDER=openai,EMBEDDING_MODEL=text-embedding-ada-002,VECTOR_SIZE=1536,LLM_PROVIDER=openai,OPENAI_MODEL=gpt-4o,GEMINI_MODEL=models/gemini-2.5-flash,NEO4J_URI=neo4j+s://15980118.databases.neo4j.io,NEO4J_USER=neo4j,NEO4J_DATABASE=neo4j,RERANKER_ENABLED=true,CRITIC_ENABLED=true,FEEDBACK_ENABLED=true,DEBUG=false,LOG_LEVEL=INFO,STORAGE_TYPE=gcs,GCP_PROJECT_ID=nyayamind-dev" \
     --set-secrets="OPENAI_API_KEY=OPENAI_API_KEY:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,LLAMA_CLOUD_API_KEY=LLAMA_CLOUD_API_KEY:latest,NEO4J_PASSWORD=NEO4J_PASSWORD:latest,CRITIC_MODEL_API_KEY=GEMINI_API_KEY:latest" \
     --max-instances 10 \
     --min-instances 0

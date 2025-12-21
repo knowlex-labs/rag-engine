@@ -18,6 +18,7 @@ class Neo4jRepository:
         return self._graph_service
 
     def _ensure_indexes(self):
+        """Ensure indexes exist - non-blocking, will retry on next query if it fails"""
         try:
             vector_dim = 1536 if Config.embedding.PROVIDER == "openai" else Config.embedding.VECTOR_SIZE
 
@@ -49,8 +50,8 @@ class Neo4jRepository:
             logger.info("Property indexes and constraints created")
 
         except Exception as e:
-            logger.error(f"Error creating indexes: {e}")
-            raise
+            # Don't raise - indexes can be created later when connection is available
+            logger.warning(f"Could not create indexes during initialization (will retry later): {e}")
 
     def create_user_collection(self, user_id: str, collection_id: str) -> bool:
         try:

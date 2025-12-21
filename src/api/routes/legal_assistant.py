@@ -19,6 +19,8 @@ class LegalQueryResponse(BaseModel):
     sources: list
     total_chunks_found: int
     chunks_used: int
+    documents_searched: List[str] = []
+    processing_time_ms: int = 0
 
 legal_service = LegalQueryService()
 

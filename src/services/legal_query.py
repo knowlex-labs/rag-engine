@@ -51,6 +51,7 @@ class LegalQueryService:
                 actual_scope = list(set(actual_scope))
 
             logger.info(f"Searching collections: {collection_ids}")
+            logger.info(f"Actual scope for response: {actual_scope}")
 
             chunks = self._get_multi_collection_chunks(question, max_chunks, collection_ids)
             logger.info(f"Found {len(chunks)} constitutional chunks")
@@ -58,8 +59,16 @@ class LegalQueryService:
             processing_time_ms = int((time.time() - start_time) * 1000)
             
             if not chunks:
+                # Create dynamic error message based on scope
+                if 'bns' in actual_scope and 'constitution' not in actual_scope:
+                    no_content_msg = "No BNS content found for your question."
+                elif 'constitution' in actual_scope and 'bns' not in actual_scope:
+                    no_content_msg = "No constitutional content found for your question."
+                else:
+                    no_content_msg = "No legal content found for your question."
+
                 return {
-                    "answer": "No constitutional content found for your question.",
+                    "answer": no_content_msg,
                     "question": question,
                     "sources": [],
                     "total_chunks_found": 0,

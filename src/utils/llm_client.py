@@ -22,7 +22,7 @@ class LlmClient:
             self.temperature = Config.llm.GEMINI_TEMPERATURE
 
 
-    def generate_answer(self, query: str, context_chunks: List[str], force_json: bool = None) -> str:
+    def generate_answer(self, query: str, context_chunks: List[str], force_json: bool = None, answer_style: str = "detailed") -> str:
         # Context is optional if query is self-contained
         if context_chunks is None:
             context_chunks = []
@@ -32,7 +32,7 @@ class LlmClient:
         if should_use_json and self._is_educational_query(query):
             return self._generate_educational_json(query, context_chunks)
         else:
-            return self._generate_text_response(query, context_chunks)
+            return self._generate_text_response(query, context_chunks, answer_style)
 
     def _is_educational_query(self, query: str) -> bool:
         educational_keywords = [
@@ -42,34 +42,36 @@ class LlmClient:
         ]
         return any(keyword in query.lower() for keyword in educational_keywords)
 
-    def _generate_text_response(self, query: str, context_chunks: List[str]) -> str:
+    def _generate_text_response(self, query: str, context_chunks: List[str], answer_style: str = "detailed") -> str:
         context = "\n\n".join(context_chunks)
 
         # CRITICAL: Only answer based on provided context, never use general knowledge
         if not context or not context.strip():
             return "Context not found. I can only answer questions based on the documents that have been indexed in the system."
 
-        prompt = f"""You are an AI assistant that answers questions based ONLY on the provided context.
+        prompt = f"""You are an advanced Legal and Academic AI assistant. Your goal is to provide comprehensive, accurate, and helpful answers based on the provided context.
 
-IMPORTANT RULES:
-1. ONLY use information from the provided context below
-2. If the context contains relevant information, provide a helpful answer even if it's partial
-3. If the context has specific cases or examples related to the question, use those to answer
-4. NEVER use your general knowledge or training data
-5. NEVER make up information not in the context
-6. Only say "Context not found" if the context is completely unrelated to the question
+### GUIDELINES:
+1. **Prioritize Context**: Use the provided context as your primary source of information. 
+2. **Be Detailed**: Provide thorough explanations. Avoid one-word or very short answers unless explicitly requested.
+3. **Legal Specificity**: When answering legal questions, cite the specific Sections, Articles, or Case laws mentioned in the context.
+4. **Formatting**: Use markdown (bolding, lists) to make the answer readable and structured.
+5. **Handling Missing Info**: 
+   - If the context contains *partial* information, provide that information and explain what is missing.
+   - If the context is *completely* unrelated to the query, you may use your general knowledge to provide a helpful answer, but you **MUST** clearly state: "Note: This information is not found in the indexed documents and is based on general knowledge."
+   - Avoid saying "Context not found" unless you truly cannot provide any helpful information even with general knowledge.
 
-Instructions for Legal Questions:
-- If asking about general law but context shows specific cases, explain what the specific cases say
-- If context has partial information, provide what information is available
-- Always specify which sections/articles your answer comes from
-
-Context from indexed documents:
+### CONTEXT FROM INDEXED DOCUMENTS:
 {context}
 
-User Query: {query}
+### USER QUERY:
+{query}
 
-Response (based ONLY on the provided context):"""
+### STYLE GUIDELINE:
+Use the following style for your response: {answer_style}
+(If "detailed", provide a comprehensive explanation. If "student_friendly", use simple terms but remain accurate.)
+
+### YOUR RESPONSE:"""
 
         try:
             if self.provider == "openai":
@@ -144,7 +146,7 @@ Important:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": "You are an AI assistant that STRICTLY answers questions based ONLY on provided context. NEVER use your general knowledge. If the context doesn't contain the information needed to answer a question, respond with 'Context not found'."},
+                {"role": "system", "content": "You are a helpful and knowledgeable AI assistant. Provide detailed and well-structured responses based on the provided context and your knowledge."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=self.max_tokens,

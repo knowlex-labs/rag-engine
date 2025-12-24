@@ -13,7 +13,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from models.question_models import (
     QuestionGenerationRequest, QuestionGenerationResponse, QuestionType,
     DifficultyLevel, QuestionRequest, GeneratedQuestion, QuestionMetadata,
-    AssertionReasonQuestion, MatchFollowingQuestion, ComprehensionQuestion
+    AssertionReasonQuestion, MatchFollowingQuestion, ComprehensionQuestion,
+    QuestionFilters
 )
 from services.content_selector import content_selector
 from utils.difficulty_analyzer import difficulty_analyzer
@@ -32,7 +33,7 @@ class EnhancedQuestionGenerator:
         self.llm_client = LlmClient()
         self.generated_questions_cache = set()  # For duplicate prevention
 
-    def generate_questions(self, request: QuestionGenerationRequest) -> QuestionGenerationResponse:
+    async def generate_questions(self, request: QuestionGenerationRequest) -> QuestionGenerationResponse:
         """
         Main method to generate questions based on request specifications
         """
@@ -52,7 +53,7 @@ class EnhancedQuestionGenerator:
             # Process each question request
             for question_request in request.questions:
                 try:
-                    questions = self._generate_question_batch(
+                    questions = await self._generate_question_batch(
                         question_request, request.context, generation_stats
                     )
                     all_questions.extend(questions)
@@ -100,7 +101,42 @@ class EnhancedQuestionGenerator:
                 errors=[f"Generation failed: {str(e)}"]
             )
 
-    def _generate_question_batch(
+    async def generate_mixed_quiz(self, collection_id: str, count: int = 15, difficulty: DifficultyLevel = DifficultyLevel.MODERATE) -> QuestionGenerationResponse:
+        """
+        Generate a balanced mixed quiz for a collection
+        """
+        # Distribute question counts (e.g., 40% MCQ, 30% AR, 30% Match)
+        mcq_count = int(count * 0.4)
+        ar_count = int(count * 0.3)
+        match_count = count - mcq_count - ar_count
+
+        requests = []
+        if mcq_count > 0:
+            requests.append(QuestionRequest(
+                type=QuestionType.MCQ,
+                count=mcq_count,
+                difficulty=difficulty,
+                filters=QuestionFilters(collection_ids=[collection_id])
+            ))
+        if ar_count > 0:
+            requests.append(QuestionRequest(
+                type=QuestionType.ASSERTION_REASONING,
+                count=ar_count,
+                difficulty=difficulty,
+                filters=QuestionFilters(collection_ids=[collection_id])
+            ))
+        if match_count > 0:
+            requests.append(QuestionRequest(
+                type=QuestionType.MATCH_FOLLOWING,
+                count=match_count,
+                difficulty=difficulty,
+                filters=QuestionFilters(collection_ids=[collection_id])
+            ))
+
+        req = QuestionGenerationRequest(questions=requests)
+        return await self.generate_questions(req)
+
+    async def _generate_question_batch(
         self,
         question_request: QuestionRequest,
         context,
@@ -131,15 +167,19 @@ class EnhancedQuestionGenerator:
         start_time = datetime.now()
 
         if question_request.type == QuestionType.ASSERTION_REASONING:
-            questions = self._generate_assertion_reasoning_batch(
+            questions = await self._generate_assertion_reasoning_batch(
                 question_request, content_result, context
             )
         elif question_request.type == QuestionType.MATCH_FOLLOWING:
-            questions = self._generate_match_following_batch(
+            questions = await self._generate_match_following_batch(
                 question_request, content_result, context
             )
         elif question_request.type == QuestionType.COMPREHENSION:
-            questions = self._generate_comprehension_batch(
+            questions = await self._generate_comprehension_batch(
+                question_request, content_result, context
+            )
+        elif question_request.type == QuestionType.MCQ:
+            questions = await self._generate_mcq_batch(
                 question_request, content_result, context
             )
 
@@ -154,7 +194,7 @@ class EnhancedQuestionGenerator:
 
         return validated_questions
 
-    def _generate_assertion_reasoning_batch(
+    async def _generate_assertion_reasoning_batch(
         self,
         request: QuestionRequest,
         content_result,
@@ -193,7 +233,7 @@ class EnhancedQuestionGenerator:
 
         return questions
 
-    def _generate_match_following_batch(
+    async def _generate_match_following_batch(
         self,
         request: QuestionRequest,
         content_result,
@@ -232,7 +272,59 @@ class EnhancedQuestionGenerator:
 
         return questions
 
-    def _generate_comprehension_batch(
+    async def _generate_mcq_batch(
+        self,
+        request: QuestionRequest,
+        content_result,
+        context
+    ) -> List[GeneratedQuestion]:
+        """
+        Generate standard multiple choice questions using selected content
+        """
+        questions = []
+        
+        logger.info(f"Starting MCQ batch generation: requested={request.count}, available_chunks={len(content_result.selected_chunks)}")
+
+        # Each chunk can typically yield one good MCQ
+        for idx, chunk in enumerate(content_result.selected_chunks[:request.count]):
+            logger.info(f"Processing MCQ {idx+1}/{min(request.count, len(content_result.selected_chunks))}, chunk_id={chunk.chunk_id}")
+            
+            prompt = self._build_mcq_prompt(
+                chunk, request.difficulty, context
+            )
+
+            try:
+                context_chunks = [chunk.text]
+                logger.info(f"Sending MCQ prompt to LLM for chunk {chunk.chunk_id}")
+                response = self.llm_client.generate_answer(prompt, context_chunks, force_json=True)
+                logger.info(f"Received LLM response for MCQ {idx+1}, length={len(response)}")
+                
+                question_data = self._parse_json_response(response)
+                
+                if not question_data:
+                    logger.warning(f"Failed to parse JSON response for MCQ {idx+1}")
+                    logger.debug(f"Raw response: {response[:500]}")
+                    continue
+                
+                if self._is_duplicate(question_data):
+                    logger.warning(f"MCQ {idx+1} is a duplicate, skipping")
+                    continue
+                
+                logger.info(f"Creating MCQ question object for {idx+1}")
+                question = self._create_mcq_question(
+                    question_data, request.difficulty, [chunk]
+                )
+                questions.append(question)
+                self.generated_questions_cache.add(self._get_question_hash(question_data))
+                logger.info(f"Successfully generated MCQ {idx+1}")
+
+            except Exception as e:
+                logger.error(f"Failed to generate MCQ question {idx+1}: {e}", exc_info=True)
+
+        logger.info(f"MCQ batch generation complete: generated={len(questions)}, requested={request.count}")
+        return questions
+
+    async def _generate_comprehension_batch(
         self,
         request: QuestionRequest,
         content_result,
@@ -412,6 +504,57 @@ class EnhancedQuestionGenerator:
 
         return prompt
 
+    def _build_mcq_prompt(
+        self,
+        chunk,
+        difficulty: DifficultyLevel,
+        context
+    ) -> str:
+        """
+        Build UGC NET-specific prompt for standard MCQ questions
+        """
+        difficulty_instructions = {
+            DifficultyLevel.EASY: """
+            - Focus on basic concepts, definitions, and direct factual recall
+            - Clear, unambiguous options
+            """,
+            DifficultyLevel.MODERATE: """
+            - Require application of principles or understanding of relationships
+            - Use plausible distractors that require careful reading to eliminate
+            """,
+            DifficultyLevel.DIFFICULT: """
+            - Complex analytical questions involving multiple principles
+            - Subtle distinctions between options requiring deep legal knowledge
+            """
+        }
+
+        prompt = f"""
+        Role: UGC NET Legal Exam Setter specializing in Law.
+        Task: Create a high-quality Multiple Choice Question (MCQ) for UGC NET Paper-II.
+
+        Difficulty Level: {difficulty.value.upper()}
+        Subject Area: {context.subject if context else 'Law'}
+
+        {difficulty_instructions[difficulty]}
+
+        Source Content:
+        {chunk.text}
+
+        Requirements:
+        1. Base the question strictly on the provided content
+        2. Create 4 options (A, B, C, D) with only one correct answer
+        3. Ensure the question is professionally phrased and student-friendly
+
+        Output JSON format:
+        {{
+            "question_text": "The clear and complete question text",
+            "options": ["Option A", "Option B", "Option C", "Option D"],
+            "correct_option": "The exact text of the correct option",
+            "explanation": "Detailed professional explanation referencing the legal principles"
+        }}
+        """
+        return prompt
+
     def _build_comprehension_prompt(
         self,
         chunk,
@@ -518,19 +661,33 @@ class EnhancedQuestionGenerator:
     def _is_duplicate(self, question_data: Dict[str, Any]) -> bool:
         """Check if question is a duplicate of previously generated ones"""
         question_hash = self._get_question_hash(question_data)
-        return question_hash in self.generated_questions_cache
+        is_dup = question_hash in self.generated_questions_cache
+        if is_dup:
+            logger.debug(f"Duplicate detected with hash: {question_hash}")
+        return is_dup
 
     def _get_question_hash(self, question_data: Dict[str, Any]) -> str:
         """Generate a hash for duplicate detection"""
         # Create hash from key question elements
         hash_elements = []
 
+        # MCQ questions
+        if 'question_text' in question_data:
+            hash_elements.append(question_data['question_text'][:150])
+        if 'options' in question_data:
+            hash_elements.extend([opt[:50] for opt in question_data['options'][:2]])  # First 2 options
+        
+        # Assertion-Reasoning questions
         if 'assertion' in question_data:
             hash_elements.append(question_data['assertion'][:100])
         if 'reason' in question_data:
             hash_elements.append(question_data['reason'][:100])
+        
+        # Match the Following questions
         if 'list_I' in question_data:
             hash_elements.extend(question_data['list_I'])
+        
+        # Comprehension questions
         if 'passage' in question_data:
             hash_elements.append(question_data['passage'][:200])
 
@@ -590,6 +747,36 @@ class EnhancedQuestionGenerator:
             type=QuestionType.MATCH_FOLLOWING,
             difficulty=difficulty,
             estimated_time=2 if difficulty == DifficultyLevel.EASY else 3 if difficulty == DifficultyLevel.MODERATE else 4,
+            source_entities=[],
+            source_files=list(set(chunk.file_id for chunk in chunks)),
+            generated_at=datetime.now().isoformat()
+        )
+
+        return GeneratedQuestion(metadata=metadata, content=question_content)
+
+    def _create_mcq_question(
+        self,
+        question_data: Dict[str, Any],
+        difficulty: DifficultyLevel,
+        chunks
+    ) -> GeneratedQuestion:
+        """Create MultipleChoiceQuestion object with metadata"""
+        from models.question_models import MultipleChoiceQuestion
+        
+        question_content = MultipleChoiceQuestion(
+            question_text=question_data.get('question_text', ''),
+            options=question_data.get('options', []),
+            correct_option=question_data.get('correct_option', ''),
+            explanation=question_data.get('explanation', ''),
+            difficulty=difficulty,
+            source_chunks=[chunk.chunk_id for chunk in chunks]
+        )
+
+        metadata = QuestionMetadata(
+            question_id=str(uuid.uuid4()),
+            type=QuestionType.MCQ,
+            difficulty=difficulty,
+            estimated_time=1 if difficulty == DifficultyLevel.EASY else 2,
             source_entities=[],
             source_files=list(set(chunk.file_id for chunk in chunks)),
             generated_at=datetime.now().isoformat()

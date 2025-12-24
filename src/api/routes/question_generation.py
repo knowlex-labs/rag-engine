@@ -56,8 +56,9 @@ router = APIRouter(prefix=f"{API_PREFIX}/law/questions", tags=["Law Questions"])
 
     Question Types:
     - "Assertion_reason": Assertion-reasoning format
-    - "MCQ": Multiple choice (uses assertion format)
+    - "MCQ": Multiple choice questions
     - "Match the following": Match items format
+    - "Comprehension": Passage-based questions
 
     Scope Options:
     - ["bns"]: BNS questions only
@@ -99,8 +100,9 @@ async def generate_questions(
         # Map question types and create internal requests
         question_type_map = {
             "assertion_reason": QuestionType.ASSERTION_REASONING,
-            "mcq": QuestionType.ASSERTION_REASONING,  # Use assertion format for MCQ
-            "match the following": QuestionType.MATCH_FOLLOWING
+            "mcq": QuestionType.MCQ,
+            "match the following": QuestionType.MATCH_FOLLOWING,
+            "comprehension": QuestionType.COMPREHENSION
         }
 
         internal_questions = []
@@ -109,7 +111,7 @@ async def generate_questions(
             if q_type_key not in question_type_map:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Unsupported question type: {q_data.question_type}. Use: 'Assertion_reason', 'MCQ', 'Match the following'"
+                    detail=f"Unsupported question type: {q_data.question_type}. Use: 'Assertion_reason', 'MCQ', 'Match the following', 'Comprehension'"
                 )
 
             internal_questions.append(QuestionRequest(
@@ -123,7 +125,7 @@ async def generate_questions(
         internal_request = QuestionGenerationRequest(questions=internal_questions)
 
         # Generate questions
-        response = enhanced_question_generator.generate_questions(internal_request)
+        response = await enhanced_question_generator.generate_questions(internal_request)
 
         logger.info(f"Generated {response.total_generated}/{request.num_questions} questions successfully")
 
@@ -199,6 +201,12 @@ async def get_supported_types() -> Dict[str, Any]:
                 "name": "Assertion-Reasoning",
                 "description": "Questions with assertion and reason statements following UGC NET format",
                 "typical_time": "2-4 minutes"
+            },
+            {
+                "type": "mcq",
+                "name": "Multiple Choice Question",
+                "description": "Standard multiple choice questions with 4 options",
+                "typical_time": "1-2 minutes"
             },
             {
                 "type": "match_following",
@@ -352,7 +360,7 @@ async def _validate_generation_request(request: QuestionGenerationRequest) -> Op
             return f"Question count must be between 1 and 10, got {q.count}"
 
     # Validate question types
-    supported_types = [QuestionType.ASSERTION_REASONING, QuestionType.MATCH_FOLLOWING, QuestionType.COMPREHENSION]
+    supported_types = [QuestionType.ASSERTION_REASONING, QuestionType.MCQ, QuestionType.MATCH_FOLLOWING, QuestionType.COMPREHENSION]
     for q in request.questions:
         if q.type not in supported_types:
             return f"Unsupported question type: {q.type}"

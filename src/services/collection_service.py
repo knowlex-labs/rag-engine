@@ -78,16 +78,25 @@ class CollectionService:
             
             # Unquote in case of %20 etc
             gcs_url = unquote(item.gcs_url)
+            logger.info(f"Resolving GCS URL: {gcs_url}")
             
             # If it's a GCS HTTPS URL for our bucket, use native GCS client
             bucket_prefix = f'https://storage.googleapis.com/{Config.gcs.BUCKET_NAME}/'
             if gcs_url.startswith(bucket_prefix):
                 storage_path = gcs_url[len(bucket_prefix):]
-                return self.storage_service.download_for_processing(storage_path)
+                logger.info(f"Downloading from GCS bucket path: {storage_path}")
+                local_path = self.storage_service.download_for_processing(storage_path)
+                if not local_path:
+                    raise ValueError(f"Failed to download file from GCS: {storage_path}")
+                logger.info(f"Downloaded to local path: {local_path}")
+                return local_path
             
             if gcs_url.startswith(('http://', 'https://')):
+                logger.info(f"Downloading from HTTP URL: {gcs_url}")
                 return self._download_from_url(gcs_url)
-                
+            
+            # Handle gs:// URLs
+            logger.info(f"Downloading from gs:// URL: {gcs_url}")
             return self._download_from_gcs(gcs_url)
         return item.url
 
@@ -134,7 +143,26 @@ class CollectionService:
         logger.info(f"Status tracking not yet implemented for Neo4j: file_id={file_id}, status={status.value}")
 
     def get_status(self, tenant_id: str, file_id: str) -> dict:
-        return {"status": "UNKNOWN", "file_id": file_id, "message": "Status tracking not yet implemented for Neo4j"}
+        """Check if a document is indexed in Neo4j."""
+        try:
+            query = "MATCH (d:Document {file_id: $file_id}) RETURN d.indexed_at as indexed_at"
+            result = self.neo4j_repo.graph_service.execute_query(query, {"file_id": file_id})
+            
+            if result:
+                return {
+                    "status": "READY", 
+                    "file_id": file_id, 
+                    "message": "Document is indexed and ready for AI",
+                    "indexed_at": result[0]["indexed_at"]
+                }
+            return {
+                "status": "PROCESSING", 
+                "file_id": file_id, 
+                "message": "Document is being processed or not found"
+            }
+        except Exception as e:
+            logger.error(f"Error checking status: {e}")
+            return {"status": "ERROR", "file_id": file_id, "message": str(e)}
 
 
 

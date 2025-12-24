@@ -41,6 +41,8 @@ class ContentSelector:
                 return self._select_for_match_following(difficulty, filters, count)
             elif question_type == QuestionType.COMPREHENSION:
                 return self._select_for_comprehension(difficulty, filters, count)
+            elif question_type == QuestionType.MCQ:
+                return self._select_for_mcq(difficulty, filters, count)
             else:
                 raise ValueError(f"Unsupported question type: {question_type}")
 
@@ -236,6 +238,47 @@ class ContentSelector:
         return ContentSelectionResult(
             selected_chunks=chunks,
             entity_relationships=relationships,
+            selection_strategy=strategy
+        )
+
+    def _select_for_mcq(
+        self,
+        difficulty: DifficultyLevel,
+        filters: Optional[QuestionFilters],
+        count: int
+    ) -> ContentSelectionResult:
+        """
+        Select content for standard MCQ questions
+        """
+        logger.info(f"Selecting content for MCQ: difficulty={difficulty.value}, count={count}, filters={filters}")
+        
+        base_conditions = self._build_base_conditions(filters)
+        
+        # Similar to assertion reasoning but maybe simpler chunks
+        query = f"""
+        MATCH (c:Chunk)
+        WHERE {base_conditions}
+        AND size(c.text) > 300
+        ORDER BY rand()
+        LIMIT {min(count * 2, 20)}
+        RETURN c.chunk_id, c.text, c.file_id, c.collection_id,
+               coalesce(c.chunk_type, 'concept') as chunk_type,
+               coalesce(c.key_terms, []) as key_terms,
+               coalesce(c.chapter_title, '') as chapter_title,
+               coalesce(c.section_title, '') as section_title
+        """
+        strategy = f"{difficulty.value}_mcq_selection"
+        
+        params = self._build_query_params(filters)
+        logger.info(f"Executing MCQ content query with params: {params}")
+        
+        chunks = self._execute_and_process_chunks(query, params)
+        
+        logger.info(f"MCQ content selection complete: found {len(chunks)} chunks for {count} questions")
+        
+        return ContentSelectionResult(
+            selected_chunks=chunks,
+            entity_relationships=[],
             selection_strategy=strategy
         )
 

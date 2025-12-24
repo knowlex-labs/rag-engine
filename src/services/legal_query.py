@@ -18,7 +18,7 @@ class LegalQueryService:
         question = request.question
         max_chunks = 5
         scope = getattr(request, 'scope', [])  # Default to empty (search all)
-        answer_style = getattr(request, 'answer_style', 'student_friendly')
+        answer_style = getattr(request, 'answer_style', 'detailed')
         logger.info(f"Legal query: {question[:100]}, scope: {scope}")
 
         try:
@@ -79,10 +79,16 @@ class LegalQueryService:
                 }
 
             context_texts = [chunk['text'] for chunk in chunks]
-            answer = self.llm_client.generate_answer(question, context_texts)
+            answer = self.llm_client.generate_answer(question, context_texts, answer_style=answer_style)
 
-            # Simplified sources - just return empty for now to avoid validation errors
+            # Populate sources from chunks
             sources = []
+            for chunk in chunks:
+                sources.append({
+                    "text": chunk.get('text', '')[:500] + "...",
+                    "article": chunk.get('article', 'N/A'),
+                    "relevance_score": chunk.get('score', 0.0)
+                })
             
             processing_time_ms = int((time.time() - start_time) * 1000)
 
@@ -91,7 +97,7 @@ class LegalQueryService:
                 "question": question,
                 "sources": sources,
                 "total_chunks_found": len(chunks),
-                "chunks_used": min(len(chunks), 3),
+                "chunks_used": len(chunks),
                 "answer_style": answer_style,
                 "documents_searched": actual_scope,
                 "processing_time_ms": processing_time_ms

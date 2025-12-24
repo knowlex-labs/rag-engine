@@ -51,7 +51,8 @@ async def query(
             collection_ids=request.filters.collection_ids if request.filters else None,
             file_ids=request.filters.file_ids if request.filters else None,
             limit=request.top_k,
-            enable_critic=False
+            enable_critic=False,
+            answer_style=request.answer_style or "detailed"
         )
 
         sources = None

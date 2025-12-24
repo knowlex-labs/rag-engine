@@ -12,6 +12,7 @@ class QuestionType(str, Enum):
     ASSERTION_REASONING = "assertion_reasoning"
     MATCH_FOLLOWING = "match_following"
     COMPREHENSION = "comprehension"
+    MCQ = "mcq"
 
 
 class DifficultyLevel(str, Enum):
@@ -134,6 +135,16 @@ class MatchFollowingQuestion(BaseModel):
     source_chunks: List[str] = Field(default_factory=list, description="Source chunk IDs used")
 
 
+class MultipleChoiceQuestion(BaseModel):
+    """Standard Multiple Choice Question format"""
+    question_text: str = Field(..., description="The question text")
+    options: List[str] = Field(..., min_items=4, max_items=4, description="Four options")
+    correct_option: str = Field(..., description="The correct option text")
+    explanation: str = Field(..., description="Detailed explanation of the answer")
+    difficulty: DifficultyLevel = Field(..., description="Actual difficulty level")
+    source_chunks: List[str] = Field(default_factory=list, description="Source chunk IDs used")
+
+
 class ComprehensionQuestion(BaseModel):
     """Comprehension-based question format"""
     passage: str = Field(..., description="Reading passage")
@@ -157,7 +168,7 @@ class QuestionMetadata(BaseModel):
 class GeneratedQuestion(BaseModel):
     """Unified question response model"""
     metadata: QuestionMetadata = Field(..., description="Question metadata")
-    content: Union[AssertionReasonQuestion, MatchFollowingQuestion, ComprehensionQuestion] = Field(..., description="Question content")
+    content: Union[AssertionReasonQuestion, MatchFollowingQuestion, ComprehensionQuestion, MultipleChoiceQuestion] = Field(..., description="Question content")
 
 
 class QuestionGenerationResponse(BaseModel):

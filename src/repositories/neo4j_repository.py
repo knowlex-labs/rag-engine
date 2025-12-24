@@ -312,4 +312,34 @@ class Neo4jRepository:
             logger.error(f"Error performing vector search: {e}")
             return []
 
+    def retrieve_fallback_chunks(
+        self,
+        collection_ids: List[str],
+        limit: int = 5
+    ) -> List[Dict[str, Any]]:
+        """Retrieve latest chunks from collections as fallback when vector search fails"""
+        try:
+            query = """
+            MATCH (c:Chunk)
+            WHERE c.collection_id IN $collection_ids
+            RETURN c.chunk_id as chunk_id,
+                   c.text as text,
+                   c.file_id as file_id,
+                   c.collection_id as collection_id,
+                   c.chunk_type as chunk_type,
+                   c.chapter_title as chapter_title,
+                   c.section_title as section_title,
+                   c.page_start as page_start,
+                   c.page_end as page_end,
+                   c.key_terms as key_terms,
+                   0.95 as score
+            ORDER BY c.indexed_at DESC
+            LIMIT $limit
+            """
+            results = self.graph_service.execute_query(query, {"collection_ids": collection_ids, "limit": limit})
+            return [dict(record) for record in results]
+        except Exception as e:
+            logger.error(f"Error retrieving fallback chunks: {e}")
+            return []
+
 neo4j_repository = Neo4jRepository()

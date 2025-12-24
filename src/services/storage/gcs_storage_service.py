@@ -26,14 +26,26 @@ class GCSStorageService(StorageServiceInterface):
 
     def download_for_processing(self, storage_path: str) -> Optional[str]:
         try:
-            blob = self.bucket.blob(self._get_blob_name(storage_path))
+            blob_name = self._get_blob_name(storage_path)
+            logger.info(f"Attempting to download blob: {blob_name} from bucket: {self.bucket_name}")
+            blob = self.bucket.blob(blob_name)
+            
+            # Check if blob exists
+            if not blob.exists():
+                logger.error(f"Blob does not exist: {blob_name}")
+                raise FileNotFoundError(f"File not found in GCS: {storage_path}")
+            
             suffix = os.path.splitext(storage_path)[1]
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
+                logger.info(f"Downloading blob to temporary file: {tmp_file.name}")
                 blob.download_to_filename(tmp_file.name)
+                logger.info(f"Successfully downloaded {blob_name} to {tmp_file.name}")
                 return tmp_file.name
+        except FileNotFoundError:
+            raise
         except Exception as e:
-            logger.error(f"Failed to download from GCS {storage_path}: {e}")
-            return None
+            logger.error(f"Failed to download from GCS {storage_path}: {e}", exc_info=True)
+            raise ValueError(f"GCS download failed for {storage_path}: {str(e)}")
 
     def upload_file(self, file_data: bytes, storage_path: str) -> bool:
         try:

@@ -131,6 +131,7 @@ class QueryAnswerRequest(BaseModel):
     filters: Optional[RetrieveFilters] = None
     top_k: int = 5
     include_sources: bool = False
+    answer_style: Optional[str] = "detailed"
 
 class QueryAnswerResponse(BaseModel):
     success: bool

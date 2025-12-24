@@ -170,7 +170,7 @@ class QueryService:
             return 0.0
         return max(result.get("score", 0) for result in results)
 
-    def _create_query_response(self, results: List[Dict], query: str, enable_critic: bool = True, structured_output: bool = False) -> QueryResponse:
+    def _create_query_response(self, results: List[Dict], query: str, enable_critic: bool = True, structured_output: bool = False, answer_style: str = "detailed") -> QueryResponse:
         relevant_results = self._filter_relevant_results(results)
 
         if not relevant_results:
@@ -193,7 +193,7 @@ class QueryService:
 
         chunk_texts = [chunk.text for chunk in chunks]
         full_chunk_texts = self._extract_full_texts(relevant_results)
-        answer = self.llm_client.generate_answer(query, chunk_texts, force_json=structured_output)
+        answer = self.llm_client.generate_answer(query, chunk_texts, force_json=structured_output, answer_style=answer_style)
         answer = enhance_response_if_needed(answer, query)
 
         confidence = self._calculate_confidence(relevant_results)
@@ -243,10 +243,44 @@ class QueryService:
         except Exception:
             return results
 
+    async def retrieve_context(
+        self,
+        query: str,
+        user_id: str,
+        collection_ids: Optional[List[str]] = None,
+        top_k: int = 5,
+        file_ids: Optional[List[str]] = None,
+        enable_reranking: bool = True
+    ) -> List[Dict[str, Any]]:
+        """
+        Retrieve relevant context chunks for a query without generating an answer.
+        This provides a cleaner interface for summary and other internal services.
+        """
+        try:
+            query_vector = self.embedding_client.generate_single_embedding(query)
+            collection_name = f"user_{user_id}"
+
+            results = self._smart_chunk_retrieval(
+                collection_name,
+                query_vector,
+                query,
+                top_k,
+                collection_ids=collection_ids,
+                file_ids=file_ids
+            )
+
+            if enable_reranking and reranker.is_available() and results:
+                results = reranker.rerank(query, results)
+
+            return results
+        except Exception as e:
+            logger.error(f"Error retrieving context: {str(e)}")
+            return []
+
     def get_all_embeddings(self, collection_name: str, limit: int = 100) -> Dict[str, Any]:
         return {"message": "Get all embeddings not implemented for Neo4j"}
 
-    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False, collection_ids: Optional[List[str]] = None, file_ids: Optional[List[str]] = None) -> QueryResponse:
+    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False, collection_ids: Optional[List[str]] = None, file_ids: Optional[List[str]] = None, answer_style: str = "detailed") -> QueryResponse:
         try:
             query_vector = self.embedding_client.generate_single_embedding(query_text)
 
@@ -264,7 +298,7 @@ class QueryService:
 
             results = self._apply_feedback_scoring(results, query_vector, collection_name)
 
-            return self._create_query_response(results, query_text, enable_critic, structured_output)
+            return self._create_query_response(results, query_text, enable_critic, structured_output, answer_style=answer_style)
 
         except Exception as e:
             logger.error(f"Error in query search: {str(e)}")

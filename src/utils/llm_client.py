@@ -22,7 +22,7 @@ class LlmClient:
             self.temperature = Config.llm.GEMINI_TEMPERATURE
 
 
-    def generate_answer(self, query: str, context_chunks: List[str], force_json: bool = None) -> str:
+    def generate_answer(self, query: str, context_chunks: List[str], force_json: bool = None, answer_style: str = "detailed") -> str:
         # Context is optional if query is self-contained
         if context_chunks is None:
             context_chunks = []
@@ -32,7 +32,7 @@ class LlmClient:
         if should_use_json and self._is_educational_query(query):
             return self._generate_educational_json(query, context_chunks)
         else:
-            return self._generate_text_response(query, context_chunks)
+            return self._generate_text_response(query, context_chunks, answer_style)
 
     def _is_educational_query(self, query: str) -> bool:
         educational_keywords = [
@@ -42,18 +42,36 @@ class LlmClient:
         ]
         return any(keyword in query.lower() for keyword in educational_keywords)
 
-    def _generate_text_response(self, query: str, context_chunks: List[str]) -> str:
+    def _generate_text_response(self, query: str, context_chunks: List[str], answer_style: str = "detailed") -> str:
         context = "\n\n".join(context_chunks)
-        prompt = f"""You are an experienced physics teacher with advanced expertise who helps students prepare for examinations. You have deep knowledge of physics concepts and can create educational content including questions, explanations, and practice materials.
 
-Based on the following physics content, respond to the student's request. Whether they ask for explanations, practice questions, MCQs, or any other educational assistance, provide comprehensive and accurate help.
+        # CRITICAL: Only answer based on provided context, never use general knowledge
+        if not context or not context.strip():
+            return "Context not found. I can only answer questions based on the documents that have been indexed in the system."
 
-Physics Content:
+        prompt = f"""You are an advanced Legal and Academic AI assistant. Your goal is to provide comprehensive, accurate, and helpful answers based on the provided context.
+
+### GUIDELINES:
+1. **Prioritize Context**: Use the provided context as your primary source of information. 
+2. **Be Detailed**: Provide thorough explanations. Avoid one-word or very short answers unless explicitly requested.
+3. **Legal Specificity**: When answering legal questions, cite the specific Sections, Articles, or Case laws mentioned in the context.
+4. **Formatting**: Use markdown (bolding, lists) to make the answer readable and structured.
+5. **Handling Missing Info**: 
+   - If the context contains *partial* information, provide that information and explain what is missing.
+   - If the context is *completely* unrelated to the query, you may use your general knowledge to provide a helpful answer, but you **MUST** clearly state: "Note: This information is not found in the indexed documents and is based on general knowledge."
+   - Avoid saying "Context not found" unless you truly cannot provide any helpful information even with general knowledge.
+
+### CONTEXT FROM INDEXED DOCUMENTS:
 {context}
 
-Student Request: {query}
+### USER QUERY:
+{query}
 
-Your Response:"""
+### STYLE GUIDELINE:
+Use the following style for your response: {answer_style}
+(If "detailed", provide a comprehensive explanation. If "student_friendly", use simple terms but remain accurate.)
+
+### YOUR RESPONSE:"""
 
         try:
             if self.provider == "openai":
@@ -68,12 +86,23 @@ Your Response:"""
 
     def _generate_educational_json(self, query: str, context_chunks: List[str]) -> str:
         context = "\n\n".join(context_chunks)
-        prompt = f"""You are an experienced physics teacher creating educational content. Generate structured educational material in valid JSON format based on the provided physics content.
 
-Physics Content:
+        # CRITICAL: Only answer based on provided context, never use general knowledge
+        if not context or not context.strip():
+            return '{"error": "Context not found. Cannot generate educational content without indexed documents."}'
+
+        prompt = f"""You are an AI assistant that creates educational content based STRICTLY on the provided context.
+
+IMPORTANT RULES:
+1. ONLY use information from the provided context below
+2. If the context doesn't contain sufficient information, return {{"error": "Context not found"}}
+3. NEVER use your general knowledge or training data
+4. NEVER make up questions or content not based on the provided context
+
+Context from indexed documents:
 {context}
 
-Student Request: {query}
+User Request: {query}
 
 Respond with valid JSON only:
 {{
@@ -106,8 +135,10 @@ Important:
             else:
                 return f"Error: Unknown LLM provider: {self.provider}"
         except Exception as e:
-            logger.error(f"Error generating educational JSON: {str(e)}")
-            return f"Error generating educational JSON: {str(e)}"
+            import traceback
+            logger.error(f"Error generating educational JSON: {type(e).__name__}: {e}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return f"Error generating educational JSON: {type(e).__name__}: {e}"
 
 
 
@@ -115,7 +146,7 @@ Important:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": "You are an experienced physics teacher with advanced expertise who helps students prepare for examinations. You have deep knowledge of physics concepts and excel at creating educational content including detailed explanations, practice questions, MCQs, and examination materials. Always provide comprehensive, accurate, and pedagogically sound responses."},
+                {"role": "system", "content": "You are a helpful and knowledgeable AI assistant. Provide detailed and well-structured responses based on the provided context and your knowledge."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=self.max_tokens,
@@ -131,6 +162,7 @@ Important:
                 temperature=self.temperature
             )
         )
+
 
         try:
             return response.text.strip()

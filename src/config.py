@@ -3,24 +3,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class QdrantConfig:
-    HOST: str = os.getenv("QDRANT_HOST", "localhost")
-    PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
-    TIMEOUT: int = int(os.getenv("QDRANT_TIMEOUT", "30"))
-    API_KEY: str = os.getenv("QDRANT_API_KEY", "")
-    COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "knowledge_base")
-
 class ParserConfig:
     WEB_SCRAPER_USER_AGENT: str = os.getenv("WEB_SCRAPER_USER_AGENT", "RAG-Engine/1.0")
     WEB_SCRAPER_TIMEOUT: int = int(os.getenv("WEB_SCRAPER_TIMEOUT", "30"))
     YOUTUBE_TRANSCRIPT_FALLBACK: str = os.getenv("YOUTUBE_TRANSCRIPT_FALLBACK", "gemini")
 
 class EmbeddingConfig:
-    MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "BAAI/bge-large-en-v1.5")
+    MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "Snowflake/snowflake-arctic-embed-l-v2.0")
+    PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "huggingface")
     VECTOR_SIZE: int = int(os.getenv("VECTOR_SIZE", "1024"))
     DISTANCE_METRIC: str = os.getenv("DISTANCE_METRIC", "COSINE")
-    CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "512"))
-    CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "50"))
+    CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "800"))
+    CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "100"))
+    MAX_CHUNK_SIZE: int = int(os.getenv("MAX_CHUNK_SIZE", "1200"))
 
 class LlmConfig:
     PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini")
@@ -46,7 +41,7 @@ class AppConfig:
     # CORS Configuration
     CORS_ALLOWED_ORIGINS: list = os.getenv(
         "CORS_ALLOWED_ORIGINS",
-        "http://localhost:3000,http://localhost:7860,http://localhost:5173,https://parkho-ai-frontend-ku7bn6e62q-uc.a.run.app,https://parkho-ai-frontend-846780462763.us-central1.run.app,https://ai-content-tutor-ku7bn6e62q-uc.a.run.app,https://ai-content-tutor-846780462763.us-central1.run.app,http://13.236.51.35:3000,http://13.236.51.35:8080"
+        "http://localhost:3000,http://localhost:7860,http://localhost:5173,https://nyayamind-frontend-722723826302.asia-south1.run.app,https://nyayamind-ai-content-tutor-722723826302.asia-south1.run.app,http://13.236.51.35:3000,http://13.236.51.35:8080"
     ).split(",")
 
 class RerankingConfig:
@@ -65,7 +60,7 @@ class FeedbackConfig:
     FEEDBACK_SIMILARITY_THRESHOLD: float = float(os.getenv("FEEDBACK_SIMILARITY_THRESHOLD", "0.8"))
 
 class QueryConfig:
-    RELEVANCE_THRESHOLD: float = float(os.getenv("RELEVANCE_THRESHOLD", "0.25"))
+    RELEVANCE_THRESHOLD: float = float(os.getenv("RELEVANCE_THRESHOLD", "0.4"))
 
 class StorageConfig:
     STORAGE_TYPE: str = os.getenv("STORAGE_TYPE", "local").lower()
@@ -77,8 +72,30 @@ class MinIOConfig:
     SECURE: bool = os.getenv("MINIO_SECURE", "false").lower() == "true"
 
 class GCSConfig:
-    BUCKET_NAME: str = os.getenv("GCS_BUCKET_NAME", "library-content-dev")
-    PROJECT_ID: str = os.getenv("GCP_PROJECT_ID", "")
+    BUCKET_NAME: str = os.getenv("GCS_BUCKET_NAME", "nyayamind-content-storage")
+    PROJECT_ID: str = os.getenv("GCP_PROJECT_ID", "nyayamind-dev")
+
+
+class Neo4jConfig:
+    URI: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+    USER: str = os.getenv("NEO4J_USER", "neo4j")
+    PASSWORD: str = os.getenv("NEO4J_PASSWORD")
+    DATABASE: str = os.getenv("NEO4J_DATABASE", "neo4j")
+    VECTOR_INDEX_NAME: str = os.getenv("NEO4J_VECTOR_INDEX_NAME", "legal_chunks_index")
+
+class LlamaCloudConfig:
+    API_KEY: str = os.getenv("LLAMA_CLOUD_API_KEY", "")
+
+
+class Neo4jConfig:
+    URI: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+    USER: str = os.getenv("NEO4J_USER", "neo4j")
+    PASSWORD: str = os.getenv("NEO4J_PASSWORD")
+    DATABASE: str = os.getenv("NEO4J_DATABASE", "neo4j")
+    VECTOR_INDEX_NAME: str = os.getenv("NEO4J_VECTOR_INDEX_NAME", "legal_chunks_index")
+
+class LlamaCloudConfig:
+    API_KEY: str = os.getenv("LLAMA_CLOUD_API_KEY", "")
 
 
 class Neo4jConfig:
@@ -91,8 +108,6 @@ class LlamaCloudConfig:
     API_KEY: str = os.getenv("LLAMA_CLOUD_API_KEY", "")
 
 class Config:
-
-    qdrant = QdrantConfig()
     parser = ParserConfig()
     embedding = EmbeddingConfig()
     llm = LlmConfig()

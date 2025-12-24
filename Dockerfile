@@ -26,9 +26,12 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 ENV HF_HOME=/app/hf_cache
 ENV TRANSFORMERS_CACHE=/app/hf_cache
 
-# Pre-download embedding model to persist in the image
-RUN mkdir -p /app/hf_cache && \
-    python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
+# Pre-download embedding model to persist in the image (cached layer)
+RUN --mount=type=cache,target=/app/hf_cache \
+    mkdir -p /app/hf_cache && \
+    python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')" && \
+    cp -r /app/hf_cache /tmp/hf_cache_backup
+RUN mv /tmp/hf_cache_backup /app/hf_cache
 
 # Copy source code
 COPY src/ ./src/

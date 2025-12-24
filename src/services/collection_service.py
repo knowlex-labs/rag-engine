@@ -5,14 +5,11 @@ import tempfile
 from typing import List, Optional
 import logging
 import asyncio
-import uuid
-from datetime import datetime
 
-from repositories.qdrant_repository import QdrantRepository
+from repositories.neo4j_repository import neo4j_repository
 from services.storage.gcs_storage_service import GCSStorageService
 from services.hierarchical_chunking_service import chunking_service
 from utils.embedding_client import embedding_client
-from utils.document_builder import build_qdrant_point
 from models.api_models import BatchLinkRequest, LinkItem, IndexingStatus
 from parsers.parser_factory import ParserFactory
 from config import Config
@@ -21,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 class CollectionService:
     def __init__(self):
-        self.qdrant_repo = QdrantRepository()
+        self.neo4j_repo = neo4j_repository
         self.embedding_client = embedding_client
         self.storage_service = GCSStorageService()
 
@@ -29,25 +26,33 @@ class CollectionService:
         return f"user_{user_id}"
 
     async def process_batch(self, request: BatchLinkRequest, tenant_id: str):
-        self.qdrant_repo.create_user_collection(tenant_id)
+        collection_id = request.items[0].collection_id if request.items else "default"
+        logger.info(f"Starting batch process for tenant {tenant_id}, collection {collection_id}")
+        self.neo4j_repo.create_user_collection(tenant_id, collection_id)
 
         results = []
         for item in request.items:
             try:
-                # 1. Resolve Source
+                logger.info(f"Processing item {item.file_id} (type: {item.type})")
                 source = self._resolve_source(item)
-                
-                # 2. Parse Content
+                logger.info(f"Parsing content for {item.file_id}")
                 parsed = self._parse_content(source, item.type)
-                
-                # 3. Chunk Content
+                logger.info(f"Chunking content for {item.file_id}")
                 chunks = self._chunk_content(parsed, item.type)
-                
-                # 4. Embed & Build Points
-                points = self._embed_and_build_points(chunks, item, parsed)
-                
-                # 5. Index Points
-                self._index_points(tenant_id, points)
+                logger.info(f"Generating embeddings for {len(chunks)} chunks of {item.file_id}")
+                embeddings = self._generate_embeddings(chunks)
+
+                logger.info(f"Indexing chunks to Neo4j for {item.file_id}")
+                self.neo4j_repo.index_chunks(
+                    chunks=chunks,
+                    embeddings=embeddings,
+                    user_id=tenant_id,
+                    collection_id=item.collection_id or "default",
+                    file_id=item.file_id,
+                    file_name=parsed.metadata.title or item.title or "Unknown",
+                    source_type=item.type
+                )
+                logger.info(f"Successfully processed {item.file_id}")
 
                 results.append({
                     "file_id": item.file_id,
@@ -66,14 +71,33 @@ class CollectionService:
         return results
 
     def _resolve_source(self, item: LinkItem) -> str:
+        from urllib.parse import unquote
         if item.type == 'file':
             if not item.gcs_url:
                 raise ValueError("Missing gcs_url")
             
-            if item.gcs_url.startswith(('http://', 'https://')):
-                return self._download_from_url(item.gcs_url)
-                
-            return self._download_from_gcs(item.gcs_url)
+            # Unquote in case of %20 etc
+            gcs_url = unquote(item.gcs_url)
+            logger.info(f"Resolving GCS URL: {gcs_url}")
+            
+            # If it's a GCS HTTPS URL for our bucket, use native GCS client
+            bucket_prefix = f'https://storage.googleapis.com/{Config.gcs.BUCKET_NAME}/'
+            if gcs_url.startswith(bucket_prefix):
+                storage_path = gcs_url[len(bucket_prefix):]
+                logger.info(f"Downloading from GCS bucket path: {storage_path}")
+                local_path = self.storage_service.download_for_processing(storage_path)
+                if not local_path:
+                    raise ValueError(f"Failed to download file from GCS: {storage_path}")
+                logger.info(f"Downloaded to local path: {local_path}")
+                return local_path
+            
+            if gcs_url.startswith(('http://', 'https://')):
+                logger.info(f"Downloading from HTTP URL: {gcs_url}")
+                return self._download_from_url(gcs_url)
+            
+            # Handle gs:// URLs
+            logger.info(f"Downloading from gs:// URL: {gcs_url}")
+            return self._download_from_gcs(gcs_url)
         return item.url
 
     def _download_from_url(self, url: str) -> str:
@@ -96,6 +120,8 @@ class CollectionService:
             raise ValueError(f"Failed to download file: {str(e)}")
 
     def _download_from_gcs(self, gcs_path: str) -> str:
+        from urllib.parse import unquote
+        gcs_path = unquote(gcs_path)
         if gcs_path.startswith("gs://"):
             parts = gcs_path.replace("gs://", "").split("/", 1)
             if len(parts) > 1:
@@ -109,104 +135,51 @@ class CollectionService:
     def _chunk_content(self, parsed_content, item_type: str):
         return chunking_service.chunk_parsed_content(parsed_content, item_type)
 
-    def _embed_and_build_points(self, chunks, item: LinkItem, parsed_content):
-        points = []
-        for chunk in chunks:
-            embedding = self.embedding_client.generate_single_embedding(chunk.text)
-            
-            meta_channel = parsed_content.metadata.channel if item.type == 'youtube' else None
-            meta_domain = parsed_content.metadata.domain if item.type == 'web' else None
-            
-            point = build_qdrant_point(
-                collection_id=item.collection_id or "default", 
-                file_id=item.file_id,
-                chunk_id=chunk.chunk_id,
-                chunk_text=chunk.text,
-                embedding=embedding,
-                source_type=item.type,
-                file_name=parsed_content.metadata.title or "Unknown",
-                chunk_type=chunk.chunk_metadata.chunk_type.value,
-                youtube_channel=meta_channel,
-                web_domain=meta_domain
-            )
-            points.append(point)
-        
-        if not points:
-            raise ValueError("No chunks generated")
-        return points
-
-    def _index_points(self, tenant_id: str, points: List):
-        user_col = self._get_user_collection(tenant_id)
-        self.qdrant_repo.link_content(user_col, points)
+    def _generate_embeddings(self, chunks):
+        texts = [chunk.text for chunk in chunks]
+        return self.embedding_client.generate_embeddings(texts)
 
     def _set_status(self, tenant_id: str, file_id: str, status: IndexingStatus, error: Optional[str] = None, item_name: Optional[str] = None, source_type: Optional[str] = None):
-        user_col = self._get_user_collection(tenant_id)
-        status_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{file_id}_status"))
-
-        payload = {
-            "type": "status",
-            "file_id": file_id,
-            "name": item_name,
-            "source": source_type,
-            "status": status.value,
-            "error": error,
-            "timestamp": datetime.utcnow().isoformat()
-        }
-
-        logger.info(f"[_set_status] Setting status for file_id={file_id}, status={status.value}, name={item_name}, source={source_type}")
-
-        from qdrant_client.models import PointStruct
-        vector_size = Config.embedding.VECTOR_SIZE
-        point = PointStruct(id=status_id, vector=[0.0]*vector_size, payload=payload)
-
-        try:
-            self.qdrant_repo.client.upsert(user_col, points=[point])
-            logger.info(f"[_set_status] Successfully upserted status point for file_id={file_id}")
-        except Exception as e:
-            logger.error(f"[_set_status] Failed to upsert status for file_id={file_id}: {e}", exc_info=True)
+        logger.info(f"Status tracking not yet implemented for Neo4j: file_id={file_id}, status={status.value}")
 
     def get_status(self, tenant_id: str, file_id: str) -> dict:
-        user_col = self._get_user_collection(tenant_id)
-        status_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{file_id}_status"))
+        """Check if a document is indexed in Neo4j."""
         try:
-            res = self.qdrant_repo.client.retrieve(user_col, ids=[status_id])
-            return res[0].payload if res else {"status": "UNKNOWN", "file_id": file_id}
+            query = "MATCH (d:Document {file_id: $file_id}) RETURN d.indexed_at as indexed_at"
+            result = self.neo4j_repo.graph_service.execute_query(query, {"file_id": file_id})
+            
+            if result:
+                return {
+                    "status": "READY", 
+                    "file_id": file_id, 
+                    "message": "Document is indexed and ready for AI",
+                    "indexed_at": result[0]["indexed_at"]
+                }
+            return {
+                "status": "PROCESSING", 
+                "file_id": file_id, 
+                "message": "Document is being processed or not found"
+            }
         except Exception as e:
-            return {"status": "UNKNOWN", "error": str(e)}
+            logger.error(f"Error checking status: {e}")
+            return {"status": "ERROR", "file_id": file_id, "message": str(e)}
 
 
 
     def unlink_content(self, collection_name: Optional[str], file_ids: List[str], user_id: str) -> int:
-        user_col = self._get_user_collection(user_id)
-        
-        if not self.qdrant_repo.collection_exists(user_col):
-            return 0
-
         deleted_count = 0
-
         for file_id in file_ids:
             try:
-                # If deleting globally (collection_name is None), check if file exists via status point
-                if collection_name is None:
-                     status_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{file_id}_status"))
-                     existing = self.qdrant_repo.client.retrieve(user_col, ids=[status_id])
-                     
-                     if not existing:
-                         continue # File already deleted or doesn't exist
-                         
-                     self.qdrant_repo.client.delete(user_col, points_selector=[status_id])
-
-                success = self.qdrant_repo.unlink_content(user_col, file_id=file_id, collection_id=collection_name)
+                success = self.neo4j_repo.delete_file(user_id, file_id)
                 if success:
                     deleted_count += 1
             except Exception:
                 logger.error(f"Error unlinking file {file_id}", exc_info=True)
-        
         return deleted_count
 
     def delete_collection(self, user_id: str, collection_id: str) -> bool:
-        return self.qdrant_repo.delete_logical_collection(user_id, collection_id)
+        return self.neo4j_repo.delete_collection(user_id, collection_id)
 
     def purge_user_data(self, user_id: str) -> bool:
-        user_col = self._get_user_collection(user_id)
-        return self.qdrant_repo.delete_collection(user_col)
+        logger.warning(f"Purge user data not implemented for Neo4j: user_id={user_id}")
+        return False

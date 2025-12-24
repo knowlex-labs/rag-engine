@@ -6,11 +6,11 @@
 set -e  # Exit on error
 
 # Configuration
-PROJECT_ID="parkhoai-864b2"
-REGION="us-central1"
+PROJECT_ID="nyayamind-dev"
+REGION="asia-south2"
 SERVICE_NAME="rag-engine-api"
 IMAGE_NAME="gcr.io/${PROJECT_ID}/${SERVICE_NAME}"
-GCS_BUCKET_NAME="${PROJECT_ID}-rag-files"
+GCS_BUCKET_NAME="nyayamind-content-storage"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -44,6 +44,14 @@ gcloud services enable \
     secretmanager.googleapis.com \
     --quiet
 
+# Grant Secret Manager access to Cloud Run service account
+echo -e "${YELLOW}🔐 Setting up Secret Manager permissions...${NC}"
+PROJECT_NUMBER=$(gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+    --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+    --role="roles/secretmanager.secretAccessor" \
+    --quiet
+
 # Create GCS bucket if it doesn't exist
 echo -e "${YELLOW}🪣 Creating GCS bucket: ${GCS_BUCKET_NAME}${NC}"
 if gsutil ls -b gs://${GCS_BUCKET_NAME} 2>/dev/null; then
@@ -53,9 +61,9 @@ else
     echo -e "${GREEN}✅ Bucket created${NC}"
 fi
 
-# Build Docker image with caching for faster rebuilds
-echo -e "${YELLOW}🐳 Building Docker image (with layer caching)...${NC}"
-gcloud builds submit --tag ${IMAGE_NAME} .
+# Build Docker image with BuildKit enabled (required for --mount=type=cache)
+echo -e "${YELLOW}🐳 Building Docker image with BuildKit...${NC}"
+gcloud builds submit --config cloudbuild.yaml --substitutions=_IMAGE_NAME=${IMAGE_NAME} .
 
 # Deploy to Cloud Run
 echo -e "${YELLOW}🚀 Deploying to Cloud Run...${NC}"
@@ -67,8 +75,8 @@ gcloud run deploy ${SERVICE_NAME} \
     --memory 2Gi \
     --cpu 1 \
     --timeout 300 \
-    --set-env-vars="GCS_BUCKET_NAME=${GCS_BUCKET_NAME},EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2,VECTOR_SIZE=384" \
-    --set-secrets="QDRANT_HOST=QDRANT_HOST:latest,QDRANT_API_KEY=QDRANT_API_KEY:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,CRITIC_MODEL_API_KEY=CRITIC_MODEL_API_KEY:latest" \
+    --set-env-vars="GCS_BUCKET_NAME=${GCS_BUCKET_NAME},EMBEDDING_PROVIDER=openai,EMBEDDING_MODEL=text-embedding-ada-002,VECTOR_SIZE=1536,LLM_PROVIDER=openai,OPENAI_MODEL=gpt-4o,GEMINI_MODEL=models/gemini-2.5-flash,NEO4J_URI=neo4j+s://15980118.databases.neo4j.io,NEO4J_USER=neo4j,NEO4J_DATABASE=neo4j,RERANKER_ENABLED=true,CRITIC_ENABLED=true,FEEDBACK_ENABLED=true,DEBUG=false,LOG_LEVEL=INFO,STORAGE_TYPE=gcs,GCP_PROJECT_ID=nyayamind-dev" \
+    --set-secrets="OPENAI_API_KEY=OPENAI_API_KEY:latest,GEMINI_API_KEY=GEMINI_API_KEY:latest,LLAMA_CLOUD_API_KEY=LLAMA_CLOUD_API_KEY:latest,NEO4J_PASSWORD=NEO4J_PASSWORD:latest,CRITIC_MODEL_API_KEY=GEMINI_API_KEY:latest" \
     --max-instances 10 \
     --min-instances 0
 

@@ -3,6 +3,7 @@ from typing import Optional, List
 import shutil
 import uuid
 import os
+import logging
 
 from models.api_models import (
     BatchLinkRequest, IngestionResponse,
@@ -18,6 +19,7 @@ from services.query_service import QueryService
 from api.api_constants import LINK_CONTENT, QUERY_COLLECTION, COLLECTION_STATUS, UNLINK_CONTENT
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 collection_service = CollectionService()
 query_service = QueryService()
 
@@ -26,6 +28,7 @@ async def link_content(
     request: BatchLinkRequest,
     x_user_id: str = Header(...)
 ):
+    logger.info(f"Linking content for user {x_user_id}: {len(request.items)} items")
     results = await collection_service.process_batch(request, x_user_id)
     
     return IngestionResponse(
@@ -48,7 +51,8 @@ async def query(
             collection_ids=request.filters.collection_ids if request.filters else None,
             file_ids=request.filters.file_ids if request.filters else None,
             limit=request.top_k,
-            enable_critic=False
+            enable_critic=False,
+            answer_style=request.answer_style or "detailed"
         )
 
         sources = None
@@ -142,7 +146,6 @@ async def delete_file(
         user_id=x_user_id
     )
     return {"message": f"Deleted {count} file(s)"}
-
 
 @router.delete("/delete/collection")
 async def delete_collection(

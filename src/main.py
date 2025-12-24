@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import rag, config, feedback
+from api.routes import rag, config, feedback, question_generation, law_query, law_summary, legal_assistant, diagnostics, collections
 from config import Config
 
 app = FastAPI(
@@ -22,6 +22,14 @@ app.add_middleware(
 app.include_router(rag.router, prefix="/api/v1", tags=["rag"])
 app.include_router(config.router, prefix="/api/v1", tags=["config"])
 app.include_router(feedback.router, prefix="/api/v1", tags=["feedback"])
+app.include_router(question_generation.router)  # Law question generation routes
+
+# Include Law API routes
+app.include_router(legal_assistant.router, tags=["Legal Assistant"])
+app.include_router(law_query.router, tags=["Legal Query"])
+app.include_router(law_summary.router, tags=["Legal Summaries"])
+app.include_router(diagnostics.router, tags=["Diagnostics"])
+app.include_router(collections.router, tags=["Collection Tasks"])
 # app.include_router(users.router, prefix="/api/v1/users", tags=["users"]) # REMOVED
 
 @app.get("/")

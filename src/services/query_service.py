@@ -95,6 +95,11 @@ class QueryService:
             top_k=limit
         )
 
+        # Fallback: If vector search fails and we are scoped to collections, get fallback content
+        if not results and collection_ids:
+            logger.info(f"Vector search returned no results for collection(s) {collection_ids}. Attempting fallback retrieval.")
+            results = self.neo4j_repo.retrieve_fallback_chunks(collection_ids, limit=limit)
+
         if not intent:
             return results
 

@@ -7,7 +7,7 @@ from services.query_service import QueryService
 from models.api_models import QueryAnswerRequest, QueryResponse
 from models.question_models import QuestionGenerationResponse
 
-router = APIRouter(prefix="/api/v1/collections", tags=["Collection Operations"])
+router = APIRouter(prefix="/api/v1/collections")
 logger = logging.getLogger(__name__)
 query_service = QueryService()
 

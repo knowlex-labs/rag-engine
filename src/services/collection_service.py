@@ -27,8 +27,10 @@ class CollectionService:
 
     async def process_batch(self, request: BatchLinkRequest, tenant_id: str):
         collection_id = request.items[0].collection_id if request.items else "default"
-        logger.info(f"Starting batch process for tenant {tenant_id}, collection {collection_id}")
-        self.neo4j_repo.create_user_collection(tenant_id, collection_id)
+        # Get content_type from first item (all items in batch should have same content_type)
+        content_type = request.items[0].content_type.value if request.items and request.items[0].content_type else "legal"
+        logger.info(f"Starting batch process for tenant {tenant_id}, collection {collection_id}, content_type {content_type}")
+        self.neo4j_repo.create_user_collection(tenant_id, collection_id, content_type)
 
         results = []
         for item in request.items:
@@ -42,6 +44,13 @@ class CollectionService:
                 logger.info(f"Generating embeddings for {len(chunks)} chunks of {item.file_id}")
                 embeddings = self._generate_embeddings(chunks)
 
+                # Prepare news metadata if content_type is news
+                news_metadata = None
+                item_content_type = item.content_type.value if item.content_type else "legal"
+                if item_content_type == "news":
+                    # Extract news metadata from parsed content or item attributes
+                    news_metadata = self._extract_news_metadata(parsed, item)
+
                 logger.info(f"Indexing chunks to Neo4j for {item.file_id}")
                 self.neo4j_repo.index_chunks(
                     chunks=chunks,
@@ -50,7 +59,9 @@ class CollectionService:
                     collection_id=item.collection_id or "default",
                     file_id=item.file_id,
                     file_name=parsed.metadata.title or item.title or "Unknown",
-                    source_type=item.type
+                    source_type=item.type,
+                    content_type=item_content_type,
+                    news_metadata=news_metadata
                 )
                 logger.info(f"Successfully processed {item.file_id}")
 
@@ -138,6 +149,48 @@ class CollectionService:
     def _generate_embeddings(self, chunks):
         texts = [chunk.text for chunk in chunks]
         return self.embedding_client.generate_embeddings(texts)
+
+    def _extract_news_metadata(self, parsed_content, item: LinkItem) -> dict:
+        """Extract news-specific metadata from parsed content and LinkItem"""
+        from datetime import datetime
+
+        metadata = {}
+
+        # Extract from parsed content metadata
+        if hasattr(parsed_content, 'metadata') and parsed_content.metadata:
+            # Try to extract publication date from metadata
+            if hasattr(parsed_content.metadata, 'publish_date'):
+                metadata['published_date'] = parsed_content.metadata.publish_date
+
+            # Extract author if available
+            if hasattr(parsed_content.metadata, 'author'):
+                metadata['author'] = parsed_content.metadata.author
+
+            # Extract headline (title)
+            if hasattr(parsed_content.metadata, 'title'):
+                metadata['headline'] = parsed_content.metadata.title
+
+        # Extract from URL if it's a web source
+        if item.url:
+            metadata['source_url'] = item.url
+            # Try to extract source name from URL domain
+            try:
+                from urllib.parse import urlparse
+                parsed_url = urlparse(item.url)
+                metadata['source_name'] = parsed_url.netloc
+            except:
+                pass
+
+        # Add crawled timestamp
+        metadata['crawled_date'] = datetime.now().isoformat()
+
+        # For now, these would need to be provided via API or extracted using NLP
+        # metadata['news_category'] = "general"
+        # metadata['news_subcategory'] = None
+        # metadata['tags'] = []
+        # metadata['summary'] = None
+
+        return metadata if metadata else None
 
     def _set_status(self, tenant_id: str, file_id: str, status: IndexingStatus, error: Optional[str] = None, item_name: Optional[str] = None, source_type: Optional[str] = None):
         logger.info(f"Status tracking not yet implemented for Neo4j: file_id={file_id}, status={status.value}")

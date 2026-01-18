@@ -15,6 +15,7 @@ class LegalDocumentType(str, Enum):
     IPC = "ipc"  # Indian Penal Code (legacy)
     CPC = "cpc"  # Code of Civil Procedure
     CRPC = "crpc"  # Code of Criminal Procedure
+    BARE_ACTS = "bare_acts"
     ALL = "all"
 
 

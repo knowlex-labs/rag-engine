@@ -18,12 +18,28 @@ class Neo4jRepository:
         return self._graph_service
 
     def _ensure_indexes(self):
-        """Ensure indexes exist - non-blocking, will retry on next query if it fails"""
+        """Ensure indexes exist with correct dimensions. Drops and recreates if dimension mismatch."""
         try:
-            vector_dim = 1536 if Config.embedding.PROVIDER == "openai" else Config.embedding.VECTOR_SIZE
+            vector_dim = Config.embedding.VECTOR_SIZE
+            index_name = Config.neo4j.VECTOR_INDEX_NAME
+
+            # Check existing index dimension
+            check_query = f"SHOW INDEXES YIELD name, type, options WHERE name = '{index_name}' RETURN options"
+            result = self.graph_service.execute_query(check_query)
+            
+            recreate = False
+            if result:
+                options = result[0].get('options', {})
+                existing_dim = options.get('indexConfig', {}).get('vector.dimensions')
+                if existing_dim and int(existing_dim) != vector_dim:
+                    logger.warning(f"Vector index dimension mismatch: existing={existing_dim}, required={vector_dim}. Recreating...")
+                    recreate = True
+            
+            if recreate:
+                self.graph_service.execute_query(f"DROP INDEX {index_name} IF EXISTS")
 
             query = f"""
-            CREATE VECTOR INDEX {Config.neo4j.VECTOR_INDEX_NAME} IF NOT EXISTS
+            CREATE VECTOR INDEX {index_name} IF NOT EXISTS
             FOR (c:Chunk) ON (c.embedding)
             OPTIONS {{
                 indexConfig: {{
@@ -33,13 +49,14 @@ class Neo4jRepository:
             }}
             """
             self.graph_service.execute_query(query)
-            logger.info(f"Vector index '{Config.neo4j.VECTOR_INDEX_NAME}' ensured ({vector_dim}D)")
+            logger.info(f"Vector index '{index_name}' ensured ({vector_dim}D)")
 
             property_indexes = [
                 "CREATE INDEX chunk_file_id_idx IF NOT EXISTS FOR (c:Chunk) ON (c.file_id)",
                 "CREATE INDEX chunk_collection_id_idx IF NOT EXISTS FOR (c:Chunk) ON (c.collection_id)",
                 "CREATE INDEX chunk_type_idx IF NOT EXISTS FOR (c:Chunk) ON (c.chunk_type)",
-                # Note: document_file_id_idx removed - the constraint below will create its backing index
+                "CREATE INDEX collection_content_type_idx IF NOT EXISTS FOR (col:Collection) ON (col.content_type)",
+                "CREATE INDEX document_content_type_idx IF NOT EXISTS FOR (d:Document) ON (d.content_type)",
                 "CREATE CONSTRAINT chunk_id_unique IF NOT EXISTS FOR (c:Chunk) REQUIRE c.chunk_id IS UNIQUE",
                 "CREATE CONSTRAINT file_id_unique IF NOT EXISTS FOR (d:Document) REQUIRE d.file_id IS UNIQUE"
             ]
@@ -47,23 +64,23 @@ class Neo4jRepository:
             for index_query in property_indexes:
                 self.graph_service.execute_query(index_query)
 
-            logger.info("Property indexes and constraints created")
+            logger.info("Property indexes and constraints verified")
 
         except Exception as e:
-            # Don't raise - indexes can be created later when connection is available
-            logger.warning(f"Could not create indexes during initialization (will retry later): {e}")
+            logger.warning(f"Index management error: {e}")
 
-    def create_user_collection(self, user_id: str, collection_id: str) -> bool:
+    def create_user_collection(self, user_id: str, collection_id: str, content_type: str = "legal") -> bool:
         try:
             query = """
             MERGE (u:User {user_id: $user_id})
             MERGE (c:Collection {collection_id: $collection_id})
+            SET c.content_type = $content_type
             MERGE (u)-[:OWNS]->(c)
             RETURN c.collection_id as collection_id
             """
             result = self.graph_service.execute_query(
                 query,
-                {"user_id": user_id, "collection_id": collection_id}
+                {"user_id": user_id, "collection_id": collection_id, "content_type": content_type}
             )
             logger.info(f"Collection {collection_id} created for user {user_id}")
             return True
@@ -79,26 +96,33 @@ class Neo4jRepository:
         collection_id: str,
         file_id: str,
         file_name: str,
-        source_type: str
+        source_type: str,
+        content_type: str = "legal",
+        news_metadata: Optional[Dict[str, Any]] = None
     ) -> bool:
         try:
             query = """
             MERGE (u:User {user_id: $user_id})
             MERGE (col:Collection {collection_id: $collection_id})
+            SET col.content_type = $content_type
             MERGE (u)-[:OWNS]->(col)
 
             MERGE (d:Document {file_id: $file_id})
             SET d.file_name = $file_name,
                 d.source_type = $source_type,
+                d.content_type = $content_type,
                 d.indexed_at = datetime()
+            SET d += CASE WHEN $news_metadata IS NOT NULL THEN $news_metadata ELSE {} END
             MERGE (col)-[:CONTAINS]->(d)
 
             WITH d
             UNWIND $chunks_data as chunk_data
 
             MERGE (c:Chunk {chunk_id: chunk_data.chunk_id})
-            SET c.chunk_id = chunk_data.chunk_id,
-                c.text = chunk_data.text,
+            WITH c, chunk_data, d
+            WHERE c.text_hash IS NULL OR c.text_hash <> chunk_data.text_hash
+
+            SET c.text = chunk_data.text,
                 c.embedding = chunk_data.embedding,
                 c.file_id = $file_id,
                 c.collection_id = $collection_id,
@@ -110,6 +134,7 @@ class Neo4jRepository:
                 c.key_terms = chunk_data.key_terms,
                 c.has_equations = chunk_data.has_equations,
                 c.has_diagrams = chunk_data.has_diagrams,
+                c.text_hash = chunk_data.text_hash,
                 c.indexed_at = datetime()
 
             MERGE (d)-[:HAS_CHUNK]->(c)
@@ -130,7 +155,8 @@ class Neo4jRepository:
                     "page_end": chunk.topic_metadata.page_end,
                     "key_terms": chunk.chunk_metadata.key_terms,
                     "has_equations": chunk.chunk_metadata.has_equations,
-                    "has_diagrams": chunk.chunk_metadata.has_diagrams
+                    "has_diagrams": chunk.chunk_metadata.has_diagrams,
+                    "text_hash": self._generate_text_hash(chunk.text)
                 })
 
             result = self.graph_service.execute_query(
@@ -141,6 +167,8 @@ class Neo4jRepository:
                     "file_id": file_id,
                     "file_name": file_name,
                     "source_type": source_type,
+                    "content_type": content_type,
+                    "news_metadata": news_metadata,
                     "chunks_data": chunks_data
                 }
             )
@@ -263,6 +291,8 @@ class Neo4jRepository:
         query_embedding: List[float],
         collection_ids: Optional[List[str]] = None,
         file_ids: Optional[List[str]] = None,
+        content_type: Optional[str] = None,
+        news_subcategory: Optional[str] = None,
         top_k: int = 5
     ) -> List[Dict[str, Any]]:
         try:
@@ -279,6 +309,16 @@ class Neo4jRepository:
             if file_ids:
                 where_clauses.append("c.file_id IN $file_ids")
                 params["file_ids"] = file_ids
+
+            # Content type filtering via collection or document
+            if content_type:
+                where_clauses.append("EXISTS { MATCH (col:Collection)-[:CONTAINS]->(d:Document)-[:HAS_CHUNK]->(c) WHERE col.content_type = $content_type }")
+                params["content_type"] = content_type
+
+            # News subcategory filtering
+            if news_subcategory:
+                where_clauses.append("EXISTS { MATCH (d:Document)-[:HAS_CHUNK]->(c) WHERE d.news_subcategory = $news_subcategory }")
+                params["news_subcategory"] = news_subcategory
 
             where_clause = " AND " + " AND ".join(where_clauses) if where_clauses else ""
 
@@ -315,13 +355,23 @@ class Neo4jRepository:
     def retrieve_fallback_chunks(
         self,
         collection_ids: List[str],
+        content_type: Optional[str] = None,
         limit: int = 5
     ) -> List[Dict[str, Any]]:
         """Retrieve latest chunks from collections as fallback when vector search fails"""
         try:
-            query = """
+            where_clauses = ["c.collection_id IN $collection_ids"]
+            params = {"collection_ids": collection_ids, "limit": limit}
+
+            if content_type:
+                where_clauses.append("EXISTS { MATCH (col:Collection)-[:CONTAINS]->(d:Document)-[:HAS_CHUNK]->(c) WHERE col.content_type = $content_type }")
+                params["content_type"] = content_type
+
+            where_clause = " AND ".join(where_clauses)
+
+            query = f"""
             MATCH (c:Chunk)
-            WHERE c.collection_id IN $collection_ids
+            WHERE {where_clause}
             RETURN c.chunk_id as chunk_id,
                    c.text as text,
                    c.file_id as file_id,
@@ -336,10 +386,15 @@ class Neo4jRepository:
             ORDER BY c.indexed_at DESC
             LIMIT $limit
             """
-            results = self.graph_service.execute_query(query, {"collection_ids": collection_ids, "limit": limit})
+            results = self.graph_service.execute_query(query, params)
             return [dict(record) for record in results]
         except Exception as e:
             logger.error(f"Error retrieving fallback chunks: {e}")
             return []
+
+    def _generate_text_hash(self, text: str) -> str:
+        """Generate a SHA-256 hash of the text content."""
+        import hashlib
+        return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
 neo4j_repository = Neo4jRepository()

@@ -9,9 +9,9 @@ class ParserConfig:
     YOUTUBE_TRANSCRIPT_FALLBACK: str = os.getenv("YOUTUBE_TRANSCRIPT_FALLBACK", "gemini")
 
 class EmbeddingConfig:
-    MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "Snowflake/snowflake-arctic-embed-l-v2.0")
-    PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "huggingface")
-    VECTOR_SIZE: int = int(os.getenv("VECTOR_SIZE", "1024"))
+    MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "text-embedding-004")
+    PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "gemini")
+    VECTOR_SIZE: int = int(os.getenv("VECTOR_SIZE", "768"))
     DISTANCE_METRIC: str = os.getenv("DISTANCE_METRIC", "COSINE")
     CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "800"))
     CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "100"))
@@ -24,7 +24,7 @@ class LlmConfig:
     OPENAI_MAX_TOKENS: int = int(os.getenv("OPENAI_MAX_TOKENS", "1000"))
     OPENAI_TEMPERATURE: float = float(os.getenv("OPENAI_TEMPERATURE", "0.1"))
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
     GEMINI_MAX_TOKENS: int = int(os.getenv("GEMINI_MAX_TOKENS", "4000"))
     GEMINI_TEMPERATURE: float = float(os.getenv("GEMINI_TEMPERATURE", "0.1"))
     ENABLE_JSON_RESPONSE: bool = os.getenv("ENABLE_JSON_RESPONSE", "false").lower() == "true"
@@ -82,27 +82,6 @@ class Neo4jConfig:
     PASSWORD: str = os.getenv("NEO4J_PASSWORD")
     DATABASE: str = os.getenv("NEO4J_DATABASE", "neo4j")
     VECTOR_INDEX_NAME: str = os.getenv("NEO4J_VECTOR_INDEX_NAME", "legal_chunks_index")
-
-class LlamaCloudConfig:
-    API_KEY: str = os.getenv("LLAMA_CLOUD_API_KEY", "")
-
-
-class Neo4jConfig:
-    URI: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-    USER: str = os.getenv("NEO4J_USER", "neo4j")
-    PASSWORD: str = os.getenv("NEO4J_PASSWORD")
-    DATABASE: str = os.getenv("NEO4J_DATABASE", "neo4j")
-    VECTOR_INDEX_NAME: str = os.getenv("NEO4J_VECTOR_INDEX_NAME", "legal_chunks_index")
-
-class LlamaCloudConfig:
-    API_KEY: str = os.getenv("LLAMA_CLOUD_API_KEY", "")
-
-
-class Neo4jConfig:
-    URI: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-    USER: str = os.getenv("NEO4J_USER", "neo4j")
-    PASSWORD: str = os.getenv("NEO4J_PASSWORD")
-    DATABASE: str = os.getenv("NEO4J_DATABASE", "neo4j")
 
 class LlamaCloudConfig:
     API_KEY: str = os.getenv("LLAMA_CLOUD_API_KEY", "")

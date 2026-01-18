@@ -31,6 +31,13 @@ class ChunkType(str, Enum):
     EXAMPLE = "example"
     QUESTION = "question"
     OTHER = "other"
+    # Legal document types
+    SECTION = "section"
+    PROVISION = "provision"
+    DEFINITION = "definition"
+    SCHEDULE = "schedule"
+    PREAMBLE = "preamble"
+    CHAPTER = "chapter"
 
 class ContentType(str, Enum):
     """Type of content being indexed - determines chunking strategy"""
@@ -38,6 +45,11 @@ class ContentType(str, Enum):
     CHAPTER = "chapter"     # Single chapter (10-50 pages, use medium chunks)
     DOCUMENT = "document"   # Small document (<10 pages, use small chunks)
     AUTO = "auto"           # Auto-detect based on file size
+
+class DataContentType(str, Enum):
+    """Type of data content for filtering and separation"""
+    LEGAL = "legal"         # Constitution, BNS, legal documents
+    NEWS = "news"           # News articles and current events
 
 # Metadata models
 class BookMetadata(BaseModel):
@@ -49,6 +61,19 @@ class BookMetadata(BaseModel):
     book_subject: Optional[str] = None
     total_chapters: Optional[int] = None
     total_pages: Optional[int] = None
+
+class NewsMetadata(BaseModel):
+    """News-specific metadata for articles and current events"""
+    published_date: Optional[datetime] = None
+    crawled_date: Optional[datetime] = None
+    source_name: Optional[str] = None
+    source_url: Optional[str] = None
+    author: Optional[str] = None
+    news_category: Optional[str] = None  # e.g., "politics", "legal", "business"
+    news_subcategory: Optional[str] = None  # e.g., "supreme_court_news", "state_news"
+    tags: List[str] = []
+    headline: Optional[str] = None
+    summary: Optional[str] = None
 
 # Chunking configuration
 class ChunkingStrategy(BaseModel):
@@ -74,6 +99,7 @@ class LinkItem(BaseModel):
     collection_id: Optional[str] = None
     url: Optional[str] = None      # For web/youtube
     gcs_url: Optional[str] = None  # For file
+    content_type: Optional[DataContentType] = DataContentType.LEGAL  # Default to legal for backward compatibility
 
     @model_validator(mode='before')
     @classmethod
@@ -105,6 +131,8 @@ class IngestionResponse(BaseModel):
 class RetrieveFilters(BaseModel):
     collection_ids: Optional[List[str]] = None
     file_ids: Optional[List[str]] = None
+    content_type: Optional[DataContentType] = None
+    news_subcategory: Optional[str] = None  # For granular news filtering like "supreme_court_news"
 
 class RetrieveRequest(BaseModel):
     query: str

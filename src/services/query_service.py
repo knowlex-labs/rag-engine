@@ -84,7 +84,9 @@ class QueryService:
         query_text: str,
         limit: int = 10,
         collection_ids: Optional[List[str]] = None,
-        file_ids: Optional[List[str]] = None
+        file_ids: Optional[List[str]] = None,
+        content_type: Optional[str] = None,
+        news_subcategory: Optional[str] = None
     ) -> List[Dict]:
         intent = self._detect_query_intent(query_text)
 
@@ -92,13 +94,15 @@ class QueryService:
             query_embedding=query_vector,
             collection_ids=collection_ids,
             file_ids=file_ids,
+            content_type=content_type,
+            news_subcategory=news_subcategory,
             top_k=limit
         )
 
         # Fallback: If vector search fails and we are scoped to collections, get fallback content
         if not results and collection_ids:
             logger.info(f"Vector search returned no results for collection(s) {collection_ids}. Attempting fallback retrieval.")
-            results = self.neo4j_repo.retrieve_fallback_chunks(collection_ids, limit=limit)
+            results = self.neo4j_repo.retrieve_fallback_chunks(collection_ids, content_type=content_type, limit=limit)
 
         if not intent:
             return results
@@ -255,6 +259,8 @@ class QueryService:
         collection_ids: Optional[List[str]] = None,
         top_k: int = 5,
         file_ids: Optional[List[str]] = None,
+        content_type: Optional[str] = None,
+        news_subcategory: Optional[str] = None,
         enable_reranking: bool = True
     ) -> List[Dict[str, Any]]:
         """
@@ -271,7 +277,9 @@ class QueryService:
                 query,
                 top_k,
                 collection_ids=collection_ids,
-                file_ids=file_ids
+                file_ids=file_ids,
+                content_type=content_type,
+                news_subcategory=news_subcategory
             )
 
             if enable_reranking and reranker.is_available() and results:
@@ -285,7 +293,7 @@ class QueryService:
     def get_all_embeddings(self, collection_name: str, limit: int = 100) -> Dict[str, Any]:
         return {"message": "Get all embeddings not implemented for Neo4j"}
 
-    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False, collection_ids: Optional[List[str]] = None, file_ids: Optional[List[str]] = None, answer_style: str = "detailed") -> QueryResponse:
+    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False, collection_ids: Optional[List[str]] = None, file_ids: Optional[List[str]] = None, content_type: Optional[str] = None, news_subcategory: Optional[str] = None, answer_style: str = "detailed") -> QueryResponse:
         try:
             query_vector = self.embedding_client.generate_single_embedding(query_text)
 
@@ -295,7 +303,9 @@ class QueryService:
                 query_text,
                 limit,
                 collection_ids=collection_ids,
-                file_ids=file_ids
+                file_ids=file_ids,
+                content_type=content_type,
+                news_subcategory=news_subcategory
             )
 
             if reranker.is_available() and results:

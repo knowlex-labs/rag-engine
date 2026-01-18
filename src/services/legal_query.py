@@ -42,8 +42,11 @@ class LegalQueryService:
                     elif doc_type_value == 'bns':
                         collection_ids.append('bns-golden-source')
                         actual_scope.append('bns')
+                    elif doc_type_value == 'bare_acts':
+                        collection_ids.append('bare-acts-golden-source')
+                        actual_scope.append('bare_acts')
                     elif doc_type_value == 'all':
-                        collection_ids.extend(['constitution-golden-source', 'bns-golden-source'])
+                        collection_ids.extend(['constitution-golden-source', 'bns-golden-source', 'bare-acts-golden-source'])
                         actual_scope.append('all')
 
                 # Remove duplicates
@@ -60,10 +63,12 @@ class LegalQueryService:
             
             if not chunks:
                 # Create dynamic error message based on scope
-                if 'bns' in actual_scope and 'constitution' not in actual_scope:
+                if 'bns' in actual_scope and len(actual_scope) == 1:
                     no_content_msg = "No BNS content found for your question."
-                elif 'constitution' in actual_scope and 'bns' not in actual_scope:
+                elif 'constitution' in actual_scope and len(actual_scope) == 1:
                     no_content_msg = "No constitutional content found for your question."
+                elif 'bare_acts' in actual_scope and len(actual_scope) == 1:
+                    no_content_msg = "No content found in Bare Acts for your question."
                 else:
                     no_content_msg = "No legal content found for your question."
 

@@ -1,0 +1,1390 @@
+{
+  "name": "ARBITRATION AND CONCILIATION",
+  "year": 1996,
+  "act_number": "",
+  "preamble": "",
+  "document_type": "bare_act",
+  "total_chapters": 23,
+  "total_sections": 90,
+  "chapters": [
+    {
+      "number": "II",
+      "title": "",
+      "section_numbers": [
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    {
+      "number": "III",
+      "title": "",
+      "section_numbers": [
+        "10",
+        "11",
+        "11A",
+        "12",
+        "13",
+        "14",
+        "15"
+      ]
+    },
+    {
+      "number": "IV",
+      "title": "",
+      "section_numbers": [
+        "16",
+        "17"
+      ]
+    },
+    {
+      "number": "V",
+      "title": "",
+      "section_numbers": [
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27"
+      ]
+    },
+    {
+      "number": "VI",
+      "title": "",
+      "section_numbers": [
+        "28",
+        "29",
+        "29A",
+        "29B",
+        "30",
+        "31",
+        "31A",
+        "32",
+        "33"
+      ]
+    },
+    {
+      "number": "VII",
+      "title": "",
+      "section_numbers": [
+        "34"
+      ]
+    },
+    {
+      "number": "VIII",
+      "title": "",
+      "section_numbers": [
+        "35",
+        "36"
+      ]
+    },
+    {
+      "number": "IX",
+      "title": "",
+      "section_numbers": [
+        "37"
+      ]
+    },
+    {
+      "number": "X",
+      "title": "",
+      "section_numbers": [
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43"
+      ]
+    },
+    {
+      "number": "I",
+      "title": "",
+      "section_numbers": [
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51",
+        "52"
+      ]
+    },
+    {
+      "number": "II",
+      "title": "",
+      "section_numbers": [
+        "53",
+        "54",
+        "55",
+        "56",
+        "57",
+        "58",
+        "59",
+        "60",
+        "61",
+        "62",
+        "63",
+        "64",
+        "65",
+        "66",
+        "67",
+        "68",
+        "69",
+        "70",
+        "71",
+        "72",
+        "73",
+        "74",
+        "75",
+        "76",
+        "77",
+        "78",
+        "79",
+        "80",
+        "81",
+        "82",
+        "83",
+        "84",
+        "85",
+        "86",
+        "1"
+      ]
+    },
+    {
+      "number": "I",
+      "title": "",
+      "section_numbers": [
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    {
+      "number": "II",
+      "title": "",
+      "section_numbers": []
+    },
+    {
+      "number": "III",
+      "title": "",
+      "section_numbers": []
+    },
+    {
+      "number": "IV",
+      "title": "",
+      "section_numbers": []
+    },
+    {
+      "number": "V",
+      "title": "",
+      "section_numbers": []
+    },
+    {
+      "number": "VI",
+      "title": "",
+      "section_numbers": []
+    },
+    {
+      "number": "VII",
+      "title": "",
+      "section_numbers": []
+    },
+    {
+      "number": "VIII",
+      "title": "",
+      "section_numbers": []
+    },
+    {
+      "number": "IX",
+      "title": "",
+      "section_numbers": []
+    },
+    {
+      "number": "X",
+      "title": "",
+      "section_numbers": []
+    },
+    {
+      "number": "I",
+      "title": "",
+      "section_numbers": []
+    },
+    {
+      "number": "II",
+      "title": "",
+      "section_numbers": []
+    }
+  ],
+  "sections": [
+    {
+      "number": "7",
+      "title": "Arbitration agreement",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "8",
+      "title": "Power to refer parties to arbitration where there is an arbitration agreement",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "9",
+      "title": "Interim measures, etc., by Court",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "10",
+      "title": "Number of arbitrators",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "11",
+      "title": "Appointment of arbitrators",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "11A",
+      "title": "Power of Central Government to amend Fourth Schedule",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "12",
+      "title": "Grounds for challenge",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "13",
+      "title": "Challenge procedure",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "14",
+      "title": "Failure or impossibility to act",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "15",
+      "title": "Termination of mandate and substitution of arbitrator",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "16",
+      "title": "Competence of arbitral tribunal to rule on its jurisdiction",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "17",
+      "title": "Interim measures ordered by arbitral tribunal",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "18",
+      "title": "Equal treatment of parties",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "19",
+      "title": "Determination of rules of procedure",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "20",
+      "title": "Place of arbitration",
+      "content": "1\n\fSECTIONS",
+      "chapter_number": "V",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "21",
+      "title": "Commencement of arbitral proceedings",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "22",
+      "title": "Language",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "23",
+      "title": "Statements of claim and defence",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "24",
+      "title": "Hearings and written proceedings",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "25",
+      "title": "Default of a party",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "26",
+      "title": "Expert appointed by arbitral tribunal",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "27",
+      "title": "Court assistance in taking evidence",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "28",
+      "title": "Rules applicable to substance of dispute",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "29",
+      "title": "Decision making by panel of arbitrators",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "29A",
+      "title": "Time limit for arbitral award",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "29B",
+      "title": "Fast track procedure",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "30",
+      "title": "Settlement",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "31",
+      "title": "Form and contents of arbitral award",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "31A",
+      "title": "Regime for costs",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "32",
+      "title": "Termination of proceedings",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "33",
+      "title": "Correction and interpretation of award; additional award",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "34",
+      "title": "Application for setting aside arbitral awards",
+      "content": "",
+      "chapter_number": "VII",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "35",
+      "title": "Finality of arbitral awards",
+      "content": "",
+      "chapter_number": "VIII",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "36",
+      "title": "Enforcement",
+      "content": "",
+      "chapter_number": "VIII",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "37",
+      "title": "Appealable orders",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "38",
+      "title": "Deposits",
+      "content": "",
+      "chapter_number": "X",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "39",
+      "title": "Lien on arbitral award and deposits as to costs",
+      "content": "",
+      "chapter_number": "X",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "40",
+      "title": "Arbitration agreement not to be discharged by death of party thereto",
+      "content": "",
+      "chapter_number": "X",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "41",
+      "title": "Provisions in case of insolvency",
+      "content": "",
+      "chapter_number": "X",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "42",
+      "title": "Jurisdiction",
+      "content": "",
+      "chapter_number": "X",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "43",
+      "title": "Limitations",
+      "content": "PART II\nENFORCEMENT OF CERTAIN FOREIGN AWARDS",
+      "chapter_number": "X",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "44",
+      "title": "Definition",
+      "content": "2\n\fSECTIONS",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "45",
+      "title": "Power of judicial authority to refer parties to arbitration",
+      "content": "",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "46",
+      "title": "When foreign award binding",
+      "content": "",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "47",
+      "title": "Evidence",
+      "content": "",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "48",
+      "title": "Conditions for enforcement of foreign awards",
+      "content": "",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "49",
+      "title": "Enforcement of foreign awards",
+      "content": "",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "50",
+      "title": "Appealable orders",
+      "content": "",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "51",
+      "title": "Saving",
+      "content": "",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "52",
+      "title": "Chapter II not to apply",
+      "content": "",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "53",
+      "title": "Interpretation",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "54",
+      "title": "Power of judicial authority to refer parties to arbitration",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "55",
+      "title": "Foreign awards when binding",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "56",
+      "title": "Evidence",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "57",
+      "title": "Conditions for enforcement of foreign awards",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "58",
+      "title": "Enforcement of foreign awards",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "59",
+      "title": "Appealable orders",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "60",
+      "title": "Savings",
+      "content": "PART III\nCONCILIATION",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "61",
+      "title": "Application and scope",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "62",
+      "title": "Commencement of conciliation proceedings",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "63",
+      "title": "Number of conciliators",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "64",
+      "title": "Appointment of conciliators",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "65",
+      "title": "Submission of statements to conciliator",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "66",
+      "title": "Conciliator not bound by certain enactments",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "67",
+      "title": "Role of conciliator",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "68",
+      "title": "Administrative assistance",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "69",
+      "title": "Communication between conciliator and parties",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "70",
+      "title": "Disclosure of information",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "71",
+      "title": "Co-operation of parties with conciliator",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "72",
+      "title": "Suggestions by parties for settlement of dispute",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "73",
+      "title": "Settlement agreement",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "74",
+      "title": "Status and effect of settlement agreement",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "75",
+      "title": "Confidentiality",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "76",
+      "title": "Termination of conciliation proceedings",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "77",
+      "title": "Resort to arbitral or judicial proceedings",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "78",
+      "title": "Costs",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "79",
+      "title": "Deposits",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "80",
+      "title": "Role of conciliator in other proceedings",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "81",
+      "title": "Admissibility of evidence in other proceedings",
+      "content": "PART IV\nSUPPLEMENTARY PROVISIONS",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "82",
+      "title": "Power of High Court to make rules",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "83",
+      "title": "Removal of difficulties",
+      "content": "3\n\fSECTIONS",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "84",
+      "title": "Power to make rules",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "85",
+      "title": "Repeal and savings",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "86",
+      "title": "Repeal and saving",
+      "content": "THE FIRST SCHEDULE.\nTHE SECOND SCHEDULE.\nTHE THIRD SCHEDULE.\nTHE FOURTH SCHEDULE.\nTHE FIFTH SCHEDULE.\nTHE SIXTH SCHEDULE.\nTHE SEVENTH SCHEDULE.\nAPPENDIX.\n4\n\fTHE ARBITRATION AND CONCILIATION ACT, 1996\nACT No. 26 OF 1996\n[16th August, 1996.]\nAn Act to consolidate and amend the law relating to domestic arbitration, international\ncommercial arbitration and enforcement of foreign arbitral awards as also to define the law\nrelating to conciliation and for matters connected therewith or incidental thereto.\nPreamble.—WHEREAS the United Nations Commission on International Trade Law (UNCITRAL)\nhas adopted the UNCITRAL Model Law on International Commercial Arbitration in 1985;\nAND WHEREAS the General Assembly of the United Nations has recommended that all countries give\ndue consideration to the said Model Law, in view of the desirability of uniformity of the law of arbitral\nprocedures and the specific needs of international commercial arbitration practice;\nAND WHEREAS the UNCITRAL has adopted the UNCITRAL Conciliation Rules in 1980;\nAND WHEREAS the General Assembly of the United Nations has recommended the use of the said\nRules in cases where a dispute arises in the context of international commercial relations and the parties\nseek an amicable settlement of that dispute by recourse to conciliation;\nAND WHEREAS the said Model Law and Rules make significant contribution to the establishment of a\nunified legal framework for the fair and efficient settlement of disputes arising in international\ncommercial relations;\nAND WHEREAS it is expedient to make law respecting arbitration and conciliation, taking into account\nthe aforesaid Model Law and Rules;\nBE it enacted by Parliament in the Forty-seventh Year of the Republic of India as follows:—\nPRELIMINARY",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "1",
+      "title": "Short title, extent and commencement.—(1) This Act may be called the Arbitration and",
+      "content": "Conciliation Act, 1996.\n(2) It extends to the whole of India:\nProvided that Parts I, III and IV shall extend to the State of Jammu and Kashmir only in so far as they\nrelate to international commercial arbitration or, as the case may be, international commercial\nconciliation.\nExplanation.—In this sub-section, the expression “international commercial conciliation” shall have\nthe same meaning as the expression “international commercial arbitration” in clause (f) of sub-section (1)\nof section 2, subject to the modification that for the word “arbitration” occurring therein, the word\n“conciliation” shall be substituted.\n(3) It shall come into force on such date 1 as the Central Government may, by notification in the\nOfficial Gazette, appoint.\nPART I\nARBITRATION",
+      "chapter_number": "II",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "2",
+      "title": "Definitions.—(1) In this Part, unless the context otherwise requires,—",
+      "content": "(a) “arbitration” means any arbitration whether or not administered by permanent arbitral\ninstitution;\n(b) “arbitration agreement” means an agreement referred to in section 7;\n1. 22nd August, 1996, vide notification No. G.S.R 375(E), dated 22nd August, 1996, see Gazette of India, Extraordinary, Part II,\nsec. 3(i).\n5\n\f(c) “arbitral award” includes an interim award;\n(d) “arbitral tribunal” means a sole arbitrator or a panel of arbitrators;\n[(e) “Court” means—\n1\n(i) in the case of an arbitration other than international commercial arbitration, the principal\nCivil Court of original jurisdiction in a district, and includes the High Court in exercise of its\nordinary original civil jurisdiction, having jurisdiction to decide the questions forming the\nsubject-matter of the arbitration if the same had been the subject-matter of a suit, but does not\ninclude any Civil Court of a grade inferior to such principal Civil Court, or any Court of Small\nCauses;\n(ii) in the case of international commercial arbitration, the High Court in exercise of its\nordinary original civil jurisdiction, having jurisdiction to decide the questions forming the\nsubject-matter of the arbitration if the same had been the subject-matter of a suit, and in other\ncases, a High Court having jurisdiction to hear appeals from decrees of courts subordinate to that\nHigh Court;]\n(f) “international commercial arbitration” means an arbitration relating to disputes arising out of\nlegal relationships, whether contractual or not, considered as commercial under the law in force in\nIndia and where at least one of the parties is—\n(i) an individual who is a national of, or habitually resident in, any country other than India;\nor\n(ii) a body corporate which is incorporated in any country other than India; or\n(iii) 2*** an association or a body of individuals whose central management and control is\nexercised in any country other than India; or\n(iv) the Government of a foreign country;\n(g) “legal representative” means a person who in law represents the estate of a deceased person,\nand includes any person who intermeddles with the estate of the deceased, and, where a party acts in a\nrepresentative character, the person on whom the estate devolves on the death of the party so acting;\n(h) “party” means a party to an arbitration agreement.\n(2) This Part shall apply where the place of arbitration is in India:\n3\n[Provided that subject to an agreement to the contrary, the provisions of sections 9, 27 and clause (a)\nof sub-section (1) and sub-section (3) of section 37 shall also apply to international commercial\narbitration, even if the place of arbitration is outside India, and an arbitral award made or to be made in\nsuch place is enforceable and recognised under the provisions of Part II of this Act.]\n(3) This Part shall not affect any other law for the time being in force by virtue of which certain\ndisputes may not be submitted to arbitration.\n(4) This Part except sub-section (1) of section 40, sections 41 and 43 shall apply to every arbitration\nunder any other enactment for the time being in force, as if the arbitration were pursuant to an arbitration\nagreement and as if that other enactment were an arbitration agreement, except in so far as the provisions\nof this Part are inconsistent with that other enactment or with any rules made thereunder.\n(5) Subject to the provisions of sub-section (4), and save in so far as is otherwise provided by any law\nfor the time being in force or in any agreement in force between India and any other country or countries,\nthis Part shall apply to all arbitrations and to all proceedings relating thereto.\n(6) Where this Part, except section 28, leaves the parties free to determine a certain issue, that\nfreedom shall include the right of the parties to authorise any person including an institution, to determine\nthat issue.\n6\n\f(7) An arbitral award made under this Part shall be considered as a domestic award.\n(8) Where this Part—\n(a) refers to the fact that the parties have agreed or that they may agree, or\n(b) in any other way refers to an agreement of the parties,\nthat agreement shall include any arbitration rules referred to in that agreement.\n(9) Where this Part, other than clause (a) of section 25 or clause (a) of sub-section (2) of section 32,\nrefers to a claim, it shall also apply to a counterclaim, and where it refers to a defence, it shall also apply\nto a defence to that counterclaim.",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": true,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "3",
+      "title": "Receipt of written communications.—(1) Unless otherwise agreed by the parties,—",
+      "content": "(a) any written communication is deemed to have been received if it is delivered to the addressee\npersonally or at his place of business, habitual residence or mailing address, and\n(b) if none of the places referred to in clause (a) can be found after making a reasonable inquiry, a\nwritten communication is deemed to have been received if it is sent to the addressee's last known\nplace of business, habitual residence or mailing address by registered letter or by any other means\nwhich provides a record of the attempt to deliver it.\n(2) The communication is deemed to have been received on the day it is so delivered.\n(3) This section does not apply to written communications in respect of proceedings of any judicial\nauthority.",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "4",
+      "title": "Waiver of right to object.—A party who knows that—",
+      "content": "(a) any provision of this Part from which the parties may derogate, or\n(b) any requirement under the arbitration agreement,\nhas not been complied with and yet proceeds with the arbitration without stating his objection to such\nnon-compliance without undue delay or, if a time limit is provided for stating that objection, within that\nperiod of time, shall be deemed to have waived his right to so object.",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "5",
+      "title": "Extent of judicial intervention.—Notwithstanding anything contained in any other law for the",
+      "content": "time being in force, in matters governed by this Part, no judicial authority shall intervene except where so\nprovided in this Part.",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "6",
+      "title": "Administrative assistance.—In order to facilitate the conduct of the arbitral proceedings, the",
+      "content": "parties, or the arbitral tribunal with the consent of the parties, may arrange for administrative assistance\nby a suitable institution or person.",
+      "chapter_number": "I",
+      "chapter_title": "",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    }
+  ],
+  "schedules": [
+    {
+      "number": "Fourth",
+      "content": "Fourth Schedule.\n12. Grounds for challenge.\n13. Challenge procedure.\n14. Failure or impossibility to act.\n15. Termination of mandate and substitution of arbitrator.\nCHAPTER IV\nJurisdiction of arbitral tribunals\n16. Competence of arbitral tribunal to rule on its jurisdiction.\n17. Interim measures ordered by arbitral tribunal.\nCHAPTER V\nConduct of arbitral proceedings\n18. Equal treatment of parties.\n19. Determination of rules of procedure.\n20. Place of arbitration.\n1\n\n\fSECTIONS\n21. Commencement of arbitral proceedings.\n22. Language.\n23. Statements of claim and defence.\n24. Hearings and written proceedings.\n25. Default of a party.\n26. Expert appointed by arbitral tribunal.\n27. Court assistance in taking evidence.\nCHAPTER VI\nMaking of arbitral award and termination of proceedings\n28. Rules applicable to substance of dispute.\n29. Decision making by panel of arbitrators.\n29A. Time limit for arbitral award.\n29B. Fast track procedure.\n30. Settlement.\n31. Form and contents of arbitral award.\n31A. Regime for costs.\n32. Termination of proceedings.\n33. Correction and interpretation of award; additional award.\nCHAPTER VII\nRecourse against arbitral award\n34. Application for setting aside arbitral awards.\nCHAPTER VIII\nFinality and enforcement of arbitral awards\n35. Finality of arbitral awards.\n36. Enforcement.\nCHAPTER IX\nAppeals\n37. Appealable orders.\nCHAPTER X\nMiscellaneous\n38. Deposits.\n39. Lien on arbitral award and deposits as to costs.\n40. Arbitration agreement not to be discharged by death of party thereto.\n41. Provisions in case of insolvency.\n42. Jurisdiction.\n43. Limitations.\nPART II\nENFORCEMENT OF CERTAIN FOREIGN AWARDS\nCHAPTER I\nNew York Convention Awards\n44. Definition.\n2\n\n\fSECTIONS\n45. Power of judicial authority to refer parties to arbitration.\n46. When foreign award binding.\n47. Evidence.\n48. Conditions for enforcement of foreign awards.\n49. Enforcement of foreign awards.\n50. Appealable orders.\n51. Saving.\n52. Chapter II not to apply.\nCHAPTER II\nGeneva Convention Awards\n53. Interpretation.\n54. Power of judicial authority to refer parties to arbitration.\n55. Foreign awards when binding.\n56. Evidence.\n57. Conditions for enforcement of foreign awards.\n58. Enforcement of foreign awards.\n59. Appealable orders.\n60. Savings.\nPART III\nCONCILIATION\n61. Application and scope.\n62. Commencement of conciliation proceedings.\n63. Number of conciliators.\n64. Appointment of conciliators.\n65. Submission of statements to conciliator.\n66. Conciliator not bound by certain enactments.\n67. Role of conciliator.\n68. Administrative assistance.\n69. Communication between conciliator and parties.\n70. Disclosure of information.\n71. Co-operation of parties with conciliator.\n72. Suggestions by parties for settlement of dispute.\n73. Settlement agreement.\n74. Status and effect of settlement agreement.\n75. Confidentiality.\n76. Termination of conciliation proceedings.\n77. Resort to arbitral or judicial proceedings.\n78. Costs.\n79. Deposits.\n80. Role of conciliator in other proceedin"
+    },
+    {
+      "number": "FIRST",
+      "content": "THE FIRST SCHEDULE."
+    },
+    {
+      "number": "SECOND",
+      "content": "THE SECOND SCHEDULE."
+    },
+    {
+      "number": "THIRD",
+      "content": "THE THIRD SCHEDULE."
+    },
+    {
+      "number": "FOURTH",
+      "content": "THE FOURTH SCHEDULE."
+    },
+    {
+      "number": "FIFTH",
+      "content": "THE FIFTH SCHEDULE."
+    },
+    {
+      "number": "SIXTH",
+      "content": "THE SIXTH SCHEDULE."
+    },
+    {
+      "number": "SEVENTH",
+      "content": "THE SEVENTH SCHEDULE.\nAPPENDIX.\n\n4\n\n\fTHE ARBITRATION AND CONCILIATION ACT, 1996\nACT No. 26 OF 1996\n[16th August, 1996.]\n\nAn Act to consolidate and amend the law relating to domestic arbitration, international\ncommercial arbitration and enforcement of foreign arbitral awards as also to define the law\nrelating to conciliation and for matters connected therewith or incidental thereto.\nPreamble.—WHEREAS the United Nations Commission on International Trade Law (UNCITRAL)\nhas adopted the UNCITRAL Model Law on International Commercial Arbitration in 1985;\nAND WHEREAS the General Assembly of the United Nations has recommended that all countries give\ndue consideration to the said Model Law, in view of the desirability of uniformity of the law of arbitral\nprocedures and the specific needs of international commercial arbitration practice;\nAND WHEREAS the UNCITRAL has adopted the UNCITRAL Conciliation Rules in 1980;\nAND WHEREAS the General Assembly of the United Nations has recommended the use of the said\nRules in cases where a dispute arises in the context of international commercial relations and the parties\nseek an amicable settlement of that dispute by recourse to conciliation;\nAND WHEREAS the said Model Law and Rules make significant contribution to the establishment of a\nunified legal framework for the fair and efficient settlement of disputes arising in international\ncommercial relations;\nAND WHEREAS it is expedient to make law respecting arbitration and conciliation, taking into account\nthe aforesaid Model Law and Rules;\nBE it enacted by Parliament in the Forty-seventh Year of the Republic of India as follows:—\nPRELIMINARY\n1. Short title, extent and commencement.—(1) This Act may be called the Arbitration and\nConciliation Act, 1996.\n(2) It extends to the whole of India:\nProvided that Parts I, III and IV shall extend to the State of Jammu and Kashmir only in so far as they\nrelate to international commercial arbitration or, as the case may be, international commercial\nconciliation.\nExplanation.—In this sub-section, the expression “international commercial conciliation” shall have\nthe same meaning as the expression “international commercial arbitration” in clause (f) of sub-section (1)\nof section 2, subject to the modification that for the word “arbitration” occurring therein, the word\n“conciliation” shall be substituted.\n(3) It shall come into force on such date 1 as the Central Government may, by notification in the\nOfficial Gazette, appoint.\nPART I\nARBITRATION\nCHAPTER I\nGeneral provisions\n2. Definitions.—(1) In this Part, unless the context otherwise requires,—\n(a) “arbitration” means any arbitration whether or not administered by permanent arbitral\ninstitution;\n(b) “arbitration agreement” means an agreement referred to in section 7;\n1. 22nd August, 1996, vide notification No. G.S.R 375(E), dated 22nd August, 1996, see Gazette of India, Extraordinary, Part II,\nsec. 3(i).\n\n5\n\n\f(c) “arbitral award” includes an interim award;\n(d) “arbitral tribunal” mea"
+    },
+    {
+      "number": "Fourth",
+      "content": "the Fourth Schedule.\nExplanation.—For the removal of doubts, it is hereby clarified that this sub-section shall not apply to\ninternational commercial arbitration and in arbitrations (other than international commercial arbitration)\nin case where parties have agreed for determination of fees as per the rules of an arbitral institution.]\n7\n\n[11A. Power of Central Government to amend"
+    },
+    {
+      "number": "Fourth",
+      "content": "Fourth Schedule.—(1) If the Central Government\nGovernment is satisfied that it is necessary or expedient so to do, it may, by notification in the Official\nGazette, amend"
+    },
+    {
+      "number": "Fourth",
+      "content": "the Fourth Schedule and thereupon"
+    },
+    {
+      "number": "Fourth",
+      "content": "the Fourth Schedule shall be deemed to have been\namended accordingly.\n(2) A copy of every notification proposed to be issued under sub-section (1), shall be laid in draft\nbefore each House of Parliament, while it is in session, for a total period of thirty days which may be\ncomprised in one session or in two or more successive sessions, and if, before the expiry of the session\nimmediately following the session or the successive sessions aforesaid, both Houses agree in\ndisapproving the issue of the notification or both Houses agree in making any modification in the\n1. Subs. by Act 3 of 2016, s. 6, for sub-section (8) (w.e.f. 23-10-2015).\n2. Subs. by s. 6, ibid., for “the Chief Justice of India of India or the person or institution designated by him” (w.e.f. 23-10-2015).\n3. Subs. by s. 6, ibid., for sub-section (10) (w.e.f. 23-10-2015).\n4. Subs. by s. 6, ibid., for “the Chief Justices of different High Courts or their designates, the Chief Justice or his designate to\nwhom the request has been first made” (w.e.f 23-10-2015).\n5. Subs. by s. 6, ibid., for sub-section (12) (w.e.f. 23-10-2015).\n6. Ins. by s. 6, ibid. (w.e.f. 23-10-2015).\n7. Ins. by s. 7, ibid. (w.e.f. 23-10-2015).\n\n10\n\n\fnotification, the notification shall not be issued or, as the case may be, shall be issued only in such\nmodified form as may be agreed upon by the both Houses of Parliament.]\n12. Grounds for challenge.—1[(1) When a person is approached in connection with his possible\nappointment as an arbitrator, he shall disclose in writing any circumstances,—\n(a) such as the existence either direct or indirect, of any past or present relationship with or\ninterest in any of the parties or in relation to the subject-matter in dispute, whether financial, business,\nprofessional or other kind, which is likely to give rise to justifiable doubts as to his independence or\nimpartiality; and\n(b) which are likely to affect his ability to devote sufficient time to the arbitration and in\nparticular his ability to complete the entire arbitration within a period of twelve months.\nExplanation 1.—The grounds stated in"
+    },
+    {
+      "number": "Fifth",
+      "content": "the Fifth Schedule shall guide in determining whether\ncircumstances exist which give rise to justifiable doubts as to the independence or impartiality of an\narbitrator.\nExplanation 2.—The disclosure shall be made by such person in the form specified in"
+    },
+    {
+      "number": "Sixth",
+      "content": "the Sixth\nSchedule.]\n(3) An arbitrator may be challenged only if—\n(a) circumstances exist that give rise to justifiable doubts as to his independence or impartiality,\nor\n(b) he does not possess the qualifications agreed to by the parties.\n(4) A party may challenge an arbitrator appointed by him, or in whose appointment he has\nparticipated, only for reasons of which he becomes aware after the appointment has been made.\n2\n\n[(5) Notwithstanding any prior agreement to the contrary, any person whose relationship, with the\nparties or counsel or the subject-matter of the dispute, falls under any of the categories specified in"
+    },
+    {
+      "number": "Seventh",
+      "content": "the\nSeventh Schedule shall be ineligible to be appointed as an arbitrator:\nProvided that parties may, subsequent to disputes having arisen between them, waive the applicability\nof this sub-section by an express agreement in writing.]\n13. Challenge procedure.—(1) Subject to sub-section (4), the parties are free to agree on a procedure\nfor challenging an arbitrator.\n(2) Failing any agreement referred to in sub-section (1), a party who intends to challenge an arbitrator\nshall, within fifteen days after becoming aware of the constitution of the arbitral tribunal or after\nbecoming aware of any circumstances referred to in sub-section (3) of section 12, send a written\nstatement of the reasons for the challenge to the arbitral tribunal.\n(3) Unless the arbitrator challenged under sub-section (2) withdraws from his office or the other party\nagrees to the challenge, the arbitral tribunal shall decide on the challenge.\n(4) If a challenge under any procedure agreed upon by the parties or under the procedure under\nsub-section (2) is not successful, the arbitral tribunal shall continue the arbitral proceedings and make an\narbitral award.\n(5) Where an arbitral award is made under sub-section (4), the party challenging the arbitrator may\nmake an application for setting aside such an arbitral award in accordance with section 34.\n(6) Where an arbitral award is set aside on an application made under sub-section (5), the Court may\ndecide as to whether the arbitrator who is challenged is entitled to any fees.\n14. Failure or impossibility to act.—(1) 3[The mandate of an arbitrator shall terminate and he shall\nbe substituted by another arbitrator, if]—\n(a) he becomes de jure or de facto unable to perform his functions or for other reasons fails to act\nwithout undue delay; and\n1. Subs. by Act 3 of 2016, s. 8, for sub-section (1) (w.e.f. 23-10-2015).\n2. Ins. by s. 8, ibid. (w.e.f. 23-10-2015).\n3. Subs. by s. 9, ibid., for “The mandate of an arbitrator shall terminate if” (w.e.f. 23-10-2015).\n\n11\n\n\f(b) he withdraws from his office or the parties agree to the termination of his mandate.\n(2) If a controversy remains concerning any of the grounds referred to in clause (a) of sub-section (1),\na party may, unless otherwise agreed by the parties, apply to the Court to decide on the termination of the\nmandate.\n(3) If, under this section or sub-section (3) of section 13, an arbitrator withdraws from his office or a\nparty agrees to the termination of the mandate of an arbitrator, it shall not imply acceptance of the validity\nof any ground referred to in this section or sub-section (3) of section 12.\n15. Termination of mandate and substitution of arbitrator.—(1) In addition to the circumstances\nreferred to in section 13 or section 14, the mandate of an arbitrator shall terminate—\n(a) where he withdraws from office for any reason; or\n(b) by or pursuant to agreement of the parties.\n(2) Where the mandate of an arbitrator terminates, a substitute arbitrator shall be appointed according"
+    },
+    {
+      "number": "First",
+      "content": "the First Schedule applies, and\n(b) in one of such territories as the Central Government, being satisfied that reciprocal provisions\nhave been made may, by notification in the Official Gazette, declare to be territories to which the said\nConvention applies.\n45. Power of judicial authority to refer parties to arbitration.—Notwithstanding anything\ncontained in Part I or in the Code of Civil Procedure, 1908 (5 of 1908), a judicial authority, when seized\nof an action in a matter in respect of which the parties have made an agreement referred to in section 44,\nshall, at the request of one of the parties or any person claiming through or under him, refer the parties to\narbitration, unless it finds that the said agreement is null and void, inoperative or incapable of being\nperformed.\n46. When foreign award binding.—Any foreign award which would be enforceable under this\nChapter shall be treated as binding for all purposes on the persons as between whom it was made, and\nmay accordingly be relied on by any of those persons by way of defence, set off or otherwise in any legal\nproceedings in India and any references in this Chapter to enforcing a foreign award shall be construed as\nincluding references to relying on an award.\n47. Evidence.—(1) The party applying for the enforcement of a foreign award shall, at the time of the\napplication, produce before the court—\n(a) the original award or a copy thereof, duly authenticated in the manner required by the law of\nthe country in which it was made;\n(b) the original agreement for arbitration or a duly certified copy thereof; and\n(c) such evidence as may be necessary to prove that the award is a foreign award.\n(2) If the award or agreement to be produced under sub-section (1) is in a foreign language, the party\nseeking to enforce the award shall produce a translation into English certified as correct by a diplomatic\n23\n\n\for consular agent of the country to which that party belongs or certified as correct in such other manner as\nmay be sufficient according to the law in force in India.\n[Explanation.—In this section and in the sections following in this Chapter, “Court” means the High\nCourt having original jurisdiction to decide the questions forming the subject-matter of the arbitral award\nif the same had been the subject-matter of a suit on its original civil jurisdiction and in other cases, in the\nHigh Court having jurisdiction to hear appeals from decrees of courts subordinate to such High Court.]\n1\n\n48. Conditions for enforcement of foreign awards.—(1) Enforcement of a foreign award may be\nrefused, at the request of the party against whom it is invoked, only if that party furnishes to the court\nproof that—\n(a) the parties to the agreement referred to in section 44 were, under the law applicable to them,\nunder some incapacity, or the said agreement is not valid under the law to which the parties have\nsubjected it or, failing any indication thereon, under the law of the country where the award was\nmade; or\n(b) th"
+    },
+    {
+      "number": "Second",
+      "content": "the Second\nSchedule applies, and\n(b) between persons of whom one is subject to the jurisdiction of some one of such Powers as the\nCentral Government, being satisfied that reciprocal provisions have been made, may, by notification\nin the Official Gazette, declare to be parties to the Convention set forth in"
+    },
+    {
+      "number": "Third",
+      "content": "the Third Schedule, and of\nwhom the other is subject to the jurisdiction of some other of the Powers aforesaid, and\n(c) in one of such territories as the Central Government, being satisfied that reciprocal provisions\nhave been made, may, by like notification, declare to be territories to which the said Convention\napplies,\nand for the purposes of this Chapter an award shall not be deemed to be final if any proceedings for the\npurpose of contesting the validity of the award are pending in the country in which it was made.\n54. Power of judicial authority to refer parties to arbitration.—Notwithstanding anything\ncontained in Part I or in the Code of Civil Procedure, 1908 (5 of 1908), a judicial authority, on being\nseized of a dispute regarding a contract made between persons to whom section 53 applies and including\nan arbitration agreement, whether referring to present or future differences, which is valid under that\nsection and capable of being carried into effect, shall refer the parties on the application of either of them\nor any person claiming through or under him to the decision of the arbitrators and such reference shall not\nprejudice the competence of the judicial authority in case the agreement or the arbitration cannot proceed\nor becomes inoperative.\n55. Foreign awards when binding.—Any foreign award which would be enforceable under this\nChapter shall be treated as binding for all purposes on the persons as between whom it was made, and\nmay accordingly be relied on by any of those persons by way of defence, set off or otherwise in any legal\nproceedings in India and any references in this Chapter to enforcing a foreign award shall be construed as\nincluding references to relying on an award.\n56. Evidence.—(1) The party applying for the enforcement of a foreign award shall, at the time of\napplication produce before the Court—\n(a) the original award or a copy thereof duly authenticated in the manner required by the law of\nthe country in which it was made;\n(b) evidence proving that the award has become final; and\n(c) such evidence as may be necessary to prove that the conditions mentioned in\nclauses (a) and (c) of sub-section (1) of section 57 are satisfied.\n25\n\n\f(2) Where any document requiring to be produced under sub-section (1) is in a foreign language, the\nparty seeking to enforce the award shall produce a translation into English certified as correct by a\ndiplomatic or consular agent of the country to which that party belongs or certified as correct in such\nother manner as may be sufficient according to the law in force in India.\n[Explanation.—In this section and in the sections following in this Chapter, “Court” means the High\nCourt having original jurisdiction to decide the questions forming the subject-matter of the arbitral award\nif the same had been the subject-matter of a suit on its original civil jurisdiction and in other cases, in the\nHigh Court having jurisdiction to hear appeals from decrees of courts subordinate to such High Co"
+    },
+    {
+      "number": "FIRST",
+      "content": "THE FIRST SCHEDULE\n(See section 44)\nCONVENTION ON THE RECOGNITION AND ENFORCEMENT OF FOREIGN ARBITRAL AWARDS\nARTICLE 1\n1. This Convention shall apply to the recognition and enforcement of arbitral awards made in the\nterritory of a State other than the State where the recognition and enforcement of such awards are sought,\nand arising out of differences between persons, whether physical or legal. It shall also apply to arbitral\nawards not considered as domestic awards in the State where their recognition and enforcement are\nsought.\n2. The term “arbitral awards” shall include not only awards made by arbitrators appointed for each\ncase but also those made by permanent arbitral bodies to which the parties have submitted.\n3. When signing, ratifying or acceding to this Convention, or notifying extension under article X\nhereof, any State may on the basis of reciprocity declare that it will apply the Convention to the\nrecognition and enforcement of awards made only in the territory of another Contracting State. It may\nalso declare that it will apply the Convention only to differences arising out of legal relationships,\nwhether contractual or not, which are considered as commercial under the national law of the State\nmaking such declaration.\nARTICLE II\n1. Each Contracting State shall recognise an agreement in writing under which the parties undertake\nto submit to arbitration all or any differences which have arisen or which may arise between them in\nrespect of defined legal relationship, whether contractual or not, concerning a subject-matter capable of\nsettlement by arbitration.\n2. The term “agreement in writing” shall include an arbitral clause in a contract or an arbitration\nagreement, signed by the parties or contained in an exchange of letters or telegrams.\n3. The court of a Contracting State, when seized of an action in a matter in respect of which the\nparties have made an agreement within the meaning of this article, shall, at the request of one of the\nparties, refer the parties to arbitration, unless in finds that the said agreement is null and void, inoperative\nof incapable of being performed.\nARTICLE III\nEach Contracting State shall recognize arbitral awards as binding and enforce them in accordance\nwith the rules of procedure of the territory where the award is relied upon, under the conditions laid down\nin the following articles. There shall not be imposed substantially more onerous conditions or higher fees\nor charges on the recognition or enforcement of arbitral awards to which this Convention applies than are\nimposed on the recognition or enforcement of domestic arbitral awards.\nARTICLE IV\n1. To obtain the recognition and enforcement mentioned in the preceding article, the party applying\nfor recognition and enforcement shall, at the time of the application, supply—\n(a) the duly authenticated original award or a duly certified copy thereof;\n(b) the original agreement referred to in article II or a duly certified copy thereof.\n2. If the said a"
+    },
+    {
+      "number": "SECOND",
+      "content": "THE SECOND SCHEDULE\n(See section 53)\nPROTOCOL ON ARBITRATION CLAUSES\nThe undersigned, being duly authorised, declare that they accept, on behalf of the countries which\nthey represent, the following provisions:—\n1. Each of the Contracting States recognises the validity of an agreement whether relating to existing\nor future differences between parties subject respectively to the jurisdiction of different Contracting States\nby which the parties to a contract agree to submit to arbitration all or any differences that may arise in\nconnection with such contract relating to commercial matters or to any other matter capable of settlement\nby arbitration, whether or not the arbitration is to take place in a country to whose jurisdiction none of the\nparties is subject.\nEach Contracting State reserves the right to limit the obligation mentioned above to contracts which\nare considered as commercial under its national law. Any Contracting State which avails itself of this\nright will notify the Secretary-General of the League of Nations in order that the other Contracting States\nmay be so informed.\n2. The arbitral procedure, including the constitution of the Arbitral Tribunal, shall be governed by the\nwill of the parties and by the law of the country in whose territory the arbitration takes place.\nThe Contracting States agree to facilitate all steps in the procedure which require to be taken in their\nown territories, in accordance with the provisions of their law governing arbitral procedure applicable to\nexisting differences.\n3. Each Contracting State undertakes to ensure the execution by its authorities and in accordance with\nthe provisions of its national laws of arbitral awards made in its own territory under the preceding articles.\n4. The Tribunals of the Contracting Parties, on being seized of a dispute regarding a contract made\nbetween persons to whom Article I applies and including an Arbitration Agreement whether referring to\npresent or future differences which is valid in virtue of the said article and capable of being carried into\neffect, shall refer the parties on the application of either of them to the decision of the Arbitrators.\nSuch reference shall not prejudice the competence of the judicial tribunals in case the agreement or\nthe arbitration cannot proceed or becomes inoperative.\n5. The present Protocol, which shall remain open for signature by all States, shall be ratified. The\nratification shall be deposited as soon as possible with the Secretary-General of the League of Nations,\nwho shall notify such deposit to all the Signatory States.\n6. The present Protocol will come into force as soon as two ratifications have been deposited.\nThereafter it will take effect, in the case of each Contracting State, one month after the notification by the\nSecretary-General of the deposit of its ratification.\n7. The present Protocol may be denounced by any Contracting State on giving one year's notice.\nDenunciation shall be effected by a notification address"
+    },
+    {
+      "number": "THIRD",
+      "content": "THE THIRD SCHEDULE\n(See section 53)\nCONVENTION ON THE EXECUTION OF FOREIGN ARBITRAL AWARDS\nARTICLE 1.—(1) In the territories of any High Contracting Party to which the present Convention\napplies, an arbitral award made in pursuance of an agreement whether relating to existing or future\ndifferences (hereinafter called “a submission to arbitration”) covered by the Protocol on Arbitration\nClauses opened at Geneva on September 24th, 1923, shall be recognised as binding and shall be enforced\nin accordance with the rules of the procedure of the territory where the award is relied upon, provided that\nthe said award has been made in a territory of one of the High Contracting Parties to which the present\nConvention applies and between persons who are subject to the jurisdiction of one of the High\nContracting Parties.\n(2) To obtain such recognition or enforcement, it shall, further, be necessary:—\n(a) that the award has been made in pursuance of a submission to arbitration which is valid under\nthe law applicable thereto;\n(b) that the subject-matter of the award is capable of settlement by arbitration under the law of the\ncountry in which the award is sought to be relied upon;\n(c) that the award has been made by the Arbitral Tribunal provided for in the submission to\narbitration or constituted in the manner agreed upon by the parties and in conformity with the law\ngoverning the arbitration procedure;\n(d) that the award has become final in the country in which it has been made, in the sense that it\nwill not be considered as such if it is open to opposition, appeal or pourvoi en cassation\n(in the countries where such forms of procedure exist) or if it is proved that any proceedings for the\npurpose of contesting the validity of the award are pending;\n(e) that the recognition or enforcement of the award is not contrary to the public policy or to the\nprinciples of the law of the country in which it is sought to be relied upon.\nARTICLE 2.—Even if the conditions laid down in Article 1 hereof are fulfilled, recognition and\nenforcement of the award shall be refused if the Court is satisfied:—\n(a) that the award has been annulled in the country in which it was made;\n(b) that the party against whom it is sought to use the award was not given notice of the\narbitration proceedings in sufficient time to enable him to present his case; or that, being under a legal\nincapacity, he was not properly represented;\n(c) that the award does not deal with the differences contemplated by or falling within the terms\nof the submission to arbitration or that it contains decisions on matters beyond the scope of the\nsubmission to arbitration.\nIf the award has not covered all the questions submitted to the arbitral tribunal, the competent\nauthority of the country where recognition or enforcement of the award is sought can, if it thinks fit,\npostpone such recognition or enforcement or grant it subject to such guarantee as that authority may\ndecide.\nARTICLE 3.—If the party against whom the "
+    },
+    {
+      "number": "FOURTH",
+      "content": "THE FOURTH SCHEDULE\n[See section 11(14)]\n\nSum in dispute\n\nModel fee\n\nUp to Rs. 5,00,000\n\nRs. 45,000\n\nAbove Rs. 5,00,000 and up to Rs. 20,00,000\n\nRs. 45,000 plus 3.5 per cent. of the claim amount\nover and above Rs. 5,00,000\n\nAbove Rs. 20,00,000 and up to Rs. 1,00,00,000\n\nRs. 97,500 plus 3 per cent. of the claim amount\nover and above Rs. 20,00,000\n\nAbove Rs. 1,00,00,000 and up to\nRs. 10,00,00,000\n\nRs. 3,37,500 plus 1 per cent. of the claim amount\nover and above Rs. 1,00,00,000\n\nAbove Rs. 10,00,00,000 and up to\nRs. 20,00,00,000\n\nRs. 12,37,500 plus 0.75 per cent. of the claim\namount over and above Rs. 1,00,00,000\n\nAbove Rs. 20,00,00,000\n\nRs. 19,87,500 plus 0.5 per cent. of the claim\namount over and above Rs. 20,00,00,000 with a\nceiling of Rs. 30,00,000\n\nNote:—In the event, the arbitral tribunal is a sole arbitrator, he shall be entitled to an additional amount of\ntwenty-five per cent. on the fee payable as per the table set out above.\n\n1. Ins. by Act 3 of 2016, s. 25 (w.e.f.23-10-2015).\n\n40"
+    },
+    {
+      "number": "FIFTH",
+      "content": "THE FIFTH SCHEDULE\n[See section 12(1) (b)]\nThe following grounds give rise to justifiable doubts as to the independence or impartiality of\narbitrators:\nArbitrator’s relationship with the parties or counsel\n1. The arbitrator is an employee, consultant, advisor or has any other past or present business\nrelationship with a party.\n2. The arbitrator currently represents or advises one of the parties or an affiliate of one of the parties.\n3. The arbitrator currently represents the lawyer or law firm acting as counsel for one of the parties.\n4. The arbitrator is a lawyer in the same law firm which is representing one of the parties.\n5. The arbitrator is a manager, director or part of the management, or has a similar controlling\ninfluence, in an affiliate of one of the parties if the affiliate is directly involved in the matters in dispute in\nthe arbitration.\n6. The arbitrator’s law firm had a previous but terminated involvement in the case without the\narbitrator being involved himself or herself.\n7. The arbitrator’s law firm currently has a significant commercial relationship with one of the parties\nor an affiliate of one of the parties.\n8. The arbitrator regularly advises the appointing party or an affiliate of the appointing party even\nthough neither the arbitrator nor his or her firm derives a significant financial income therefrom.\n9. The arbitrator has a close family relationship with one of the parties and in the case of companies\nwith the persons in the management and controlling the company.\n10. A close family member of the arbitrator has a significant financial interest in one of the parties or\nan affiliate of one of the parties.\n11. The arbitrator is a legal representative of an entity that is a party in the arbitration.\n12. The arbitrator is a manager, director or part of the management, or has a similar controlling\ninfluence in one of the parties.\n13. The arbitrator has a significant financial interest in one of the parties or the outcome of the case.\n14. The arbitrator regularly advises the appointing party or an affiliate of the appointing party, and the\narbitrator or his or her firm derives a significant financial income therefrom.\nRelationship of the arbitrator to the dispute\n15. The arbitrator has given legal advice or provided an expert opinion on the dispute to a party or an\naffiliate of one of the parties.\n16. The arbitrator has previous involvement in the case.\nArbitrator’s direct or indirect interest in the dispute\n17. The arbitrator holds shares, either directly or indirectly, in one of the parties or an affiliate of one\nof the parties that is privately held.\n18. A close family member of the arbitrator has a significant financial interest in the outcome of the\ndispute.\n19. The arbitrator or a close family member of the arbitrator has a close relationship with a third party\nwho may be liable to recourse on the part of the unsuccessful party in the dispute.\n\n41\n\n\fPrevious services for one of the parties or other involvement in the c"
+    },
+    {
+      "number": "SIXTH",
+      "content": "THE SIXTH SCHEDULE\n[See section 12(1) (b)]\nNAME:\nCONTACT DETAILS:\nPRIOR EXPERIENCE (INCLUDING EXPERIENCE WITH ARBITRATIONS):\nNUMBER OF ONGOING ARBITRATIONS:\nCIRCUMSTANCES DISCLOSING ANY PAST OR PRESENT RELATIONSHIP WITH OR\nINTEREST IN ANY OF THE PARTIES OR IN RELATION TO THE SUBJECT-MATTER IN\nDISPUTE, WHETHER FINANCIAL, BUSINESS, PROFESSIONAL OR OTHER KIND, WHICH IS\nLIKELY TO GIVE RISE TO JUSTIFIABLE DOUBTS AS TO YOUR INDEPENDENCE OR\nIMPARTIALITY (LIST OUT):\nCIRCUMSTANCES WHICH ARE LIKELY TO AFFECT YOUR ABILITY TO DEVOTE\nSUFFICIENT TIME TO THE ARBITRATION AND IN PARTICULAR YOUR ABILITY TO FINISH\nTHE ENTIRE ARBITRATION WITHIN TWELVE MONTHS (LIST OUT):\n\n43"
+    },
+    {
+      "number": "SEVENTH",
+      "content": "THE SEVENTH SCHEDULE\n[See section 12(5)]\nArbitrator’s relationship with the parties or counsel\n1. The arbitrator is an employee, consultant, advisor or has any other past or present business\nrelationship with a party.\n2. The arbitrator currently represents or advises one of the parties or an affiliate of one of the parties.\n3. The arbitrator currently represents the lawyer or law firm acting as counsel for one of the parties.\n4. The arbitrator is a lawyer in the same law firm which is representing one of the parties.\n5. The arbitrator is a manager, director or part of the management, or has a similar controlling\ninfluence, in an affiliate of one of the parties if the affiliate is directly involved in the matters in dispute in\nthe arbitration.\n6. The arbitrator’s law firm had a previous but terminated involvement in the case without the\narbitrator being involved himself or herself.\n7. The arbitrator’s law firm currently has a significant commercial relationship with one of the parties\nor an affiliate of one of the parties.\n8. The arbitrator regularly advises the appointing party or an affiliate of the appointing party even\nthough neither the arbitrator nor his or her firm derives a significant financial income therefrom.\n9. The arbitrator has a close family relationship with one of the parties and in the case of companies\nwith the persons in the management and controlling the company.\n10. A close family member of the arbitrator has a significant financial interest in one of the parties or\nan affiliate of one of the parties.\n11. The arbitrator is a legal representative of an entity that is a party in the arbitration.\n12. The arbitrator is a manager, director or part of the management, or has a similar controlling\ninfluence in one of the parties.\n13. The arbitrator has a significant financial interest in one of the parties or the outcome of the case.\n14. The arbitrator regularly advises the appointing party or an affiliate of the appointing party, and the\narbitrator or his or her firm derives a significant financial income therefrom.\nRelationship of the arbitrator to the dispute\n15. The arbitrator has given legal advice or provided an expert opinion on the dispute to a party or an\naffiliate of one of the parties.\n16. The arbitrator has previous involvement in the case.\nArbitrator’s direct or indirect interest in the dispute\n17. The arbitrator holds shares, either directly or indirectly, in one of the parties or an affiliate of one\nof the parties that is privately held.\n18. A close family member of the arbitrator has a significant financial interest in the outcome of the\ndispute.\n19. The arbitrator or a close family member of the arbitrator has a close relationship with a third party\nwho may be liable to recourse on the part of the unsuccessful party in the dispute.\nExplanation 1.—The term “close family member” refers to a spouse, sibling, child, parent or life\npartner.\nExplanation 2.—The term “affiliate” encompasses all companies in one group of com"
+    },
+    {
+      "number": "Fourth",
+      "content": "the Fourth Schedule.\nExplanation.—For the removal of doubts, it is hereby clarified that this\nsub-section shall not apply to international commercial arbitration and in\narbitrations (other than international commercial arbitration) in case where parties\nhave agreed for determination of fees as per the rules of an arbitral institution.’’.\nInsertion of\nnew section\n11A.\n\n7. After section 11 of the principal Act, the following new section shall be inserted,\nnamely:—\n\nPower of\nCentral\nGovernment\nto amend"
+    },
+    {
+      "number": "Fourth",
+      "content": "Fourth\nSchedule.\n\n“11A. (1) If the Central Government is satisfied that it is necessary or expedient\nso to do, it may, by notification in the Official Gazette, amend"
+    },
+    {
+      "number": "Fourth",
+      "content": "the Fourth Schedule and\nthereupon"
+    },
+    {
+      "number": "Fourth",
+      "content": "the Fourth Schedule shall be deemed to have been amended accordingly.\n\nAmendment\nof section 12.\n\n(2) A copy of every notification proposed to be issued under sub-section (1),\nshall be laid in draft before each House of Parliament, while it is in session, for a total\nperiod of thirty days which may be comprised in one session or in two or more\nsuccessive sessions, and if, before the expiry of the session immediately following\nthe session or the successive sessions aforesaid, both Houses agree in disapproving\nthe issue of the notification or both Houses agree in making any modification in the\nnotification, the notification shall not be issued or, as the case may be, shall be issued\nonly in such modified form as may be agreed upon by the both Houses of Parliament.’’.\n8. In section 12 of the principal Act,—\n(i) for sub-section (1), the following sub-section shall be substituted, namely:—\n“(1) When a person is approached in connection with his possible\nappointment as an arbitrator, he shall disclose in writing any circumstances,—\n(a) such as the existence either direct or indirect, of any past or\npresent relationship with or interest in any of the parties or in relation to\nthe subject-matter in dispute, whether financial, business, professional\nor other kind, which is likely to give rise to justifiable doubts as to his\nindependence or impartiality; and\n(b) which are likely to affect his ability to devote sufficient time to\nthe arbitration and in particular his ability to complete the entire arbitration\nwithin a period of twelve months.\n\n\fSEC. 1]\n\nTHE GAZETTE OF INDIA EXTRAORDINARY\n\n5\n\nExplanation 1.—The grounds stated in"
+    },
+    {
+      "number": "Fifth",
+      "content": "the Fifth Schedule shall guide in\ndetermining whether circumstances exist which give rise to justifiable doubts\nas to the independence or impartiality of an arbitrator.\nExplanation 2.—The disclosure shall be made by such person in the\nform specified in"
+    },
+    {
+      "number": "Sixth",
+      "content": "the Sixth Schedule.”;\n(ii) after sub-section (4), the following sub-section shall be inserted, namely:—\n“(5) Notwithstanding any prior agreement to the contrary, any person\nwhose relationship, with the parties or counsel or the subject-matter of the\ndispute, falls under any of the categories specified in"
+    },
+    {
+      "number": "Seventh",
+      "content": "the Seventh Schedule\nshall be ineligible to be appointed as an arbitrator:\nProvided that parties may, subsequent to disputes having arisen between\nthem, waive the applicability of this sub-section by an express agreement in\nwriting.\n9. In section 14 of the principal Act, in sub-section (1), in the opening portion, for the\nwords “The mandate of an arbitrator shall terminate if ”, the words “The mandate of an\narbitrator shall terminate and he shall be substituted by another arbitrator, if ” shall be\nsubstituted.\n\nAmendment\nof section 14.\n\n10. For section 17 of the principal Act, the following section shall be substituted,\nnamely:—\n\nSubstitution\nof new\nsection for\nsection 17.\n\n“17. (1) A party may, during the arbitral proceedings or at any time after the\nmaking of the arbitral award but before it is enforced in accordance with section 36,\napply to the arbitral tribunal—\n(i) for the appointment of a guardian for a minor or person of unsound\nmind for the purposes of arbitral proceedings; or\n(ii) for an interim measure of protection in respect of any of the following\nmatters, namely:—\n(a) the preservation, interim custody or sale of any goods which\nare the subject-matter of the arbitration agreement;\n(b) securing the amount in dispute in the arbitration;\n(c) the detention, preservation or inspection of any property or\nthing which is the subject-matter of the dispute in arbitration, or as to\nwhich any question may arise therein and authorising for any of the\naforesaid purposes any person to enter upon any land or building in the\npossession of any party, or authorising any samples to be taken, or any\nobservation to be made, or experiment to be tried, which may be necessary\nor expedient for the purpose of obtaining full information or evidence;\n(d) interim injunction or the appointment of a receiver;\n(e) such other interim measure of protection as may appear to the\narbitral tribunal to be just and convenient,\nand the arbitral tribunal shall have the same power for making orders, as the\ncourt has for the purpose of, and in relation to, any proceedings before it.\n\nInterim\nmeasures\nordered by\narbitral\ntribunal.\n\n\f6\n\nTHE GAZETTE OF INDIA EXTRAORDINARY\n\n[PART II—\n\n(2) Subject to any orders passed in an appeal under section 37, any order\nissued by the arbitral tribunal under this section shall be deemed to be an order of the\nCourt for all purposes and shall be enforceable under the Code of Civil Procedure,\n1908, in the same manner as if it were an order of the Court.”.\nAmendment\nof section 23.\n\n11. In section 23 of the principal Act, after sub-section (2), the following sub-section\nshall be inserted, namely:—\n“(2A) The respondent, in support of his case, may also submit a counterclaim or\nplead a set-off, which shall be adjudicated upon by the arbitral tribunal, if such\ncounterclaim or set-off falls within the scope of the arbitration agreement.”.\n\nAmendment\nof section 24.\n\n12. In section 24 of the principal Act, after the proviso to sub-section (1), the followi"
+    },
+    {
+      "number": "Third",
+      "content": "the Third Schedule to the principal Act, the following new Schedules shall\nbe inserted, namely:—\n\n‘"
+    },
+    {
+      "number": "FOURTH",
+      "content": "THE FOURTH SCHEDULE\n[See section 11 (14)]\nSum in dispute\n\nModel fee\n\nUp to Rs. 5,00,000\n\nRs. 45,000\n\nAbove Rs. 5,00,000 and up to\nRs. 20,00,000\n\nRs. 45,000 plus 3.5 per cent. of the claim amount\nover and above Rs. 5,00,000\n\nAbove Rs. 20,00,000 and up to\nRs. 1,00,00,000\n\nRs. 97,500 plus 3 per cent. of the claim amount\nover and above Rs. 20,00,000\n\nAbove Rs. 1,00,00,000 and\nup to Rs. 10,00,00,000\n\nRs. 3,37,500 plus 1 per cent. of the claim amount\nover and above Rs. 1,00,00,000\n\nAbove Rs. 10,00,00,000 and up to\nRs. 20,00,00,000\n\nRs. 12,37,500 plus 0.75 per cent. of the claim\namount over and above Rs. 1,00,00,000\n\nAbove Rs. 20,00,00,000\n\nRs. 19,87,500 plus 0. 5 per cent. of the claim\namount over and above Rs. 20,00,00,000 with\na ceiling of Rs. 30,00,000\n\nNote:— In the event, the arbitral tribunal is a sole arbitrator, he shall be entitled to an\nadditional amount of twenty-five per cent. on the fee payable as per the table set out\nabove."
+    },
+    {
+      "number": "FIFTH",
+      "content": "THE FIFTH SCHEDULE\n[See section 12 (1)(b)]\nThe following grounds give rise to justifiable doubts as to the independence or\nimpartiality of arbitrators:\nArbitrator’s relationship with the parties or counsel\n1. The arbitrator is an employee, consultant, advisor or has any other past or present\nbusiness relationship with a party.\n2. The arbitrator currently represents or advises one of the parties or an affiliate of\none of the parties.\n3. The arbitrator currently represents the lawyer or law firm acting as counsel for one\nof the parties.\n4. The arbitrator is a lawyer in the same law firm which is representing one of the\nparties.\n5. The arbitrator is a manager, director or part of the management, or has a similar\ncontrolling influence, in an affiliate of one of the parties if the affiliate is directly involved in\nthe matters in dispute in the arbitration.\n6. The arbitrator’s law firm had a previous but terminated involvement in the case\nwithout the arbitrator being involved himself or herself.\n\nInsertion of\nnew"
+    },
+    {
+      "number": "Fourth",
+      "content": "Fourth\nSchedule,"
+    },
+    {
+      "number": "Fifth",
+      "content": "Fifth\nSchedule,"
+    },
+    {
+      "number": "Sixth",
+      "content": "Sixth Schedule\nand"
+    },
+    {
+      "number": "Seventh",
+      "content": "Seventh\nSchedule.\n\n\f12\n\nTHE GAZETTE OF INDIA EXTRAORDINARY\n\n[PART II—\n\n7. The arbitrator’s law firm currently has a significant commercial relationship with\none of the parties or an affiliate of one of the parties.\n8. The arbitrator regularly advises the appointing party or an affiliate of the appointing\nparty even though neither the arbitrator nor his or her firm derives a significant financial\nincome therefrom.\n9. The arbitrator has a close family relationship with one of the parties and in the case\nof companies with the persons in the management and controlling the company.\n10. A close family member of the arbitrator has a significant financial interest in one of\nthe parties or an affiliate of one of the parties.\n11.The arbitrator is a legal representative of an entity that is a party in the arbitration.\n12. The arbitrator is a manager, director or part of the management, or has a similar\ncontrolling influence in one of the parties.\n13. The arbitrator has a significant financial interest in one of the parties or the\noutcome of the case.\n14. The arbitrator regularly advises the appointing party or an affiliate of the appointing\nparty, and the arbitrator or his or her firm derives a significant financial income therefrom.\nRelationship of the arbitrator to the dispute\n15. The arbitrator has given legal advice or provided an expert opinion on the dispute\nto a party or an affiliate of one of the parties.\n16. The arbitrator has previous involvement in the case.\nArbitrator’s direct or indirect interest in the dispute\n17. The arbitrator holds shares, either directly or indirectly, in one of the parties or an\naffiliate of one of the parties that is privately held.\n18. A close family member of the arbitrator has a significant financial interest in the\noutcome of the dispute.\n19. The arbitrator or a close family member of the arbitrator has a close relationship\nwith a third party who may be liable to recourse on the part of the unsuccessful party in the\ndispute.\nPrevious services for one of the parties or other involvement in the case\n20. The arbitrator has within the past three years served as counsel for one of the\nparties or an affiliate of one of the parties or has previously advised or been consulted by\nthe party or an affiliate of the party making the appointment in an unrelated matter, but the\narbitrator and the party or the affiliate of the party have no ongoing relationship.\n21. The arbitrator has within the past three years served as counsel against one of the\nparties or an affiliate of one of the parties in an unrelated matter.\n22. The arbitrator has within the past three years been appointed as arbitrator on two\nor more occasions by one of the parties or an affiliate of one of the parties.\n23. The arbitrator’s law firm has within the past three years acted for one of the parties\nor an affiliate of one of the parties in an unrelated matter without the involvement of the\narbitrator.\n24. The arbitrator currently serves, or has served within the "
+    },
+    {
+      "number": "SIXTH",
+      "content": "THE SIXTH SCHEDULE\n[See section 12 (1)(b)]\nNAME:\nCONTACT DETAILS:\nPRIOR EXPERIENCE (INCLUDING EXPERIENCE WITH ARBITRATIONS):\nNUMBER OF ONGOING ARBITRATIONS:\nCIRCUMSTANCES DISCLOSING ANY PAST OR PRESENT RELATIONSHIP WITH OR\nINTEREST IN ANY OF THE PARTIES OR IN RELATION TO THE SUBJECT-MATTER IN\nDISPUTE, WHETHER FINANCIAL, BUSINESS, PROFESSIONAL OR OTHER KIND,\nWHICH IS LIKELY TO GIVE RISE TO JUSTIFIABLE DOUBTS AS TO YOUR\nINDEPENDENCE OR IMPARTIALITY (LIST OUT):\n\n\f14\n\nTHE GAZETTE OF INDIA EXTRAORDINARY\n\n[PART II—\n\nCIRCUMSTANCES WHICH ARE LIKELY TO AFFECT YOUR ABILITY TO\nDEVOTE SUFFICIENT TIME TO THE ARBITRATION AND IN PARTICULAR\nYOUR ABILITY TO FINISH THE ENTIRE ARBITRATION WITHIN TWELVE\nMONTHS (LIST OUT):"
+    },
+    {
+      "number": "SEVENTH",
+      "content": "THE SEVENTH SCHEDULE\n[See section 12 (5)]\nArbitrator’s relationship with the parties or counsel\n1. The arbitrator is an employee, consultant, advisor or has any other past or present\nbusiness relationship with a party.\n2. The arbitrator currently represents or advises one of the parties or an affiliate of\none of the parties.\n3. The arbitrator currently represents the lawyer or law firm acting as counsel for one\nof the parties.\n4. The arbitrator is a lawyer in the same law firm which is representing one of the\nparties.\n5. The arbitrator is a manager, director or part of the management, or has a similar\ncontrolling influence, in an affiliate of one of the parties if the affiliate is directly involved in\nthe matters in dispute in the arbitration.\n6. The arbitrator’s law firm had a previous but terminated involvement in the case\nwithout the arbitrator being involved himself or herself.\n7. The arbitrator’s law firm currently has a significant commercial relationship with\none of the parties or an affiliate of one of the parties.\n8. The arbitrator regularly advises the appointing party or an affiliate of the appointing\nparty even though neither the arbitrator nor his or her firm derives a significant financial\nincome therefrom.\n9. The arbitrator has a close family relationship with one of the parties and in the case\nof companies with the persons in the management and controlling the company.\n10. A close family member of the arbitrator has a significant financial interest in one of\nthe parties or an affiliate of one of the parties.\n11. The arbitrator is a legal representative of an entity that is a party in the arbitration.\n12. The arbitrator is a manager, director or part of the management, or has a similar\ncontrolling influence in one of the parties.\n13. The arbitrator has a significant financial interest in one of the parties or the\noutcome of the case.\n14. The arbitrator regularly advises the appointing party or an affiliate of the appointing\nparty, and the arbitrator or his or her firm derives a significant financial income therefrom.\nRelationship of the arbitrator to the dispute\n15. The arbitrator has given legal advice or provided an expert opinion on the dispute\nto a party or an affiliate of one of the parties.\n16. The arbitrator has previous involvement in the case.\nArbitrator’s direct or indirect interest in the dispute\n17. The arbitrator holds shares, either directly or indirectly, in one of the parties or an\naffiliate of one of the parties that is privately held.\n18. A close family member of the arbitrator has a significant financial interest in the\noutcome of the dispute.\n\n\fSEC. 1]\n\nTHE GAZETTE OF INDIA EXTRAORDINARY\n\n15\n\n19. The arbitrator or a close family member of the arbitrator has a close relationship\nwith a third party who may be liable to recourse on the part of the unsuccessful party in the\ndispute.\nExplanation 1.—The term “close family member” refers to a spouse, sibling, child,\nparent or life partner.\nExplanation 2.—The term “affi"
+    }
+  ],
+  "metadata": {
+    "source_file": "tmpd88vpvvb.pdf",
+    "text_length": 180255
+  }
+}

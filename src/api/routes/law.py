@@ -126,7 +126,7 @@ async def query_legal_document(
             raise HTTPException(status_code=400, detail="Question cannot be empty")
 
         start_time = time.time()
-        response = await legal_query_service.process_legal_query(
+        raw_response = await legal_query_service.process_legal_query(
             request=request,
             user_id=x_user_id
         )
@@ -134,7 +134,53 @@ async def query_legal_document(
         processing_time = int((time.time() - start_time) * 1000)
         logger.info(f"Legal query processed in {processing_time}ms: {request.question[:50]}...")
 
-        return response
+        # Transform to LawQueryResponse format
+        from models.law_query_models import LegalSourceReference, LegalDocumentType, AnswerStyle
+
+        # Transform sources to LegalSourceReference objects
+        transformed_sources = []
+        for source in raw_response.get("sources", []):
+            # Try to determine document type from chunk/source metadata if available
+            doc_type = LegalDocumentType.BARE_ACTS
+            if "constitution" in raw_response.get("documents_searched", []):
+                doc_type = LegalDocumentType.CONSTITUTION
+            elif "bns" in raw_response.get("documents_searched", []):
+                doc_type = LegalDocumentType.BNS
+
+            transformed_sources.append(LegalSourceReference(
+                document_type=doc_type,
+                article_number=source.get("article"),
+                title=source.get("article", "Legal Provision"),
+                part_chapter=None,
+                text_excerpt=source.get("text", ""),
+                relevance_score=source.get("relevance_score", 0.0),
+                page_reference=None
+            ))
+
+        # Map string scope to enum
+        doc_types = []
+        for scope in raw_response.get("documents_searched", []):
+            if scope == "constitution":
+                doc_types.append(LegalDocumentType.CONSTITUTION)
+            elif scope == "bns":
+                doc_types.append(LegalDocumentType.BNS)
+            elif scope == "bare_acts":
+                doc_types.append(LegalDocumentType.BARE_ACTS)
+            elif scope == "all":
+                doc_types.append(LegalDocumentType.ALL)
+
+        return LawQueryResponse(
+            answer=raw_response["answer"],
+            question=raw_response["question"],
+            sources=transformed_sources,
+            related_concepts=[],  # Empty for now
+            related_questions=[],  # Empty for now
+            answer_style=getattr(request, 'answer_style', AnswerStyle.STUDENT_FRIENDLY),
+            documents_searched=doc_types,
+            processing_time_ms=raw_response["processing_time_ms"],
+            total_chunks_found=raw_response["total_chunks_found"],
+            chunks_used=raw_response["chunks_used"]
+        )
 
     except ValueError as e:
         logger.warning(f"Invalid request parameters: {e}")
@@ -211,10 +257,31 @@ async def retrieve_legal_content(
     """
     try:
         response = await query_service.retrieve_context(
-            request=request,
-            user_id=x_user_id
+            query=request.query,
+            user_id=x_user_id,
+            collection_ids=request.filters.collection_ids if request.filters else None,
+            top_k=request.top_k,
+            file_ids=request.filters.file_ids if request.filters else None,
+            enable_reranking=True
         )
-        return response
+
+        # Convert response to RetrieveResponse format
+        transformed_results = []
+        for item in response:
+            transformed_results.append({
+                "chunk_id": item.get("chunk_id", ""),
+                "chunk_text": item.get("text", ""),  # Map text → chunk_text
+                "relevance_score": float(item.get("score", 0.0)),  # Map score → relevance_score
+                "file_id": item.get("file_id", ""),
+                "page_number": item.get("page_start"),
+                "timestamp": item.get("timestamp"),
+                "concepts": item.get("key_terms", []) or []
+            })
+
+        return RetrieveResponse(
+            success=True,
+            results=transformed_results
+        )
 
     except Exception as e:
         logger.error(f"Content retrieval failed: {e}", exc_info=True)
@@ -257,7 +324,7 @@ async def generate_legal_summary(
             )
 
         start_time = time.time()
-        response = await legal_summary_service.generate_summary(
+        response = await legal_summary_service.generate_legal_summary(
             request=request,
             user_id=x_user_id
         )
@@ -297,7 +364,7 @@ async def generate_batch_summaries(
         results = []
         for summary_req in request.requests:
             try:
-                result = await legal_summary_service.generate_summary(
+                result = await legal_summary_service.generate_legal_summary(
                     request=summary_req,
                     user_id=x_user_id
                 )
@@ -378,9 +445,11 @@ async def generate_questions(
                 collection_ids.append("bns-golden-source")
             elif scope == "constitution":
                 collection_ids.append("constitution-golden-source")
+            elif scope == "bare_acts":
+                collection_ids.append("bare-acts-golden-source")
 
         if not collection_ids:
-            raise HTTPException(status_code=400, detail="Invalid scope. Use 'bns' and/or 'constitution'")
+            raise HTTPException(status_code=400, detail="Invalid scope. Use 'bns', 'constitution', and/or 'bare_acts'")
 
         # Map difficulty
         difficulty_map = {

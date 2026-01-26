@@ -190,25 +190,65 @@ class ConstitutionParser(BaseParser):
         return parts
 
     def _extract_articles(self, text: str, parts: List[Dict]) -> List[LegalProvision]:
-        """Extract constitutional articles."""
-        articles = []
+        """Extract constitutional articles with deduplication."""
+        # Use dict to deduplicate by article number
+        # Store tuple of (priority, article) - higher priority wins
+        articles_dict: Dict[str, tuple] = {}
 
-        # Article patterns for Constitution
+        # Find where actual article content starts (after Table of Contents)
+        # Look for "PART I" followed by "THE UNION AND ITS TERRITORY" and article content
+        content_start = 0
+        part1_match = re.search(r'#\s*PART\s+I\s*\n.*?#\s*THE\s+UNION', text, re.IGNORECASE | re.DOTALL)
+        if part1_match and part1_match.start() > 50000:
+            # Found Part I content section (not TOC), start searching from there
+            content_start = part1_match.start()
+            logger.info(f"Skipping TOC, extracting articles from position {content_start}")
+
+        # Work on text after TOC
+        search_text = text[content_start:]
+
+        # Article patterns for Constitution - ordered by priority
         article_patterns = [
-            r'Article\s+(\d+[A-Z]*)\.\s*([^\n]+?)(?=\n|\.|—)',
-            r'अनुच्छेद\s+(\d+[A-Z]*)\.\s*([^\n]+?)(?=\n|\.|—)',
-            r'(\d+)\.\s*([^\n]+?)(?=\n(?:\d+\.|Article|\n))',  # Numbered provisions
+            # Markdown header format: # 1. Name and territory of the Union.
+            (r'#\s*(\d+[A-Z]*)\.?\s+([^\n#]+?)(?=\n|$)', 2),
+            # Explicit Article format (rare in this document)
+            (r'Article\s+(\d+[A-Z]*)\.\s*([^\n]+?)(?=\n|\.|—)', 3),
         ]
 
-        for pattern in article_patterns:
-            matches = re.finditer(pattern, text, re.IGNORECASE | re.MULTILINE)
+        for pattern, priority in article_patterns:
+            matches = re.finditer(pattern, search_text, re.IGNORECASE | re.MULTILINE)
             for match in matches:
                 article_num = match.group(1).strip()
                 article_title = match.group(2).strip()
 
+                # Skip invalid article numbers (Constitution articles are 1-448+)
+                try:
+                    num = int(''.join(c for c in article_num if c.isdigit()))
+                    if num < 1 or num > 500:
+                        continue
+                except ValueError:
+                    continue
+
+                # Skip if title is too short
+                if len(article_title) < 15:
+                    continue
+
+                # Skip table content
+                if article_title.startswith('|') or '|' in article_title[:10]:
+                    continue
+
+                # Check if this is in a Schedule section (skip schedule list items)
+                # Use absolute position in original text
+                abs_pos = content_start + match.start()
+                context_start = max(0, abs_pos - 500)
+                context = text[context_start:abs_pos].upper()
+                if 'SCHEDULE' in context:
+                    continue
+
                 # Extract full article text (next few paragraphs)
-                start_pos = match.end()
-                article_text = self._extract_article_text(text, start_pos, article_num)
+                # Use absolute position in original text
+                abs_end = content_start + match.end()
+                article_text = self._extract_article_text(text, abs_end, article_num)
 
                 # Determine which part this article belongs to
                 part_number = self._determine_article_part(article_num)
@@ -226,39 +266,42 @@ class ConstitutionParser(BaseParser):
                     provision_type="ARTICLE",
                     references=references
                 )
-                articles.append(article)
 
-        return articles
+                # Deduplicate: prefer higher priority, then longer text
+                if article_num not in articles_dict:
+                    articles_dict[article_num] = (priority, article)
+                else:
+                    existing_priority, existing_article = articles_dict[article_num]
+                    if priority > existing_priority or (priority == existing_priority and len(article_text) > len(existing_article.text)):
+                        articles_dict[article_num] = (priority, article)
+
+        return [article for _, article in articles_dict.values()]
 
     def _extract_schedules(self, text: str) -> List[LegalProvision]:
-        """Extract constitutional schedules."""
-        schedules = []
+        """Extract constitutional schedules with deduplication."""
+        # Use dict to deduplicate by schedule number - keep the one with longest text
+        schedules_dict: Dict[str, LegalProvision] = {}
 
-        # Schedule patterns
+        # Known schedule mapping
+        schedule_mapping = {
+            "FIRST": "1", "SECOND": "2", "THIRD": "3", "FOURTH": "4",
+            "FIFTH": "5", "SIXTH": "6", "SEVENTH": "7", "EIGHTH": "8",
+            "NINTH": "9", "TENTH": "10", "ELEVENTH": "11", "TWELFTH": "12"
+        }
+
+        # Schedule patterns - more specific to avoid false matches
         schedule_patterns = [
-            r'(?:THE\s+)?(\w+)\s+SCHEDULE\s*(?:\[.*?\])?\s*\n(.*?)(?=(?:THE\s+)?\w+\s+SCHEDULE|\n\n\n|$)',
-            r'अनुसूची\s+(\d+)\s*([^\n]+?)(?=अनुसूची|\n\n)',
+            r'(?:THE\s+)?(FIRST|SECOND|THIRD|FOURTH|FIFTH|SIXTH|SEVENTH|EIGHTH|NINTH|TENTH|ELEVENTH|TWELFTH)\s+SCHEDULE\s*(?:\[.*?\])?\s*\n(.*?)(?=(?:THE\s+)?(?:FIRST|SECOND|THIRD|FOURTH|FIFTH|SIXTH|SEVENTH|EIGHTH|NINTH|TENTH|ELEVENTH|TWELFTH)\s+SCHEDULE|\n\n\n|$)',
         ]
 
         for pattern in schedule_patterns:
             matches = re.finditer(pattern, text, re.IGNORECASE | re.DOTALL)
             for match in matches:
-                schedule_num = match.group(1).strip()
+                schedule_name = match.group(1).strip().upper()
                 schedule_content = match.group(2).strip()
 
-                # Determine schedule title and number
-                if schedule_num.isdigit():
-                    schedule_number = schedule_num
-                    schedule_title = f"Schedule {schedule_number}"
-                else:
-                    # Handle named schedules like "FIRST SCHEDULE", "SEVENTH SCHEDULE"
-                    schedule_mapping = {
-                        "FIRST": "1", "SECOND": "2", "THIRD": "3", "FOURTH": "4",
-                        "FIFTH": "5", "SIXTH": "6", "SEVENTH": "7", "EIGHTH": "8",
-                        "NINTH": "9", "TENTH": "10", "ELEVENTH": "11", "TWELFTH": "12"
-                    }
-                    schedule_number = schedule_mapping.get(schedule_num.upper(), schedule_num)
-                    schedule_title = f"{schedule_num.title()} Schedule"
+                schedule_number = schedule_mapping.get(schedule_name, schedule_name)
+                schedule_title = f"{schedule_name.title()} Schedule"
 
                 schedule = LegalProvision(
                     id=f"Schedule-{schedule_number}",
@@ -268,9 +311,12 @@ class ConstitutionParser(BaseParser):
                     statute_name="Constitution of India",
                     provision_type="SCHEDULE"
                 )
-                schedules.append(schedule)
 
-        return schedules
+                # Deduplicate: keep the schedule with the longest text
+                if schedule_number not in schedules_dict or len(schedule_content) > len(schedules_dict[schedule_number].text):
+                    schedules_dict[schedule_number] = schedule
+
+        return list(schedules_dict.values())
 
     def _extract_cross_references(self, provisions: List[LegalProvision]) -> Dict[str, List[str]]:
         """Extract cross-references between provisions."""

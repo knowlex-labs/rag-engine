@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import rag, law, collections
+from api.routes import rag, law, collections, raw
 from config import Config
 
 app = FastAPI(
@@ -22,8 +22,9 @@ app.add_middleware(
 app.include_router(rag.router, prefix="/api/v1", tags=["rag"])
 # Include Law API routes
 app.include_router(law.router, prefix="/api/v1/law", tags=["Law"])
+# Include Raw Data API routes (embeddings, chunks)
+app.include_router(raw.router, prefix="/api/v1", tags=["Raw Data"])
 app.include_router(collections.router, tags=["Collections"])
-# app.include_router(users.router, prefix="/api/v1/users", tags=["users"]) # REMOVED
 
 @app.get("/")
 def read_root():

@@ -7,7 +7,7 @@ import logging
 import asyncio
 
 from repositories.neo4j_repository import neo4j_repository
-from services.storage.gcs_storage_service import GCSStorageService
+from services.storage.storage_factory import get_storage_service
 from services.hierarchical_chunking_service import chunking_service
 from utils.embedding_client import embedding_client
 from models.api_models import BatchLinkRequest, LinkItem, IndexingStatus
@@ -20,7 +20,7 @@ class CollectionService:
     def __init__(self):
         self.neo4j_repo = neo4j_repository
         self.embedding_client = embedding_client
-        self.storage_service = GCSStorageService()
+        self.storage_service = get_storage_service()
 
     def _get_user_collection(self, user_id: str) -> str:
         return f"user_{user_id}"
@@ -84,31 +84,28 @@ class CollectionService:
     def _resolve_source(self, item: LinkItem) -> str:
         from urllib.parse import unquote
         if item.type == 'file':
-            if not item.gcs_url:
-                raise ValueError("Missing gcs_url")
-            
+            if not item.storage_url:
+                raise ValueError("Missing storage_url")
+
             # Unquote in case of %20 etc
-            gcs_url = unquote(item.gcs_url)
-            logger.info(f"Resolving GCS URL: {gcs_url}")
-            
-            # If it's a GCS HTTPS URL for our bucket, use native GCS client
-            bucket_prefix = f'https://storage.googleapis.com/{Config.gcs.BUCKET_NAME}/'
-            if gcs_url.startswith(bucket_prefix):
-                storage_path = gcs_url[len(bucket_prefix):]
-                logger.info(f"Downloading from GCS bucket path: {storage_path}")
-                local_path = self.storage_service.download_for_processing(storage_path)
+            storage_url = unquote(item.storage_url)
+            logger.info(f"Resolving storage URL: {storage_url}")
+
+            # Handle local:// URLs (local storage)
+            if storage_url.startswith('local://'):
+                logger.info(f"Downloading from local storage: {storage_url}")
+                local_path = self.storage_service.download_for_processing(storage_url)
                 if not local_path:
-                    raise ValueError(f"Failed to download file from GCS: {storage_path}")
-                logger.info(f"Downloaded to local path: {local_path}")
+                    raise ValueError(f"Failed to get file from local storage: {storage_url}")
+                logger.info(f"Local path: {local_path}")
                 return local_path
-            
-            if gcs_url.startswith(('http://', 'https://')):
-                logger.info(f"Downloading from HTTP URL: {gcs_url}")
-                return self._download_from_url(gcs_url)
-            
-            # Handle gs:// URLs
-            logger.info(f"Downloading from gs:// URL: {gcs_url}")
-            return self._download_from_gcs(gcs_url)
+
+            # Handle HTTP/HTTPS URLs
+            if storage_url.startswith(('http://', 'https://')):
+                logger.info(f"Downloading from HTTP URL: {storage_url}")
+                return self._download_from_url(storage_url)
+
+            raise ValueError(f"Unsupported storage URL format: {storage_url}")
         return item.url
 
     def _download_from_url(self, url: str) -> str:
@@ -130,14 +127,6 @@ class CollectionService:
             logger.error(f"Failed to download file from URL {url}: {e}")
             raise ValueError(f"Failed to download file: {str(e)}")
 
-    def _download_from_gcs(self, gcs_path: str) -> str:
-        from urllib.parse import unquote
-        gcs_path = unquote(gcs_path)
-        if gcs_path.startswith("gs://"):
-            parts = gcs_path.replace("gs://", "").split("/", 1)
-            if len(parts) > 1:
-                return self.storage_service.download_for_processing(parts[1])
-        raise ValueError(f"Invalid GCS URL: {gcs_path}")
 
     def _parse_content(self, source: str, item_type: str):
         parser = ParserFactory.get_parser(item_type)

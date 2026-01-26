@@ -98,7 +98,7 @@ class LinkItem(BaseModel):
     file_id: str
     collection_id: Optional[str] = None
     url: Optional[str] = None      # For web/youtube
-    gcs_url: Optional[str] = None  # For file
+    storage_url: Optional[str] = None  # For file (local://, http://, https://)
     content_type: Optional[DataContentType] = DataContentType.LEGAL  # Default to legal for backward compatibility
 
     @model_validator(mode='before')
@@ -107,12 +107,12 @@ class LinkItem(BaseModel):
         if isinstance(values, dict):
             type_val = values.get('type')
             url = values.get('url')
-            gcs_url = values.get('gcs_url')
-            
+            storage_url = values.get('storage_url')
+
             if type_val in ['youtube', 'web'] and not url:
                 raise ValueError(f"{type_val} requires 'url'")
-            if type_val == 'file' and not gcs_url:
-                raise ValueError("file requires 'gcs_url'")
+            if type_val == 'file' and not storage_url:
+                raise ValueError("file requires 'storage_url'")
         return values
 
 class BatchLinkRequest(BaseModel):

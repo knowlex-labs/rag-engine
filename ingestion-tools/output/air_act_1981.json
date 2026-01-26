@@ -1,0 +1,791 @@
+{
+  "name": "AIR (PREVENTION AND CONTROL OF POLLUTION)",
+  "year": 1981,
+  "act_number": "",
+  "preamble": "",
+  "document_type": "bare_act",
+  "total_chapters": 13,
+  "total_sections": 56,
+  "chapters": [
+    {
+      "number": "II",
+      "title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "section_numbers": [
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15"
+      ]
+    },
+    {
+      "number": "III",
+      "title": "POWERS AND FUNCTIONS OF BOARDS",
+      "section_numbers": [
+        "16",
+        "17",
+        "18"
+      ]
+    },
+    {
+      "number": "IV",
+      "title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "section_numbers": [
+        "19",
+        "20",
+        "21",
+        "22",
+        "22A",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "31A"
+      ]
+    },
+    {
+      "number": "V",
+      "title": "FUND, ACCOUNTS AND AUDIT",
+      "section_numbers": [
+        "32",
+        "33",
+        "33A",
+        "34",
+        "35",
+        "36"
+      ]
+    },
+    {
+      "number": "VI",
+      "title": "PENALTIES AND PROCEDURE",
+      "section_numbers": [
+        "37",
+        "38",
+        "39",
+        "40",
+        "41",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46"
+      ]
+    },
+    {
+      "number": "VII",
+      "title": "MISCELLANEOUS",
+      "section_numbers": [
+        "47",
+        "48",
+        "49",
+        "51",
+        "52",
+        "53",
+        "54"
+      ]
+    },
+    {
+      "number": "I",
+      "title": "PRELIMINARY",
+      "section_numbers": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "number": "II",
+      "title": "CENTRAL AND STATE BOARDS FOR THE PREVENTION AND CONTROL OF AIR POLLUTION",
+      "section_numbers": []
+    },
+    {
+      "number": "III",
+      "title": "POWERS AND FUNCTIONS OF BOARDS",
+      "section_numbers": []
+    },
+    {
+      "number": "IV",
+      "title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "section_numbers": []
+    },
+    {
+      "number": "V",
+      "title": "FUND, ACCOUNTS AND AUDIT",
+      "section_numbers": []
+    },
+    {
+      "number": "VI",
+      "title": "PENALTIES AND PROCEDURE",
+      "section_numbers": []
+    },
+    {
+      "number": "VII",
+      "title": "MISCELLANEOUS",
+      "section_numbers": []
+    }
+  ],
+  "sections": [
+    {
+      "number": "3",
+      "title": "Central Pollution Control Board",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "4",
+      "title": "State Pollution Control Boards constituted under section 4 of Act 6 of 1974 to be State Boards",
+      "content": "under this Act.",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "5",
+      "title": "Constitution of State Boards",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "6",
+      "title": "Central Board to exercise the powers and perform the functions of a State Board in the Union",
+      "content": "territories.",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "7",
+      "title": "Terms and conditions of service of members",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "8",
+      "title": "Disqualifications",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "9",
+      "title": "Vacation of seats by members",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "10",
+      "title": "Meetings of Board",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "11",
+      "title": "Constitution of committees",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "12",
+      "title": "Temporary association of persons with Board for particular purpose",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "13",
+      "title": "Vacancy in Board not to invalidate acts or proceedings",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "14",
+      "title": "Member-secretary and officers and other employees of State Boards",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "15",
+      "title": "Delegation of powers",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "CENTRAL AND STATE BOARDSFOR THE PREVENTION AND CONTROLOF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "16",
+      "title": "Functions of Central Board",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "POWERS AND FUNCTIONS OF BOARDS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "17",
+      "title": "Functions of State Boards",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "POWERS AND FUNCTIONS OF BOARDS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "18",
+      "title": "Power to give directions",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "POWERS AND FUNCTIONS OF BOARDS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "19",
+      "title": "Power to declare air pollution control areas",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "20",
+      "title": "Power to give instructions for ensuring standards for emission from automobiles",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "21",
+      "title": "Restrictions on use of certain industrial plants",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "22",
+      "title": "Persons carrying on industry, etc., not to allow emission of air pollutants in excess of the standard",
+      "content": "laid down by State Board.",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "22A",
+      "title": "Power of Board to make application to court for restraining persons from causing air pollution",
+      "content": "1\n\fSECTIONS",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "23",
+      "title": "Furnishing of information to State Board and other agencies in certain cases",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "24",
+      "title": "Power of entry and inspection",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "25",
+      "title": "Power to obtain information",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "26",
+      "title": "Power to take samples of air or emission and procedure to be followed in connection therewith",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "27",
+      "title": "Reports of the result of analysis on samples taken under section 26",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "28",
+      "title": "State Air Laboratory",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "29",
+      "title": "Analysis",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "30",
+      "title": "Reports of analysis",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "31",
+      "title": "Appeals",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "31A",
+      "title": "Power to give directions",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PREVENTION AND CONTROL OF AIR POLLUTION",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "32",
+      "title": "Contribution by Central Government",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "FUND, ACCOUNTS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "33",
+      "title": "Fund of Board",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "FUND, ACCOUNTS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "33A",
+      "title": "Borrowing powers of Board",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "FUND, ACCOUNTS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "34",
+      "title": "Budget",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "FUND, ACCOUNTS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "35",
+      "title": "Annual report",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "FUND, ACCOUNTS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "36",
+      "title": "Accounts and audit",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "FUND, ACCOUNTS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "37",
+      "title": "Failure to comply with the provisions of section 21 or section 22 or with the directions issued",
+      "content": "under section 31A.",
+      "chapter_number": "VI",
+      "chapter_title": "PENALTIES AND PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "38",
+      "title": "Penalties for certain acts",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PENALTIES AND PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "39",
+      "title": "Penalty for contravention of certain provisions of the Act",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PENALTIES AND PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "40",
+      "title": "Offences by companies",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PENALTIES AND PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "41",
+      "title": "Offences by Government Departments",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PENALTIES AND PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "42",
+      "title": "Protection of action taken in good faith",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PENALTIES AND PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "43",
+      "title": "Cognizance of offences",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PENALTIES AND PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "44",
+      "title": "Members, officers and employees of Board to be public servants",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PENALTIES AND PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "45",
+      "title": "Reports and returns",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PENALTIES AND PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "46",
+      "title": "Bar of jurisdiction",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PENALTIES AND PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "47",
+      "title": "Power of State Government to supersede State Board",
+      "content": "",
+      "chapter_number": "VII",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "48",
+      "title": "Special provision in the case of supersession of the Central Board or the State Boards constituted",
+      "content": "under the Water (Prevention and Control of Pollution) Act, 1974.",
+      "chapter_number": "VII",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "49",
+      "title": "Dissolution of State Boards constituted under the Act",
+      "content": "50. [Omitted.].",
+      "chapter_number": "VII",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "51",
+      "title": "Maintenance of register",
+      "content": "2\n\fSECTIONS",
+      "chapter_number": "VII",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "52",
+      "title": "Effect of other laws",
+      "content": "",
+      "chapter_number": "VII",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "53",
+      "title": "Power of Central Government to make rules",
+      "content": "",
+      "chapter_number": "VII",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "54",
+      "title": "Power of State Government to make rules",
+      "content": "THE SCHEDULE [Omitted.].\n3\n\fTHE AIR (PREVENTION AND CONTROL OF POLLUTION) ACT, 1981\nACT NO. 14 OF 1981\n[29th March, 1981.]\nAn Act to provide for the prevention, control and abatement of air pollution, for the\nestablishment, with a view to carrying out the aforesaid purposes, of Boards, for conferring\non and assigning to such Boards powers and functions relating thereto and for matters\nconnected therewith.\nWHEREAS decisions were taken at the United Nations Conference on the Human Environment held in\nStockholm in June, 1972, in which India participated, to take appropriate steps for the preservation of the\nnatural resources of the earth which, among other things, include the preservation of the quality of air and\ncontrol of air pollution;\nAND WHEREAS it is considered necessary to implement the decisions aforesaid in so far as they relate\nto the preservation of the quality of air and control of air pollution;\nBE it enacted by Parliament in the Thirty-second Year of the Republic of India as follows:—",
+      "chapter_number": "VII",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "1",
+      "title": "Short title, extent and commencement.—(1) This Act may be called the Air (Prevention and",
+      "content": "Control of Pollution) Act, 1981.\n(2) It extends to the whole of India.\n(3) It shall come into force on such date1 as the Central Government may, by notification in the\nOfficial Gazette, appoint.",
+      "chapter_number": "I",
+      "chapter_title": "PRELIMINARY",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "2",
+      "title": "Definitions.—In this Act, unless the context otherwise requires,—",
+      "content": "(a) “air pollutant” means any solid, liquid or gaseous substance 2[(including noise)] present in the\natmosphere in such concentration as may be or tend to be injurious to human beings or other living\ncreatures or plants or property or environment;\n(b) “air pollution” means the presence in the atmosphere of any air pollutant;\n(c) “approved appliance” means any equipment or gadget used for the bringing of any\ncombustible material or for generating or consuming any fume, gas of particulate matter and\napproved by the State Board for the purposes of this Act;\n(d) “approved fuel” means any fuel approved by the State Board for the purposes of this Act;\n(e) “automobile” means any vehicle powered either by internal combustion engine or by any\nmethod of generating power to drive such vehicle by burning fuel;\n(f)“Board” means the Central Board or a State Board;\n(g) “Central Board” means the 3[Central Pollution Control Board] constituted under section 3 of\nthe Water (Prevention and Control of Pollution) Act, 1974 (6 of 1974);\n(h) “chimney” includes any structure with an opening or outlet from or through which any air\npollutant may be emitted;\n(i) “control equipment” means any apparatus, device, equipment or system to control the quality\nand manner of emission of any air pollutant and includes any device used for securing the efficient\noperation of any industrial plant;\n1.16th May, 1981,vide notificationNo. G.S.R. 351(E), dated 15th May, 1981, see Gazette of India, Extraordinary, Part II, sec. 3\n(i).\n4\n\f(j) “emission” means any solid or liquid or gaseous substance coming out of any chimney, duct or\nflue or any other outlet;\n(k) “industrial plant” means any plant used for any industrial or trade purposes and emitting any\nair pollutant into the atmosphere;\n(l) “member” means a member of the Central Board or a State Board, as the case may be, and\nincludes the Chairman thereof;\n[(m) “occupier”, in relation to any factory or premises, means the person who has control over\nthe affairs of the factory or the premises, and includes, in relation to any substance, the person in\npossession of the substance;]\n1\n(n) “prescribed” means prescribed by rules made under this Act by the Central Government or, as\nthe case may be, the State Government;\n(o) “State Board” means,—\n(i) in relation to a State in which the Water (Prevention and Control of Pollution) Act, 1974\n(6 of 1974), is in force and the State Government has constituted for that State a 2[State Pollution\nControl Board] under section 4 of that Act, the said State Board; and\n(ii) in relation to any other State, the State Board for the Prevention and Control of Air\nPollution constituted by the State Government under section 5 of this Act.",
+      "chapter_number": "I",
+      "chapter_title": "PRELIMINARY",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    }
+  ],
+  "schedules": [
+    {
+      "number": "I",
+      "content": "THE SCHEDULE [Omitted.].\n\n3\n\n\fTHE AIR (PREVENTION AND CONTROL OF POLLUTION) ACT, 1981\nACT NO. 14 OF 1981\n[29th March, 1981.]\n\nAn Act to provide for the prevention, control and abatement of air pollution, for the\nestablishment, with a view to carrying out the aforesaid purposes, of Boards, for conferring\non and assigning to such Boards powers and functions relating thereto and for matters\nconnected therewith.\nWHEREAS decisions were taken at the United Nations Conference on the Human Environment held in\nStockholm in June, 1972, in which India participated, to take appropriate steps for the preservation of the\nnatural resources of the earth which, among other things, include the preservation of the quality of air and\ncontrol of air pollution;\nAND WHEREAS it is considered necessary to implement the decisions aforesaid in so far as they relate\nto the preservation of the quality of air and control of air pollution;\nBE it enacted by Parliament in the Thirty-second Year of the Republic of India as follows:—\nCHAPTER I\nPRELIMINARY\n1. Short title, extent and commencement.—(1) This Act may be called the Air (Prevention and\nControl of Pollution) Act, 1981.\n(2) It extends to the whole of India.\n(3) It shall come into force on such date1 as the Central Government may, by notification in the\nOfficial Gazette, appoint.\n2. Definitions.—In this Act, unless the context otherwise requires,—\n(a) “air pollutant” means any solid, liquid or gaseous substance 2[(including noise)] present in the\natmosphere in such concentration as may be or tend to be injurious to human beings or other living\ncreatures or plants or property or environment;\n(b) “air pollution” means the presence in the atmosphere of any air pollutant;\n(c) “approved appliance” means any equipment or gadget used for the bringing of any\ncombustible material or for generating or consuming any fume, gas of particulate matter and\napproved by the State Board for the purposes of this Act;\n(d) “approved fuel” means any fuel approved by the State Board for the purposes of this Act;\n(e) “automobile” means any vehicle powered either by internal combustion engine or by any\nmethod of generating power to drive such vehicle by burning fuel;\n(f)“Board” means the Central Board or a State Board;\n(g) “Central Board” means the 3[Central Pollution Control Board] constituted under section 3 of\nthe Water (Prevention and Control of Pollution) Act, 1974 (6 of 1974);\n(h) “chimney” includes any structure with an opening or outlet from or through which any air\npollutant may be emitted;\n(i) “control equipment” means any apparatus, device, equipment or system to control the quality\nand manner of emission of any air pollutant and includes any device used for securing the efficient\noperation of any industrial plant;\n1.16th May, 1981,vide notificationNo. G.S.R. 351(E), dated 15th May, 1981, see Gazette of India, Extraordinary, Part II, sec. 3\n(i).\n2. Ins. by Act 47 of 1987, s. 2 (w.e.f. 1-4-1988).\n3. Subs. by s. 2,ibid., for “Central Board "
+    },
+    {
+      "number": "I",
+      "content": "the Schedule” omitted by s. 9, ibid. (w.e.f. 1-4-1988).\n\n11\n\n\fmay be prescribed and where such person makes such application, he shall be deemed to be operating\nsuch industrial plant with the consent of the State Board until the consent applied for has been refused.\n(3) The State Board may make such inquiry as it may deem fit in respect of the application for\nconsent referred to in sub-section (1) and in making any such inquiry, shall follow such procedure as may\nbe prescribed.\n(4) Within a period of four months after the receipt of the application for consent referred to in\nsub-section (1), the State Board shall, by order in writing, 1[and for reasons to be recorded in the order,\ngrant the consent applied for subject to such conditions and for such period as may be specified in the\norder, or refuse such consent]:\n2\n\n[Provided that it shall be open to the State Board to cancel such consent before the expiry of the\nperiod for which it is granted or refuse further consent after such expiry if the conditions subject to which\nsuch consent has been granted are not fulfilled:\nProvided further that before cancelling a consent or refusing a further consent under the first\nprovision, a reasonable opportunity of being heard shall be given to the person concerned.]\n(5) Every person to whom consent has been granted by the State Board under sub-section (4), shall\ncomply with the following conditions, namely:—\n(i) the control equipment of such specifications as the State Board may approve in this behalf\nshall be installed and operated in the premises where the industry is carried on or proposed to be\ncarried on;\n(ii) the existing control equipment, if any, shall be altered or replaced in accordance with the\ndirections of the State Board;\n(iii) the control equipment referred to in clause (i) or clause (ii) shall be kept at all times in good\nrunning condition;\n(iv) chimney, wherever necessary, of such specifications as the State Board may approve in this\nbehalf shall be erected or re-erected in such premises; and\n(v) such other conditions as the State Board, may specify in this behalf; and\n(vi) the conditions referred to in clauses (i), (ii) and (iv) shall be complied with within such period\nas the State Board may specify in this behalf:\nProvided that in the case of a person operating any industrial plant 3*** in an air pollution control\narea immediately before the date of declaration of such area as an air pollution control area, the period so\nspecified shall not be less than six months:\nProvided further that—\n(a) after the installation of any control equipment in accordance with the specifications under\nclause (i), or\n(b) after the alteration or replacement of any control equipment in accordance with the directions\nof the State Board under clause (ii), or\n(c) after the erection or re-erection of any chimney under clause (iv),\nno control equipment or chimney shall be altered or replaced or, as the case may be, erected or re-erected\nexcept with the previous appr"
+    },
+    {
+      "number": "I",
+      "content": "the Schedule” omitted by s. 9, ibid. (w.e.f. 1-4-1988).\n\n12\n\n\fconsent has been granted an opportunity of being heard, vary all or any of such conditions and thereupon\nsuch person shall be bound to comply with the conditions as so varied.\n(7) Where a person to whom consent has been granted by the State Board under sub-section (4)\ntransfers his interest in the industry to any other person, such consent shall be deemed to have been\ngranted to such other person and he shall be bound to comply with all the conditions subject to which it\nwas granted as if the consent was granted to him originally.\n22. Persons carrying on industry, etc., not to allow emission of air pollutants in excess of the\nstandard laid down by State Board.—No person 1**** operating any industrial plant, in any air\npollution control area shall discharge or cause or permit to be discharged the emission of any air pollutant\nin excess of the standards laid down by the State Board under clause (g) of sub-section (1) of section 17.\n2\n\n[22A. Power of Board to make application to court for restraining person from causing air\npollution.—(1) Where it is apprehended by a Board that emission of any air pollutant, in excess of the\nstandards laid down by the State Board under clause (g) of sub-section (1) of section 17, is likely to occur\nby reason of any person operating an industrial plant or otherwise in any air pollution control area, the\nBoard may make an application to a court, not inferior to that of a Metropolitan Magistrate or a Judicial\nMagistrate of the first class for restraining such person from emitting such air pollutant.\n(2) On receipt of the application under sub-section (1), the court may make such order as it deems fit.\n(3) Where under sub-section (2), the court makes an order restraining any person from discharging or\ncausing or permitting to be discharged the emission of any air pollutant, it may, in that order,—\n(a) direct such person to desist from taking such action as is likely to cause emission;\n(b) authorise the Board, if the direction under clause (a) is not complied with by the person to\nwhom such direction is issued, to implement the direction in such manner as may be specified by the\ncourt.\n(4) All expenses incurred by the Board in implementing the directions of the court under clause (b) of\nsub-section (3) shall be recoverable from the person concerned as arrears of land revenue or of public\ndemand.]\n23. Furnishing of information to State Board and other agencies in certain cases.—(1) Where in\nany 3*** area the emission of any air pollutant into the atmosphere in excess of the standards laid down\nby the State Board occurs or is apprehended to occur due to accident or other unforeseen act or event, the\nperson in charge of the premises from where such emission occurs or is apprehended to occur shall\nforthwith intimate the fact of such occurrence or the apprehension of such occurrence to the State Board\nand to such authorities or agencies as may be prescribed.\n(2) On"
+    },
+    {
+      "number": "I",
+      "content": "the Schedule or” omitted by Act 47 of 1987, s. 10 (w.e.f. 1-4-1988).\n2. Ins. by s. 11, ibid. (w.e.f. 1-4-1988).\n3. The words “air pollution control” omitted by s. 12, ibid. (w.e.f. 1-4-1988).\n\n13\n\n\f(b) for the purpose of determining whether and if so in what manner, any such functions are to be\nperformed or whether any provisions of this Act or the rules made thereunder or any notice, order,\ndirection or authorisation served, made, given or granted under this Act is being or has been complied\nwith;\n(c) for the purpose of examining and testing any control equipment, industrial plant, record,\nregister, document or any other material object or for conducting a search of any place in which he\nhas reason to believe that an offence under this Act or the rules made thereunder has been or is being\nor is about to be committed and for seizing any such control equipment, industrial plant, record,\nregister, document or other material object if he has reasons to believe that it may furnish evidence of\nthe commission of an offence punishable under this Act or the rules made thereunder.\n(2) Every person 1*** operating any control equipment or any industrial plant, in an air pollution\ncontrol area shall be bound to render all assistance to the person empowered by the State Board under\nsub-section (1) for carrying out the functions under that sub-section and if he fails to do so without any\nreasonable cause or excuse, he shall be guilty of an offence under this Act.\n(3) If any person willfully delays or obstructs any person empowered by the State Board under\nsub-section (1) in the discharge of his duties, he shall be guilty of an offence under this Act.\n(4) The provisions of the Code of Criminal Procedure, 1973 (2 of 1974), or, in relation to the State of\nJammu and Kashmir, or any area, in which that Code is not in force, the provisions of any corresponding\nlaw in force in that State or area, shall, so far as may be, apply to any search or seizure under this section\nas they apply to any search or seizure made under the authority of a warrant issued under section 94 of the\nsaid Code or, as the case may be, under the corresponding provisions of the said law.\n25. Power to obtain information.—For the purposes of carrying out the functions entrusted to it, the\nState Board or any officer empowered by it in that behalf may call for any information (including\ninformation regarding the types of air pollutants emitted into the atmosphere and the level of the emission\nof such air pollutants) from the occupier or any other person carrying on any industry or operating any\ncontrol equipment or industrial plant and for the purpose of verifying the correctness of such information,\nthe State Board or such officer shall have the right to inspect the premises where such industry, control\nequipment or industrial plant is being carried on or operated.\n26. Power to take samples of air or emission and procedure to be followed in connection\ntherewith.—(1) A State Board or any officer em"
+    },
+    {
+      "number": "I",
+      "content": "the Schedule and every person” omitted by Act47 of 1987, s. 13\n(w.e.f. 1-4-1988).\n\n14\n\n\f(4) When a sample of emission is taken for analysis under sub-section (1) and the person taking the\nsample serves on the occupier or his agent, a notice under clause (a) of sub-section (3), then,—\n(a) in a case where the occupier or his agent wilfully absents himself, the person taking the\nsample shall collect the sample of emission for analysis to be placed in a container or containers\nwhich shall be marked and sealed and shall also be signed by the person taking the sample, and\n(b) in a case where the occupier or his agent is present at the time of taking the sample but refuses\nto sign the marked and sealed container or containers of the sample of emission as required under\nclause (c) of sub-section (3), the marked and sealed container or containers shall be signed by the\nperson taking the sample,\nand the container or containers shall be sent without delay by the person taking the sample for analysis to\nthe laboratory established or specified under sub-section (1) of section 28 and such person shall inform\nthe Government analyst appointed under sub-section (1) of section 29, in writing, about the wilful\nabsence of the occupier or his agent, or, as the case may be, his refusal to sign the container or containers.\n27. Reports of the result of analysis on samples taken under section 26.—(1) Where a sample of\nemission has been sent for analysis to the laboratory established or recognised by the State Board, the\nBoard analyst appointed under sub-section (2) of section 29 shall analyse the sample and submit a report\nin the prescribed form of such analysis in triplicate to the State Board.\n(2) On receipt of the report under sub-section (1), one copy of the report shall be sent by the State\nBoard to the occupier or his agent referred to in section 26, another copy shall be preserved for production\nbefore the court in case any legal proceedings are taken against him and the other copy shall be kept by\nthe State Board.\n(3) Where a sample has been sent for analysis under clause of sub-section (3) or sub-section (4) of\nsection 26 to any laboratory mentioned therein, the Government analyst referred to in the said\nsub-section (4) shall analyse the sample and submit a report in the prescribed form of the result of the\nanalysis in triplicate to the State Board which shall comply with the provisions of sub-section (2).\n(4) Any cost incurred in getting any sample analysed at the request of the occupier or his agent as\nprovided in clause (d) of sub-section (3) of section 26 or when he wilfully absents himself or refuses to\nsign the marked and sealed container or containers of sample of emission under sub-section (4) of that\nsection, shall be payable by such occupier or his agent and in case of default the same shall be recoverable\nfrom him as arrears of land revenue or of public demand.\n28. State Air Laboratory.—(1) The State Government may, by notification in the Official\nGaz"
+    },
+    {
+      "number": "I",
+      "content": "the Schedule.].—Omitted by the Air (Prevention and Control of\nPollution)Amendment Act, 1987 (47 of 1987), s. 22 (w.e.f. 1-4-1988).\n51. Maintenance of register.—(1) Every State Board shall maintain a register containing particulars\nof the persons to whom consent has been granted under section 21, the standards for emission laid down\nby it in relation to each such consent and such other particulars as may be prescribed.\n(2) The register maintained under sub-section (1) shall be open to inspection at all reasonable hours\nby any person interested in or affected by such standards for emission or by any other person authorised\nby such person in this behalf.\n52. Effect of other laws.—Save as otherwise provided by or under the Atomic Energy Act, 1962\n(33 of 1962), in relation to radioactive air pollution the provisions of this Act shall have effect\nnotwithstanding anything inconsistent therewith contained in any enactment other than this Act.\n53. Power of Central Government to make rules.—(1) The Central Government may, in\nconsultation with the Central Board, by notification in the Official Gazette, make rules in respect of the\nfollowing matters, namely:—\n(a) the intervals and the time and place at which meetings of the Central Board or any committee\nthereof shall be held and the procedure to be followed at such meetings, including the quorum\nnecessary for the transaction of business thereat, under sub-section (1) of section 10 and under\nsub-section (2) of section 11;\n(b) the fees and allowances to be paid to the members of a committee of the Central Board, not\nbeing members of the Board, under sub-section (3) of section 11;\n(c) the manner in which and the purposes for which persons may be associated with the Central\nBoard under sub-section (1) of section 12;\n(d) the fees and allowance to be paid under sub-section (3) of section 12 to persons associated\nwith the Central Board under sub-section (1) of section 12;\n(e) the functions to be performed by the Central Board under clause (j) of sub-section (2) of\nsection 16;\n\n1. Subs. by Act 47 of 1987, s. 15 for “State Board for the Prevention and Control of Water Pollution” (w.e.f. 1-4-1988).\n\n21\n\n\f1\n\n[(f) the form in which and the time within which the budget of the Central Board may be\nprepared and forwarded to the Central Government under section 34;\n(ff) the form in which the annual report of die Central Board may be prepared under section 35;]\n(g) the form in which the accounts of the Central Board may be maintained under sub-section (1)\nof section 36.\n(2) Every rule made by the Central Government under this Act shall be laid, as soon as may be after it\nis made, before each House of Parliament, while it is in session, for a total period of thirty days which\nmay be comprised in one session or in two or more successive sessions, and if, before the expiry of the\nsession immediately following the session or the successive sessions aforesaid, both Houses agree in\nmaking any modification in the rule or both Hous"
+    },
+    {
+      "number": "I",
+      "content": "The Schedule.].—Omitted by the Air (Prevention and Control of Pollution)Amendment Act, 1987\n(47 of 1987), s. 25(w.e.f. 1-4-1988).\n\n1. Subs. by Act 47 of 1987, s. 24, for clause (w) (w.e.f. 1-4-1988).\n2. Ins. by s. 24, ibid. (w.e.f. 1-4-1988).\n3. Subs. by s. 24,ibid.,for “in clause (a)” (w.e.f. 1-4-1988).\n\n23"
+    }
+  ],
+  "metadata": {
+    "source_file": "air_act-1981.pdf",
+    "text_length": 78142
+  }
+}

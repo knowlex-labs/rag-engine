@@ -1,0 +1,565 @@
+{
+  "name": "ADMINISTRATIVE TRIBUNALS",
+  "year": 1985,
+  "act_number": "No. 13 of 1985",
+  "preamble": "BE it enacted by Parliament in the Thirty-sixth Year of the Republic of India as follow:—",
+  "document_type": "bare_act",
+  "total_chapters": 9,
+  "total_sections": 41,
+  "chapters": [
+    {
+      "number": "II",
+      "title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "section_numbers": [
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "10A",
+        "10B",
+        "11",
+        "12",
+        "13"
+      ]
+    },
+    {
+      "number": "III",
+      "title": "JURISDICTION, POWERS AND AUTHORITY OF TRIBUNALS",
+      "section_numbers": [
+        "14",
+        "15",
+        "16",
+        "17",
+        "18"
+      ]
+    },
+    {
+      "number": "IV",
+      "title": "PROCEDURE",
+      "section_numbers": [
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25",
+        "26",
+        "27"
+      ]
+    },
+    {
+      "number": "V",
+      "title": "MISCELLANEOUS",
+      "section_numbers": [
+        "28",
+        "29",
+        "29A",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "36A",
+        "37"
+      ]
+    },
+    {
+      "number": "I",
+      "title": "PRELIMINARY",
+      "section_numbers": [
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "number": "II",
+      "title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "section_numbers": []
+    },
+    {
+      "number": "III",
+      "title": "JURISDICTION, POWERS AND AUTHORITY OF TRIBUNALS",
+      "section_numbers": []
+    },
+    {
+      "number": "IV",
+      "title": "PROCEDURE",
+      "section_numbers": []
+    },
+    {
+      "number": "V",
+      "title": "MISCELLANEOUS",
+      "section_numbers": []
+    }
+  ],
+  "sections": [
+    {
+      "number": "4",
+      "title": "Establishment of Administrative Tribunals",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "5",
+      "title": "Composition of Tribunals and Benches thereof",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "6",
+      "title": "Qualifications for appointment as Chairman, Vice-Chairman and other Members",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "7",
+      "title": "Vice-Chairman to act as Chairman or to discharge his functions in certain circumstances",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "8",
+      "title": "Term of office",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "9",
+      "title": "Resignation and removal",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "10",
+      "title": "Salaries and allowances and other terms and conditions of service of Chairman, and other",
+      "content": "Members.",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "10A",
+      "title": "Saving terms and conditions of service of Vice-Chairman",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "10B",
+      "title": "Qualifications, terms and conditions of service of Chairman and Member",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "11",
+      "title": "Provision as to the holding of offices by Chairman, etc., on ceasing to be such Chairman, etc",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "12",
+      "title": "Financial and administrative powers of the Chairman",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "13",
+      "title": "Staff of the Tribunal",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "ESTABLISHMENT OF TRIBUNALS AND BENCHES THEREOF",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "14",
+      "title": "Jurisdiction, powers and authority of the Central Administrative Tribunal",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "JURISDICTION, POWERS AND AUTHORITY OF TRIBUNALS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "15",
+      "title": "Jurisdiction, powers and authority of State Administrative Tribunals",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "JURISDICTION, POWERS AND AUTHORITY OF TRIBUNALS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "16",
+      "title": "Jurisdiction, powers and authority of a Joint Administrative Tribunal",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "JURISDICTION, POWERS AND AUTHORITY OF TRIBUNALS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "17",
+      "title": "Power to punish for contempt",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "JURISDICTION, POWERS AND AUTHORITY OF TRIBUNALS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "18",
+      "title": "Distribution of business amongst the Benches",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "JURISDICTION, POWERS AND AUTHORITY OF TRIBUNALS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "19",
+      "title": "Applications to tribunals",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "20",
+      "title": "Applications not to be admitted unless other remedies exhausted",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "21",
+      "title": "Limitation",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "22",
+      "title": "Procedure and powers of Tribunals",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "23",
+      "title": "Right of applicant to take assistance of legal practitioner and of Government, etc., to appoint",
+      "content": "presenting officers.",
+      "chapter_number": "IV",
+      "chapter_title": "PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "24",
+      "title": "Conditions as to making of interim orders",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "25",
+      "title": "Power of Chairman to transfer cases from one Bench to another",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "26",
+      "title": "Decision to be by majority",
+      "content": "1\n\fSECTIONS",
+      "chapter_number": "IV",
+      "chapter_title": "PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "27",
+      "title": "Execution of orders of a Tribunal",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PROCEDURE",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "28",
+      "title": "Exclusion of jurisdiction of courts except the Supreme Court under article 136 of the",
+      "content": "Constitution.",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "29",
+      "title": "Transfer of pending cases",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "29A",
+      "title": "Provision for filing of certain appeals",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "30",
+      "title": "Proceedings before a Tribunal to be judicial proceedings",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "31",
+      "title": "Members and staff of Tribunal to be public servants",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "32",
+      "title": "Protection of action taken in good faith",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "33",
+      "title": "Act to have overriding effect",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "34",
+      "title": "Power to remove difficulties",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "35",
+      "title": "Power of the Central Government to make rules",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "36",
+      "title": "Power of the appropriate Government to make rules",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "36A",
+      "title": "Power to make rules retrospectively",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "37",
+      "title": "Laying of rules",
+      "content": "2\n\fTHE ADMINISTRATIVE TRIBUNALS ACT, 1985\nACT NO. 13 OF 1985\n[27th February, 1985.]\nAn Act to provide for the adjudication or trial by Administrative Tribunals of disputes and\ncomplaints with respect to recruitment and conditions of service of persons appointed to\npublic services and posts in connection with the affairs of the Union or of any State or of any\nlocal or other authority within the territory of India or under the control of the Government of\nIndia or of 1[any corporation or society owned or controlled by the Government in pursuance\nof article 323A of the Constitution] and for matters connected therewith or incidental thereto.\nBE it enacted by Parliament in the Thirty-sixth Year of the Republic of India as follow:—",
+      "chapter_number": "V",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "1",
+      "title": "Short title, extent and commencement.—(1) This Act may be called the Administrative",
+      "content": "Tribunals Act, 1985.\n(2) It extends,—\n(a) in so far as it relates to the Central Administrative Tribunal, to the whole of India;\n2\n*\n*\n*\n*\n*.\n(3) The provisions of this Act, in so far as they relate to the Central Administrative Tribunal, shall\ncome into force on such date3 as the Central Government may, by notification, appoint.\n(4) The provisions of this Act, in so far as they relate to an Administrative Tribunal for a State, shall\ncome into force in a State on such date as the Central Government may, by notification, appoint.",
+      "chapter_number": "I",
+      "chapter_title": "PRELIMINARY",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "2",
+      "title": "Act not to apply to certain persons.—The provisions of this Act shall not apply to—",
+      "content": "(a) any member of the naval, military or air forces or of any other armed forces of the Union;\n4\n*\n*\n*\n*\n*\n5\n(c) any officer or servant of the Supreme Court or of any High Court [or courts subordinate\nthereto];\n(d) any person appointed to the secretarial staff of either House of Parliament or to the secretarial\nstaff of any State Legislature or a House thereof or, in the case of a Union territory having a\nLegislature, of that Legislature.",
+      "chapter_number": "I",
+      "chapter_title": "PRELIMINARY",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "3",
+      "title": "Definitions.—In this Act, unless the context otherwise requires,—",
+      "content": "[(a) “Administrative Member” means a Member of a Tribunal who is not a Judicial Member\nwithin the meaning of clause (i);]\n6\n[(aa)] “Administrative Tribunal”, in relation to a State, means the Administrative Tribunal for\nthe State or, as the case may be, the Joint Administrative Tribunal for that State and any other State or\nStates;\n7\n(b) “application” means an application made under section 19;\n3. 1st July, 1985, vide notification No. G.S.R. 527(E), dated by 1st July, 1985, see Gazette of India, Extraordinary, Part II,\nsec. 3(i).\n3\n\f(c) “appointed day”, in relation to a Tribunal, means the date with effect from which it is\nestablished, by notification, under section 4;\n(d) “appropriate Government” means,—\n(i) in relation to the Central Administrative Tribunal or a Joint Administrative Tribunal, the\nCentral Government;\n(ii) in relation to a State Administrative Tribunal, the State Government;\n(e) “Bench” means a Bench of a Tribunal;\n(f) “Central Administrative Tribunal” means the Administrative Tribunal established under\nsub-section (1) of section 4;\n(g) “Chairman” means the Chairman of a Tribunal;\n(h) “Joint Administrative Tribunal” means an Administrative Tribunal for two or more States\nestablished under sub-section (3) of section 4;\n[(i) “Judicial Member” means a Member of a Tribunal appointed as such under this Act, and\nincludes 2[the Chairman] who possesses any of the qualifications specified in sub-section (3) of\nsection 6;\n1\n(ia) “Member” means a Member (whether Judicial or Administrative) of a Tribunal, and includes\nthe Chairman 3***;]\n(j) “notification” means a notification published in the Official Gazette;\n(k) “post” means a post within or outside India;\n(l) “prescribed” means prescribed by rules made under this Act;\n(m) “President” means the President of India;\n4\n*\n*\n*\n*\n*\n(o) “rules” means rules made under this Act;\n(p) “service” means service within or outside India;\n(q) “service matters”, in relation to a person, means all matters relating to the conditions of his service\nin connection with the affairs of the Union or of any State or of any local or other authority within the\nterritory of India or under the control of the Government of India, or, as the case may be, of any\ncorporation 5[or society] owned or controlled by the Government, as respects—\n(i) remuneration (including allowances), pension and other retirement benefits;\n(ii) tenure including confirmation, seniority, promotion, reversion, premature retirement and\nsuperannuation;\n(iii) leave of any kind;\n(iv) disciplinary matters; or\n(v) any other matter whatsoever;\n(r) “service rules as to redressal of grievances”, in relation to any matter, means the rules, regulations,\norders or other instruments or arrangements as in force for the time being with respect to redressal,\notherwise than under this Act, of any grievances in relation to such matters;\n4\n\f[(rr) “society” means a society registered under the Societies Registration Act, 1860 (21 of 1860), or\nunder any corresponding law for the time being in force in a State;]\n1\n(s) “Supreme Court” means the Supreme Court of India;\n(t) “Tribunal” means the Central Administrative Tribunal or a State Administrative Tribunal or a Joint\nAdministrative Tribunal;\n[(u) “Vice-Chairman” means a Member who has been authorised by the appropriate Government to\nperform administrative functions at each of the places where Benches of the Tribunal have been set up.]\n2\nExplanation.—In the case of a Tribunal having two or more Vice-Chairmen, references to the\nVice-Chairman in this Act shall be construed as a reference to each of those Vice-Chairmen.",
+      "chapter_number": "I",
+      "chapter_title": "PRELIMINARY",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    }
+  ],
+  "schedules": [
+    {
+      "number": "Fifth",
+      "content": "the Fifth Schedule (w.e.f. 31-10- 2019).\n3. 1st July, 1985, vide notification No. G.S.R. 527(E), dated by 1st July, 1985, see Gazette of India, Extraordinary, Part II,\nsec. 3(i).\n4. Clause (b) omitted by Act 19 of 1986, s. 3 (w.e.f. 1-11-1985).\n5. Ins. by Act 51 of 1987, s. 2 (w.e.f.22-12-1987).\n6. Ins. by Act 19 of 1986, s. 4 (w.e.f. 22-1-1986).\n7. Clause (a) re-lettered as clause (aa) thereof by s. 4, ibid. (w.e.f. 22-1-1986).\n\n3\n\n\f(c) “appointed day”, in relation to a Tribunal, means the date with effect from which it is\nestablished, by notification, under section 4;\n(d) “appropriate Government” means,—\n(i) in relation to the Central Administrative Tribunal or a Joint Administrative Tribunal, the\nCentral Government;\n(ii) in relation to a State Administrative Tribunal, the State Government;\n(e) “Bench” means a Bench of a Tribunal;\n(f) “Central Administrative Tribunal” means the Administrative Tribunal established under\nsub-section (1) of section 4;\n(g) “Chairman” means the Chairman of a Tribunal;\n(h) “Joint Administrative Tribunal” means an Administrative Tribunal for two or more States\nestablished under sub-section (3) of section 4;\n[(i) “Judicial Member” means a Member of a Tribunal appointed as such under this Act, and\nincludes 2[the Chairman] who possesses any of the qualifications specified in sub-section (3) of\nsection 6;\n1\n\n(ia) “Member” means a Member (whether Judicial or Administrative) of a Tribunal, and includes\nthe Chairman 3***;]\n(j) “notification” means a notification published in the Official Gazette;\n(k) “post” means a post within or outside India;\n(l) “prescribed” means prescribed by rules made under this Act;\n(m) “President” means the President of India;\n4\n\n*\n\n*\n\n*\n\n*\n\n*\n\n(o) “rules” means rules made under this Act;\n(p) “service” means service within or outside India;\n(q) “service matters”, in relation to a person, means all matters relating to the conditions of his service\nin connection with the affairs of the Union or of any State or of any local or other authority within the\nterritory of India or under the control of the Government of India, or, as the case may be, of any\ncorporation 5[or society] owned or controlled by the Government, as respects—\n(i) remuneration (including allowances), pension and other retirement benefits;\n(ii) tenure including confirmation, seniority, promotion, reversion, premature retirement and\nsuperannuation;\n(iii) leave of any kind;\n(iv) disciplinary matters; or\n(v) any other matter whatsoever;\n(r) “service rules as to redressal of grievances”, in relation to any matter, means the rules, regulations,\norders or other instruments or arrangements as in force for the time being with respect to redressal,\notherwise than under this Act, of any grievances in relation to such matters;\n\n1. Subs. by Act 19 of 1986, s. 4, for clause (i) (w.e.f. 22-1-1986).\n2. Subs. by Act 1 of 2007, s. 2, for “the Chairman or a Vice-Chairman” (w.e.f. 19-2-2007).\n3. The words “and a Vice-Chairman” omitted by s. 2, ibid. (w.e."
+    }
+  ],
+  "metadata": {
+    "source_file": "tmp9ztgjz42.pdf",
+    "text_length": 62228
+  }
+}

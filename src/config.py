@@ -71,10 +71,6 @@ class MinIOConfig:
     SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "minioadmin")
     SECURE: bool = os.getenv("MINIO_SECURE", "false").lower() == "true"
 
-class GCSConfig:
-    BUCKET_NAME: str = os.getenv("GCS_BUCKET_NAME", "nyayamind-content-storage")
-    PROJECT_ID: str = os.getenv("GCP_PROJECT_ID", "nyayamind-dev")
-
 
 class Neo4jConfig:
     URI: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
@@ -98,6 +94,5 @@ class Config:
     storage = StorageConfig()
 
     minio = MinIOConfig()
-    gcs = GCSConfig()
     neo4j = Neo4jConfig()
     llama_cloud = LlamaCloudConfig()

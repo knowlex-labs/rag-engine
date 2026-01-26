@@ -1,0 +1,955 @@
+{
+  "name": "Code on Wages",
+  "year": 2019,
+  "act_number": "No. 29 of 2019",
+  "preamble": "BE it enacted by Parliament in the Seventieth Year of the Republic of India as follows:—",
+  "document_type": "bare_act",
+  "total_chapters": 17,
+  "total_sections": 70,
+  "chapters": [
+    {
+      "number": "II",
+      "title": "MINIMUM WAGES",
+      "section_numbers": [
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14"
+      ]
+    },
+    {
+      "number": "III",
+      "title": "PAYMENT OF WAGES",
+      "section_numbers": [
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24",
+        "25"
+      ]
+    },
+    {
+      "number": "IV",
+      "title": "PAYMENT OF BONUS",
+      "section_numbers": [
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37",
+        "38",
+        "39",
+        "40",
+        "41"
+      ]
+    },
+    {
+      "number": "V",
+      "title": "ADVISORY BOARD",
+      "section_numbers": [
+        "42"
+      ]
+    },
+    {
+      "number": "VI",
+      "title": "PAYMENT OF DUES CLAIMS AND AUDIT",
+      "section_numbers": [
+        "43",
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50"
+      ]
+    },
+    {
+      "number": "VII",
+      "title": "INSPECTORY-CUM-FACILITATOR",
+      "section_numbers": [
+        "51"
+      ]
+    },
+    {
+      "number": "VIII",
+      "title": "OFFENCES AND PENALTIES",
+      "section_numbers": [
+        "52",
+        "53",
+        "54",
+        "55",
+        "56"
+      ]
+    },
+    {
+      "number": "IX",
+      "title": "MISCELLANEOUS",
+      "section_numbers": [
+        "57",
+        "58",
+        "59",
+        "60",
+        "61",
+        "62",
+        "63",
+        "64",
+        "65",
+        "66",
+        "67",
+        "68",
+        "69"
+      ]
+    },
+    {
+      "number": "I",
+      "title": "PRELIMINARY",
+      "section_numbers": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ]
+    },
+    {
+      "number": "II",
+      "title": "MINIMUM WAGES",
+      "section_numbers": []
+    },
+    {
+      "number": "III",
+      "title": "PAYMENT OF WAGES",
+      "section_numbers": []
+    },
+    {
+      "number": "IV",
+      "title": "PAYMENT OF BONUS",
+      "section_numbers": []
+    },
+    {
+      "number": "V",
+      "title": "ADVISORY BOARD",
+      "section_numbers": []
+    },
+    {
+      "number": "VI",
+      "title": "PAYMENT OF DUES, CLAIMS AND AUDIT",
+      "section_numbers": []
+    },
+    {
+      "number": "VII",
+      "title": "INSPECTORY-CUM-FACILITATOR",
+      "section_numbers": []
+    },
+    {
+      "number": "VIII",
+      "title": "OFFENCES AND PENALTIES",
+      "section_numbers": []
+    },
+    {
+      "number": "IX",
+      "title": "MISCELLANEOUS",
+      "section_numbers": [
+        "2018"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "number": "5",
+      "title": "Payment of minimum rate of wages",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "MINIMUM WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "6",
+      "title": "Fixation of minimum wages",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "MINIMUM WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "7",
+      "title": "Components of minimum wages",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "MINIMUM WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "8",
+      "title": "Procedure for fixing and revising minimum wages",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "MINIMUM WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "9",
+      "title": "Power of Central Government to fix floor wage",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "MINIMUM WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "10",
+      "title": "Wages of employee who works for less than normal working day",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "MINIMUM WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "11",
+      "title": "Wages for two or more classes of work",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "MINIMUM WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "12",
+      "title": "Minimum time rate wages for piece work",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "MINIMUM WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "13",
+      "title": "Fixing hours of work for normal working day",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "MINIMUM WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "14",
+      "title": "Wages for overtime work",
+      "content": "",
+      "chapter_number": "II",
+      "chapter_title": "MINIMUM WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "15",
+      "title": "Mode of payment of wages",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "PAYMENT OF WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "16",
+      "title": "Fixation of wage period",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "PAYMENT OF WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "17",
+      "title": "Time limit for payment of wages",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "PAYMENT OF WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "18",
+      "title": "Deductions which may be made from wages",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "PAYMENT OF WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "19",
+      "title": "Fines",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "PAYMENT OF WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "20",
+      "title": "Deductions for absence from duty",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "PAYMENT OF WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "21",
+      "title": "Deductions for damage or loss",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "PAYMENT OF WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "22",
+      "title": "Deductions for services rendered",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "PAYMENT OF WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "23",
+      "title": "Deductions for recovery of advances",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "PAYMENT OF WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "24",
+      "title": "Deductions for recovery of loans",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "PAYMENT OF WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "25",
+      "title": "Chapter not to apply to Government establishments",
+      "content": "",
+      "chapter_number": "III",
+      "chapter_title": "PAYMENT OF WAGES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "26",
+      "title": "Eligibility for bonus, etc",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "27",
+      "title": "Proportionate reduction in bonus in certain cases",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "28",
+      "title": "Computation of number of working days",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "29",
+      "title": "Disqualification for bonus",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "30",
+      "title": "Establishments to include departments, undertakings and branches",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "31",
+      "title": "Payment of bonus out of allocable surplus",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "32",
+      "title": "Computation of gross profits",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "33",
+      "title": "Computation of available surplus",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "34",
+      "title": "Sums deductible from gross profits",
+      "content": "3\n\fSECTIONS",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "35",
+      "title": "Calculation of direct tax payable by employer",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "36",
+      "title": "Set on and set off of allocable surplus",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "37",
+      "title": "Adjustment of customary or interim bonus against bonus payable under this Code",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "38",
+      "title": "Deduction of certain amounts from bonus payable",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "39",
+      "title": "Time limit for payment of bonus",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "40",
+      "title": "Application of this Chapter to establishments in public sector in certain cases",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "41",
+      "title": "Non-applicability of this Chapter",
+      "content": "",
+      "chapter_number": "IV",
+      "chapter_title": "PAYMENT OF BONUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "42",
+      "title": "Central Advisory Board and State Advisory Boards",
+      "content": "",
+      "chapter_number": "V",
+      "chapter_title": "ADVISORY BOARD",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "43",
+      "title": "Responsibility for payment of various dues",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PAYMENT OF DUES CLAIMS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "44",
+      "title": "Payment of various undisbursed dues in case of death of employee",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PAYMENT OF DUES CLAIMS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "45",
+      "title": "Claims under Code and procedure thereof",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PAYMENT OF DUES CLAIMS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "46",
+      "title": "Reference of disputes under this Code",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PAYMENT OF DUES CLAIMS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "47",
+      "title": "Presumption about accuracy of balance sheet and profit and loss account of corporations and",
+      "content": "companies.",
+      "chapter_number": "VI",
+      "chapter_title": "PAYMENT OF DUES CLAIMS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "48",
+      "title": "Audit of account of employers not being corporations or companies",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PAYMENT OF DUES CLAIMS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "49",
+      "title": "Appeal",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PAYMENT OF DUES CLAIMS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "50",
+      "title": "Records, returns and notices",
+      "content": "",
+      "chapter_number": "VI",
+      "chapter_title": "PAYMENT OF DUES CLAIMS AND AUDIT",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "51",
+      "title": "Appointment of Inspector-cum-Facilitators and their powers",
+      "content": "",
+      "chapter_number": "VII",
+      "chapter_title": "INSPECTORY-CUM-FACILITATOR",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "52",
+      "title": "Cognizance of offences",
+      "content": "",
+      "chapter_number": "VIII",
+      "chapter_title": "OFFENCES AND PENALTIES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "53",
+      "title": "Power of officers of appropriate Government to impose penalty in certain cases",
+      "content": "",
+      "chapter_number": "VIII",
+      "chapter_title": "OFFENCES AND PENALTIES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "54",
+      "title": "Penalties for offences",
+      "content": "",
+      "chapter_number": "VIII",
+      "chapter_title": "OFFENCES AND PENALTIES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "55",
+      "title": "Offences by companies",
+      "content": "",
+      "chapter_number": "VIII",
+      "chapter_title": "OFFENCES AND PENALTIES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "56",
+      "title": "Composition of offences",
+      "content": "",
+      "chapter_number": "VIII",
+      "chapter_title": "OFFENCES AND PENALTIES",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "57",
+      "title": "Bar of suits",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "58",
+      "title": "Protection of action taken in good faith",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "59",
+      "title": "Burden of proof",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "60",
+      "title": "Contracting out",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "61",
+      "title": "Effect of laws agreements, etc., inconsistent with this Code",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "62",
+      "title": "Delegation of powers",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "63",
+      "title": "Exemption of employer from liability in certain cases",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "64",
+      "title": "Protection against attachments of assets of employer with Government",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "65",
+      "title": "Power of Central Government to give directions",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "66",
+      "title": "Saving",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "67",
+      "title": "Power of appropriate Government to make rules",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "68",
+      "title": "Power to remove difficulties",
+      "content": "",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "69",
+      "title": "Repeal and savings",
+      "content": "4\n\f THE CODE ON WAGES, 2019\n ACT NO. 29 OF 2019\n [8th August, 2019.]\nAn Act to amend and consolidate the laws relating to wages and bonus and matters connected\n therewith or incidental thereto.\n BE it enacted by Parliament in the Seventieth Year of the Republic of India as follows:—",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "1",
+      "title": "Short title, extent and commencement.—(1) This Act may be called the Code on Wages, 2019",
+      "content": "(2) It extends to the whole of India.\n (3) It shall come into force on such date1 as the Central Government may, by notification in the\nOfficial Gazette appoint; and different dates may be appointed for different provisions of this Code and\nany reference in any such provision to the commencement of this Code shall be construed as a reference\nto the coming into force of that provision.",
+      "chapter_number": "I",
+      "chapter_title": "PRELIMINARY",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "2",
+      "title": "Definitions.—In this Code, unless the context otherwise requires,—",
+      "content": "(a) “accounting year” means the year commencing on the 1st day of April;\n (b) “Advisory Board” means the Central Advisory Board or, as the case may be, the State\n Advisory Board, constituted under section 42;\n (c) “agricultural income tax law” means any law for the time being in force relating to the levy of\n tax on agricultural income;\n (d) “appropriate Government” means, —\n (i) in relation to, an establishment carried on by or under the authority of the Central\n Government or the establishment of railways, mines, oil field, major ports, air transport service,\n telecommunication, banking and insurance company or a corporation or other authority\n established by a Central Act or a central public sector undertaking or subsidiary companies set up\n by central public sector undertakings or autonomous bodies owned or controlled by the Central\n Government, including establishment of contractors for the purposes of such establishment,\n corporation or other authority, central public sector undertakings, subsidiary companies or\n autonomous bodies, as the case may be, the Central Government;\n (ii) in relation to any other establishment, the State Government;\n (e) “company” means a company as defined in clause (20) of section 2 of the Companies Act,\n 2013 (18 of 2013);\n (f) “contractor”, in relation to an establishment, means a person, who—\n (i) undertakes to produce a given result for the establishment, other than a mere supply of\n goods or articles of manufacture to such establishment, through contract labour; or\n\n1.18th December, 2020—Sub-section (1), (2), (3), (10) and (11) of section 42 (to the extent relate to the central Advisory Board);\n clauses (s) and (t) of sub-section (2) of section 67 (to the extent they relate to the Central advisory Board); section 69 [to the\n extent it relates to section 7 and 9 (to the extent relate to the Central Government) and section 8 of the Minimum Wages Act,\n 1948 (11 of 1948)], vide notification No. S.O. 4604(E), dated 18 th December, 2020, see Gazette of India, Extraordinary, Part II,\n sec. 3(ii).\n 21st day of November, 2025—Ss. 1 to 41, sub-sections (4) to (9) of section 42, ss. 43 to 66, sub-section (1) and clauses (a) to\n (r) and (u) to (zc) of sub-section (2) and sub-sections (3) to (5) of section 67, section 68, section 69, except the provisions of\n the Code mentioned at serial number 3 of S.O. 4604 (E), dated the 18th December, 2020, vide notification no. S.O. 5322 (E),\n dated 21st November, 2025, see Gazette of India, Extraordinary, Part II, s. 3(ii).\n\n 5\n\f (ii) supplies contract labour for any work of the establishment as mere human resource and\n includes a sub-contractor;\n (g) “contract labour” means a worker who shall be deemed to be employed in or in connection\nwith the work of an establishment when he is hired in or in connection with such work by or through\na contractor, with or without the knowledge of the principal employer and includes inter-State\nmigrant worker but does not include a worker (other than part-time employee) who—\n (i) is regularly employed by the contractor for any activity of his establishment and his\n employment is governed by mutually accepted standards of the conditions of employment\n (including engagement on permanent basis), and\n (ii) gets periodical increment in the pay, social security coverage and other welfare benefits in\n accordance with the law for the time being in force in such employment;\n (h) “co-operative society” means a society registered or deemed to be registered under the Co-\noperative Societies Act, 1912 (2 of 1912), or any other law for the time being in force relating to co-\noperative societies in any State;\n (i) “corporation” means any body corporate established by or under any Central Act, or State Act,\nbut does not include a company or a co-operative society;\n (j) “direct tax” means—\n (i) any tax chargeable under the—\n (A) Income-tax Act, 1961 (43 of 1961);\n (B) Companies (Profits) Surtax Act, 1964 (7 of 1964);\n (C) Agricultural income tax law; and\n (ii) any other tax which, having regard to its nature or incidence, may be declared by the\n Central Government, by notification, to be a direct tax for the purposes of this Code;\n (k) “employee” means, any person (other than an apprentice engaged under the Apprentices Act,\n1961 (52 of 1961)), employed on wages by an establishment to do any skilled, semi-skilled or\nunskilled, manual, operational, supervisory, managerial, administrative, technical or clerical work for\nhire or reward, whether the terms of employment be express or implied, and also includes a person\ndeclared to be an employee by the appropriate Government, but does not include any member of the\nArmed Forces of the Union;\n (l) “employer” means a person who employs, whether directly or through any person, or on his\nbehalf or on behalf of any person, one or more employees in his establishment and where the\nestablishment is carried on by any department of the Central Government or the State Government,\nthe authorit",
+      "chapter_number": "I",
+      "chapter_title": "PRELIMINARY",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "3",
+      "title": "Prohibition of discrimination on ground of gender.—(1) There shall be no discrimination in an",
+      "content": "establishment or any unit thereof among employees on the ground of gender in matters relating to wages\nby the same employer, in respect of the same work or work of a similar nature done by any employee.\n (2) No employer shall, —\n (i) for the purposes of complying with the provisions of sub-section (1), reduce the rate of wages\n of any employee; and\n\n 8\n\f (ii) make any discrimination on the ground of sex while recruiting any employee for the same\n work or work of similar nature and in the conditions of employment, except where the employment\n of women in such work is prohibited or restricted by or under any law for the time being in force.",
+      "chapter_number": "I",
+      "chapter_title": "PRELIMINARY",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "4",
+      "title": "Decision as to disputes with regard to same or similar nature of work.—Where there is any",
+      "content": "dispute as to whether a work is of same or similar nature for the purposes of section 3, the dispute shall be\ndecided by such authority as may be notified by the appropriate Government.",
+      "chapter_number": "I",
+      "chapter_title": "PRELIMINARY",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    },
+    {
+      "number": "2018",
+      "title": "However, before the said Bill could be passed in the said House, it lapsed on dissolution of the",
+      "content": "Sixteenth Lok Sabha. Hence, the Code on Wages, 2019.\n\n SANTOSH GANGWAR.\n\n NEW DELHI;\nThe 18th July, 2019.\n\n 32",
+      "chapter_number": "IX",
+      "chapter_title": "MISCELLANEOUS",
+      "has_proviso": false,
+      "has_explanation": false,
+      "cross_references": [],
+      "subsections": []
+    }
+  ],
+  "schedules": [],
+  "metadata": {
+    "source_file": "tmpb32il0_5.pdf",
+    "text_length": 112725,
+    "line_count": 1493,
+    "parsed_at": "2026-01-18 10:40:03.517226"
+  }
+}

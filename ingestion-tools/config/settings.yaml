@@ -1,0 +1,8 @@
+# Default settings for Ingestion Tools
+openai_key: ""
+gemini_key: ""
+embedding_provider: "openai"
+gcs_bucket: "nyayamind-content-storage"
+neo4j_uri: "bolt://localhost:7687"
+enable_ocr: false
+ocr_provider: "tesseract"

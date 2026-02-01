@@ -1,5 +1,4 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Header, UploadFile, File
-from typing import Optional, List
+from fastapi import APIRouter, HTTPException, Header, UploadFile, File
 import shutil
 import uuid
 import os
@@ -10,7 +9,6 @@ from models.api_models import (
     RetrieveRequest, RetrieveResponse,
     QueryAnswerRequest, QueryAnswerResponse,
     DeleteFileRequest, DeleteCollectionRequest,
-    IndexingStatusResponse, IndexingStatus,
     BatchStatusRequest, BatchStatusResponse, StatusItemResponse
 )
 from services.collection_service import CollectionService
@@ -54,7 +52,8 @@ async def query(
             news_subcategory=request.filters.news_subcategory if request.filters else None,
             limit=request.top_k,
             enable_critic=False,
-            answer_style=request.answer_style or "detailed"
+            answer_style=request.answer_style or "detailed",
+            use_neo4j=request.use_neo4j
         )
 
         sources = None
@@ -93,7 +92,8 @@ async def retrieve(
             content_type=request.filters.content_type.value if request.filters and request.filters.content_type else None,
             news_subcategory=request.filters.news_subcategory if request.filters else None,
             limit=request.top_k,
-            enable_critic=False
+            enable_critic=False,
+            use_neo4j=request.use_neo4j
         )
 
         results = []
@@ -160,51 +160,3 @@ async def delete_collection(
     if not success:
          raise HTTPException(status_code=500, detail="Failed to delete collection")
     return {"message": "Deleted"}
-
-# Legal GraphRAG Endpoints
-from services.legal_ingestion_service import legal_ingestion_service
-from services.question_generator_service import question_generator
-
-
-@router.post("/ingest/legal-graph")
-async def ingest_legal_document_graph(file: UploadFile = File(...)):
-    """
-    Triggers Legal GraphRAG ingestion for an uploaded file.
-    """
-    try:
-        file_id = str(uuid.uuid4())
-        # Sanitizing filename to avoid path traversal issues, simpler way for now
-        safe_filename = os.path.basename(file.filename)
-        with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{safe_filename}", mode="wb") as buffer:
-            temp_file_path = buffer.name
-            shutil.copyfileobj(file.file, buffer)
-            
-        try:
-            await legal_ingestion_service.ingest_document(temp_file_path, file_id)
-        finally:
-            if os.path.exists(temp_file_path):
-                os.remove(temp_file_path)
-                
-        return {"status": "success", "message": f"Ingested {file.filename} into Legal Graph.", "file_id": file_id}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.post("/generate/match-list")
-async def generate_match_list_question(file_id: str = None):
-    """
-    Generates a Match List question from the Knowledge Graph.
-    """
-    result = question_generator.generate_match_list(file_id)
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    return result
-
-@router.post("/generate/assertion-reason")
-async def generate_assertion_reason_question(file_id: str = None):
-    """
-    Generates an Assertion-Reason question from the Knowledge Graph.
-    """
-    result = question_generator.generate_assertion_reason(file_id)
-    if "error" in result:
-        raise HTTPException(status_code=400, detail=result["error"])
-    return result

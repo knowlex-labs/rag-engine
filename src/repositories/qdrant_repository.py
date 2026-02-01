@@ -13,34 +13,13 @@ logger = logging.getLogger(__name__)
 class QdrantRepository:
     def __init__(self):
         host = Config.qdrant.HOST
-        
-        if Config.qdrant.API_KEY:
-            # When using API key, use url parameter
-            # Check if host already contains a scheme (http:// or https://)
-            if host.startswith(('http://', 'https://')):
-                # Host is already a full URL (e.g., from Qdrant Cloud), use it directly
-                url = host
-            else:
-                # Host is just a hostname, construct URL with scheme and port
-                url = f"http://{host}:{Config.qdrant.PORT}"
-            logger.info(f"Initializing Qdrant client with URL: {url}")
-            logger.info(f"API Key present: {bool(Config.qdrant.API_KEY)}")
-            self.client = QdrantClient(
-                url=url,
-                api_key=Config.qdrant.API_KEY,
-                timeout=Config.qdrant.TIMEOUT
-            )
-        else:
-            # For local connections without API key, extract hostname from URL if needed
-            if host.startswith(('http://', 'https://')):
-                # Extract hostname from URL (remove scheme and any path/port)
-                host = host.split('://', 1)[1].split('/')[0].split(':')[0]
-            logger.info(f"Initializing Qdrant client with host: {host}:{Config.qdrant.PORT}")
-            self.client = QdrantClient(
-                host=host,
-                port=Config.qdrant.PORT,
-                timeout=Config.qdrant.TIMEOUT
-            )
+        self.client = QdrantClient(
+            url=f"http://{host}:{Config.qdrant.PORT}",
+            api_key=Config.qdrant.API_KEY,
+            timeout=Config.qdrant.TIMEOUT
+        )
+            
+
 
     def collection_exists(self, collection_name: str) -> bool:
         try:

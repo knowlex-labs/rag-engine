@@ -89,9 +89,10 @@ class ChunkingStrategy(BaseModel):
 
 class IndexingStatus(str, Enum):
     PENDING = "INDEXING_PENDING"
-    RUNNING = "INDEXING_RUNNING"
+    STARTED = "INDEXING_STARTED"
     SUCCESS = "INDEXING_SUCCESS"
     FAILED = "INDEXING_FAILED"
+    CANCELLED = "INDEXING_CANCELLED"
 
 class LinkItem(BaseModel):
     type: str # 'file', 'youtube', 'web'
@@ -117,6 +118,7 @@ class LinkItem(BaseModel):
 
 class BatchLinkRequest(BaseModel):
     items: List[LinkItem]
+    use_neo4j: bool = False  # Also index to Neo4j (in addition to Qdrant)
 
 class BatchItemResponse(BaseModel):
     file_id: str
@@ -139,6 +141,7 @@ class RetrieveRequest(BaseModel):
     filters: Optional[RetrieveFilters] = None
     top_k: int = 5
     include_graph_context: bool = True
+    use_neo4j: bool = False  # Use Neo4j instead of Qdrant
 
 class EnrichedChunk(BaseModel):
     chunk_id: str
@@ -160,6 +163,7 @@ class QueryAnswerRequest(BaseModel):
     top_k: int = 5
     include_sources: bool = False
     answer_style: Optional[str] = "detailed"
+    use_neo4j: bool = False  # Use Neo4j instead of Qdrant
 
 class QueryAnswerResponse(BaseModel):
     success: bool
@@ -190,6 +194,16 @@ class StatusItemResponse(BaseModel):
 class BatchStatusResponse(BaseModel):
     message: str
     results: List[StatusItemResponse]
+
+class CollectionStatusRequest(BaseModel):
+    file_ids: List[str]
+
+class FileStatusResponse(BaseModel):
+    file_id: str
+    status: IndexingStatus
+    indexed_at: Optional[str] = None
+    chunk_count: Optional[int] = None
+    error: Optional[str] = None
 
 
 

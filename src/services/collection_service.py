@@ -1,36 +1,66 @@
 
 import requests
-import os
 import tempfile
 from typing import List, Optional
 import logging
-import asyncio
 
 from repositories.neo4j_repository import neo4j_repository
+from repositories.qdrant_repository import QdrantRepository
 from services.storage.storage_factory import get_storage_service
 from services.hierarchical_chunking_service import chunking_service
 from utils.embedding_client import embedding_client
 from models.api_models import BatchLinkRequest, LinkItem, IndexingStatus
 from parsers.parser_factory import ParserFactory
-from config import Config
 
 logger = logging.getLogger(__name__)
 
 class CollectionService:
     def __init__(self):
         self.neo4j_repo = neo4j_repository
+        self.qdrant_repo = QdrantRepository()
         self.embedding_client = embedding_client
         self.storage_service = get_storage_service()
 
     def _get_user_collection(self, user_id: str) -> str:
         return f"user_{user_id}"
 
+    def _format_chunks_for_qdrant(self, chunks, embeddings, file_id: str, collection_id: str, source_type: str, content_type: str):
+        """Format chunks for Qdrant indexing with proper metadata structure."""
+        documents = []
+        for i, chunk in enumerate(chunks):
+            documents.append({
+                "text": chunk.text,
+                "vector": embeddings[i],
+                "document_id": file_id,
+                "chunk_id": chunk.chunk_id,
+                "source": source_type,
+                "metadata": {
+                    "collection_id": collection_id or "default",
+                    "file_id": file_id,
+                    "source_type": source_type,
+                    "content_type": content_type,
+                    "chunk_type": chunk.chunk_metadata.chunk_type.value,
+                    "chapter_title": chunk.topic_metadata.chapter_title,
+                    "section_title": chunk.topic_metadata.section_title,
+                    "page_start": chunk.topic_metadata.page_start,
+                    "key_terms": chunk.chunk_metadata.key_terms,
+                }
+            })
+        return documents
+
     async def process_batch(self, request: BatchLinkRequest, tenant_id: str):
         collection_id = request.items[0].collection_id if request.items else "default"
         # Get content_type from first item (all items in batch should have same content_type)
         content_type = request.items[0].content_type.value if request.items and request.items[0].content_type else "legal"
         logger.info(f"Starting batch process for tenant {tenant_id}, collection {collection_id}, content_type {content_type}")
-        self.neo4j_repo.create_user_collection(tenant_id, collection_id, content_type)
+
+        # Create Qdrant user collection (default backend)
+        qdrant_collection_name = self._get_user_collection(tenant_id)
+        self.qdrant_repo.create_user_collection(tenant_id)
+
+        # Optionally also create Neo4j collection if use_neo4j is True
+        if request.use_neo4j:
+            self.neo4j_repo.create_user_collection(tenant_id, collection_id or "default", content_type)
 
         results = []
         for item in request.items:
@@ -51,18 +81,34 @@ class CollectionService:
                     # Extract news metadata from parsed content or item attributes
                     news_metadata = self._extract_news_metadata(parsed, item)
 
-                logger.info(f"Indexing chunks to Neo4j for {item.file_id}")
-                self.neo4j_repo.index_chunks(
+                # Index to Qdrant (default)
+                logger.info(f"Indexing chunks to Qdrant for {item.file_id}")
+                qdrant_documents = self._format_chunks_for_qdrant(
                     chunks=chunks,
                     embeddings=embeddings,
-                    user_id=tenant_id,
-                    collection_id=item.collection_id or "default",
                     file_id=item.file_id,
-                    file_name=parsed.metadata.title or item.title or "Unknown",
+                    collection_id=item.collection_id or "default",
                     source_type=item.type,
-                    content_type=item_content_type,
-                    news_metadata=news_metadata
+                    content_type=item_content_type
                 )
+                self.qdrant_repo.link_content(qdrant_collection_name, qdrant_documents)
+
+                # Optionally also index to Neo4j
+                if request.use_neo4j:
+                    logger.info(f"Also indexing chunks to Neo4j for {item.file_id}")
+                    file_name = parsed.metadata.title if hasattr(parsed.metadata, 'title') and parsed.metadata.title else "Unknown"
+                    self.neo4j_repo.index_chunks(
+                        chunks=chunks,
+                        embeddings=embeddings,
+                        user_id=tenant_id,
+                        collection_id=item.collection_id or "default",
+                        file_id=item.file_id,
+                        file_name=file_name,
+                        source_type=item.type,
+                        content_type=item_content_type,
+                        news_metadata=news_metadata
+                    )
+
                 logger.info(f"Successfully processed {item.file_id}")
 
                 results.append({
@@ -210,18 +256,87 @@ class CollectionService:
 
     def unlink_content(self, collection_name: Optional[str], file_ids: List[str], user_id: str) -> int:
         deleted_count = 0
+        qdrant_collection_name = self._get_user_collection(user_id)
+
         for file_id in file_ids:
             try:
-                success = self.neo4j_repo.delete_file(user_id, file_id)
-                if success:
+                # Delete from Qdrant first (default backend)
+                qdrant_success = self.qdrant_repo.unlink_content(
+                    collection_name=qdrant_collection_name,
+                    file_id=file_id
+                )
+
+                # Also delete from Neo4j for backward compatibility
+                neo4j_success = self.neo4j_repo.delete_file(user_id, file_id)
+
+                if qdrant_success or neo4j_success:
                     deleted_count += 1
             except Exception:
                 logger.error(f"Error unlinking file {file_id}", exc_info=True)
         return deleted_count
 
     def delete_collection(self, user_id: str, collection_id: str) -> bool:
-        return self.neo4j_repo.delete_collection(user_id, collection_id)
+        # Delete from Qdrant (logical collection within user's collection)
+        qdrant_success = self.qdrant_repo.delete_logical_collection(user_id, collection_id)
+
+        # Also delete from Neo4j for backward compatibility
+        neo4j_success = self.neo4j_repo.delete_collection(user_id, collection_id)
+
+        return qdrant_success or neo4j_success
 
     def purge_user_data(self, user_id: str) -> bool:
         logger.warning(f"Purge user data not implemented for Neo4j: user_id={user_id}")
         return False
+
+    def _check_file_in_collection(self, collection_name: str, collection_id: str, file_id: str) -> dict:
+        """Check if a specific file exists in a collection and return its status."""
+        from qdrant_client.models import Filter, FieldCondition, MatchValue
+
+        try:
+            scroll_result = self.qdrant_repo.client.scroll(
+                collection_name=collection_name,
+                scroll_filter=Filter(
+                    must=[
+                        FieldCondition(key="metadata.collection_id", match=MatchValue(value=collection_id)),
+                        FieldCondition(key="metadata.file_id", match=MatchValue(value=file_id))
+                    ]
+                ),
+                limit=100,
+                with_payload=True,
+                with_vectors=False
+            )
+
+            points = scroll_result[0] if scroll_result else []
+
+            if points:
+                indexed_at = points[0].payload.get("metadata", {}).get("indexed_at")
+                return {
+                    "file_id": file_id,
+                    "status": IndexingStatus.SUCCESS,
+                    "chunk_count": len(points),
+                    "indexed_at": indexed_at
+                }
+
+            # Not found - return FAILED with error message
+            return {
+                "file_id": file_id,
+                "status": IndexingStatus.FAILED,
+                "error": "not found"
+            }
+
+        except Exception as e:
+            logger.error(f"Error checking file {file_id}: {e}")
+            return {
+                "file_id": file_id,
+                "status": IndexingStatus.FAILED,
+                "error": str(e)
+            }
+
+    def check_collection_status(self, user_id: str, collection_id: str, file_ids: List[str]) -> List[dict]:
+        """Check the indexing status of multiple files within a specific collection."""
+        qdrant_collection_name = self._get_user_collection(user_id)
+
+        if not self.qdrant_repo.collection_exists(qdrant_collection_name):
+            return [{"file_id": fid, "status": IndexingStatus.FAILED, "error": "not found"} for fid in file_ids]
+
+        return [self._check_file_in_collection(qdrant_collection_name, collection_id, fid) for fid in file_ids]

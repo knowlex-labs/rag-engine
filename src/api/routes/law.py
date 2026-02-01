@@ -7,7 +7,7 @@ import logging
 import time
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Header, BackgroundTasks
-from typing import Optional, List, Dict, Any
+from typing import List
 
 # Import all the models needed
 from models.question_models import (
@@ -34,7 +34,6 @@ from models.law_summary_models import (
 from models.api_models import RetrieveRequest, RetrieveResponse
 
 # Import services
-from services.enhanced_question_generator import enhanced_question_generator
 from services.legal_query import LegalQueryService
 from services.law_summary_service import LegalSummaryService
 from services.query_service import QueryService

@@ -1,8 +1,8 @@
 import logging
 import time
-from typing import List, Dict, Any, Optional
+from typing import Dict, Any
 from services.query_service import QueryService
-from services.enhanced_question_generator import enhanced_question_generator
+from services.question_generator_service import QuestionGeneratorService
 from utils.llm_client import LlmClient
 from models.question_models import DifficultyLevel, QuestionGenerationResponse
 
@@ -14,14 +14,12 @@ class CollectionTaskService:
     def __init__(self):
         self.query_service = QueryService()
         self.llm_client = LlmClient()
-        self.question_generator = enhanced_question_generator
+        self.question_generator = QuestionGeneratorService()
 
     async def generate_summary(self, collection_id: str, user_id: str) -> Dict[str, Any]:
         """Generate a professional, high-quality, student-friendly summary of a collection."""
         start_time = time.time()
         
-        # 1. Retrieve key content from collection
-        # We search for general overview content
         logger.info(f"Generating summary for collection: {collection_id}")
         chunks = await self.query_service.retrieve_context(
             query="comprehensive overview of everything in this collection",
@@ -34,7 +32,6 @@ class CollectionTaskService:
         if not chunks:
             logger.info(f"Semantic overview search failed for {collection_id}, falling back to direct retrieval")
             try:
-                # Direct query to get any chunks from this collection
                 fallback_query = """
                 MATCH (c:Chunk)
                 WHERE c.collection_id = $collection_id

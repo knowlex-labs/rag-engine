@@ -13,11 +13,24 @@ logger = logging.getLogger(__name__)
 class QdrantRepository:
     def __init__(self):
         host = Config.qdrant.HOST
-        self.client = QdrantClient(
-            url=f"http://{host}:{Config.qdrant.PORT}",
-            api_key=Config.qdrant.API_KEY,
-            timeout=Config.qdrant.TIMEOUT
-        )
+
+        # Determine if using cloud instance (has domain with dots) or local
+        is_cloud = '.' in host and 'localhost' not in host
+
+        if is_cloud:
+            # For cloud instances, use HTTPS and the full host URL without port
+            self.client = QdrantClient(
+                url=f"https://{host}",
+                api_key=Config.qdrant.API_KEY,
+                timeout=Config.qdrant.TIMEOUT
+            )
+        else:
+            # For local instances, use HTTP with port
+            self.client = QdrantClient(
+                url=f"http://{host}:{Config.qdrant.PORT}",
+                api_key=Config.qdrant.API_KEY,
+                timeout=Config.qdrant.TIMEOUT
+            )
             
 
 
@@ -560,3 +573,50 @@ class QdrantRepository:
             status[doc_id] = "indexed" if results[0] else "not_found"
             logger.debug(f"Document {doc_id} status: {status[doc_id]}")
         return status
+
+    def scroll_by_filter(self, collection_name: str, filters: Dict[str, str], limit: int = 100) -> List[Dict]:
+        """
+        Scroll through points in a collection with filters.
+
+        Args:
+            collection_name: Name of the collection
+            filters: Dictionary of field->value filters
+            limit: Maximum number of points to return
+
+        Returns:
+            List of chunks with metadata
+        """
+        try:
+            # Build filter conditions
+            must_conditions = []
+            for key, value in filters.items():
+                must_conditions.append(
+                    FieldCondition(key=key, match=MatchValue(value=value))
+                )
+
+            # Scroll with filter
+            results, _ = self.client.scroll(
+                collection_name=collection_name,
+                scroll_filter=Filter(must=must_conditions) if must_conditions else None,
+                limit=limit,
+                with_payload=True,
+                with_vectors=False
+            )
+
+            # Format results
+            chunks = []
+            for point in results:
+                chunk_data = {
+                    "id": point.id,
+                    "text": point.payload.get("text", ""),
+                    "metadata": point.payload.get("metadata", {}),
+                    "chunk_id": point.payload.get("chunk_id", ""),
+                    "document_id": point.payload.get("document_id", "")
+                }
+                chunks.append(chunk_data)
+
+            return chunks
+
+        except Exception as e:
+            logger.error(f"Error scrolling collection {collection_name}: {e}")
+            return []

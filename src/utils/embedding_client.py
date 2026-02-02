@@ -30,7 +30,7 @@ class EmbeddingClient:
                 from openai import OpenAI
                 api_key = Config.llm.OPENAI_API_KEY
                 EmbeddingClient._client = OpenAI(api_key=api_key)
-                EmbeddingClient._model_name = "text-embedding-ada-002"
+                EmbeddingClient._model_name = Config.embedding.MODEL_NAME
             
             else:
                 logger.info(f"Using HuggingFace embeddings: {Config.embedding.MODEL_NAME}")
@@ -38,16 +38,29 @@ class EmbeddingClient:
                 EmbeddingClient._client = SentenceTransformer(Config.embedding.MODEL_NAME)
         
     def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
+        if not texts:
+            logger.warning("Empty texts list provided for embedding generation")
+            return []
+
         provider = Config.embedding.PROVIDER
-        
+
         if provider == "gemini":
             from google.genai import types
-            result = EmbeddingClient._client.models.embed_content(
-                model=EmbeddingClient._model_name,
-                contents=texts,
-                config=types.EmbedContentConfig(output_dimensionality=Config.embedding.VECTOR_SIZE)
-            )
-            return [obj.values for obj in result.embeddings]
+            # Gemini API has a batch limit of 100 requests
+            BATCH_SIZE = 100
+            all_embeddings = []
+
+            for i in range(0, len(texts), BATCH_SIZE):
+                batch = texts[i:i + BATCH_SIZE]
+                logger.debug(f"Processing embedding batch {i // BATCH_SIZE + 1} ({len(batch)} texts)")
+                result = EmbeddingClient._client.models.embed_content(
+                    model=EmbeddingClient._model_name,
+                    contents=batch,
+                    config=types.EmbedContentConfig(output_dimensionality=Config.embedding.VECTOR_SIZE)
+                )
+                all_embeddings.extend([obj.values for obj in result.embeddings])
+
+            return all_embeddings
             
         elif provider == "openai":
             response = EmbeddingClient._client.embeddings.create(

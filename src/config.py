@@ -10,15 +10,15 @@ class ParserConfig:
 
 class EmbeddingConfig:
     MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "text-embedding-004")
-    PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "gemini")
-    VECTOR_SIZE: int = int(os.getenv("VECTOR_SIZE", "768"))
+    PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "openai")
+    VECTOR_SIZE: int = int(os.getenv("VECTOR_SIZE", "1536"))
     DISTANCE_METRIC: str = os.getenv("DISTANCE_METRIC", "COSINE")
     CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "800"))
     CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "100"))
     MAX_CHUNK_SIZE: int = int(os.getenv("MAX_CHUNK_SIZE", "1200"))
 
 class LlmConfig:
-    PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini")
+    PROVIDER: str = os.getenv("LLM_PROVIDER", "openai")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
     OPENAI_MAX_TOKENS: int = int(os.getenv("OPENAI_MAX_TOKENS", "1000"))
@@ -86,7 +86,6 @@ class QdrantConfig:
     PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
     TIMEOUT: int = int(os.getenv("QDRANT_TIMEOUT", "30"))
     API_KEY: str = os.getenv("QDRANT_API_KEY", "")
-    VECTOR_SIZE: int = int(os.getenv("VECTOR_SIZE", "1536"))
 
 class Config:
     parser = ParserConfig()

@@ -1,93 +1,476 @@
-from fastapi import APIRouter, Header, HTTPException, Query
-from typing import List, Optional, Dict, Any
+from fastapi import APIRouter, Header, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional
 import logging
 
-from services.collection_task_service import collection_task_service
+from repositories.qdrant_repository import QdrantRepository
 from services.collection_service import CollectionService
 from services.query_service import QueryService
-from models.api_models import QueryAnswerRequest, QueryResponse, CollectionStatusRequest, FileStatusResponse, BatchLinkRequest, IngestionResponse
-from models.question_models import QuestionGenerationResponse
+from models.api_models import BatchLinkRequest, IngestionResponse, QueryAnswerRequest, QueryResponse, RetrieveRequest, RetrieveResponse
 
 router = APIRouter(prefix="/api/v1/collections")
 logger = logging.getLogger(__name__)
-query_service = QueryService()
-collection_service = CollectionService()
 
-@router.post("/{collection_id}/chat", response_model=QueryResponse)
-async def collection_chat(
-    collection_id: str,
-    request: QueryAnswerRequest,
-    x_user_id: str = Header(..., description="User ID for context isolation")
-):
+qdrant_repo = QdrantRepository()
+collection_service = CollectionService()
+query_service = QueryService()
+
+
+# ============================================================================
+# MODELS
+# ============================================================================
+
+class CreateCollectionRequest(BaseModel):
+    collection_name: str
+    use_new_schema: bool = True
+
+
+class DeleteFileRequest(BaseModel):
+    file_ids: List[str]
+
+
+class GetChunksRequest(BaseModel):
+    file_id: str
+    limit: int = 100
+
+
+class FileStatusRequest(BaseModel):
+    file_ids: List[str]
+
+
+class FileStatusItem(BaseModel):
+    file_id: str
+    status: str  # "INDEXED", "NOT_FOUND", "PARTIAL"
+    chunk_count: int
+    indexed_at: Optional[str] = None
+
+
+# ============================================================================
+# ENDPOINTS - ORDER MATTERS! Static routes first, then parameterized routes
+# ============================================================================
+
+# Static routes (no path parameters)
+@router.post("/create")
+async def create_collection(request: CreateCollectionRequest):
     """
-    Detailed chat about documents in a specific collection.
+    Create a new collection in Qdrant.
+
+    Example:
+    {
+        "collection_name": "LEGAL_COLLECTION_DEFAULT",
+        "use_new_schema": true
+    }
     """
     try:
-        # Override collection_ids in request to ensure focus on this collection
+        logger.info(f"Creating collection: {request.collection_name}")
+
+        if qdrant_repo.collection_exists(request.collection_name):
+            return {
+                "success": True,
+                "message": f"Collection '{request.collection_name}' already exists",
+                "collection_name": request.collection_name
+            }
+
+        success = qdrant_repo.create_collection(
+            collection_name=request.collection_name,
+            use_new_schema=request.use_new_schema
+        )
+
+        if success:
+            return {
+                "success": True,
+                "message": f"Created collection '{request.collection_name}'",
+                "collection_name": request.collection_name
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to create collection")
+
+    except Exception as e:
+        logger.error(f"Error creating collection: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/list")
+async def list_collections():
+    """
+    List all collections in Qdrant.
+    """
+    try:
+        collections = qdrant_repo.client.get_collections()
+        collection_names = [col.name for col in collections.collections]
+
+        return {
+            "success": True,
+            "collections": collection_names,
+            "count": len(collection_names)
+        }
+    except Exception as e:
+        logger.error(f"Error listing collections: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{collection_id}/files/status")
+async def get_files_status(
+    collection_id: str,
+    request: FileStatusRequest,
+    x_user_id: str = Header(...)
+):
+    """
+    Check indexing status of specific files within a collection.
+
+    Example:
+    {
+        "file_ids": ["doc_001", "doc_002", "doc_003"]
+    }
+
+    Returns status for each file:
+    - INDEXED: File is indexed with chunk count
+    - NOT_FOUND: File not found in the collection
+    """
+    try:
+        logger.info(f"Checking status for {len(request.file_ids)} files in collection {collection_id}")
+
+        collection_name = f"user_{x_user_id}"
+        file_statuses = []
+
+        for file_id in request.file_ids:
+            # Count chunks for this file in this collection
+            chunks = qdrant_repo.scroll_by_filter(
+                collection_name=collection_name,
+                filters={
+                    "metadata.collection_id": collection_id,
+                    "metadata.file_id": file_id
+                },
+                limit=10000  # High limit to count all chunks
+            )
+
+            chunk_count = len(chunks)
+
+            if chunk_count > 0:
+                # Get the most recent indexed timestamp if available
+                indexed_at = None
+                if chunks and chunks[0].get("metadata", {}).get("indexed_at"):
+                    indexed_at = chunks[0]["metadata"]["indexed_at"]
+
+                file_statuses.append({
+                    "file_id": file_id,
+                    "status": "INDEXED",
+                    "chunk_count": chunk_count,
+                    "indexed_at": indexed_at
+                })
+            else:
+                file_statuses.append({
+                    "file_id": file_id,
+                    "status": "NOT_FOUND",
+                    "chunk_count": 0,
+                    "indexed_at": None
+                })
+
+        return {
+            "success": True,
+            "collection_id": collection_id,
+            "files": file_statuses,
+            "total_files": len(file_statuses)
+        }
+
+    except Exception as e:
+        logger.error(f"Error checking file status: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Parameterized routes (with {collection_id})
+@router.post("/{collection_id}/link-content", response_model=IngestionResponse, status_code=207)
+async def link_content(
+    collection_id: str,
+    request: BatchLinkRequest,
+    x_user_id: str = Header(...)
+):
+    """
+    Index documents, web pages, or YouTube videos to a collection.
+
+    Example:
+    {
+        "items": [
+            {
+                "file_id": "doc_001",
+                "type": "file",
+                "storage_url": "local:///path/to/document.pdf",
+                "collection_id": "LEGAL_COLLECTION_DEFAULT"
+            }
+        ]
+    }
+    """
+    try:
+        logger.info(f"Linking content to {collection_id}: {len(request.items)} items")
+        logger.debug(f"Request details - collection_id: {collection_id}, user_id: {x_user_id}, items: {[item.dict() for item in request.items]}")
+
+        for item in request.items:
+            item.collection_id = collection_id
+
+        results = await collection_service.process_batch(request, x_user_id)
+
+        return IngestionResponse(
+            message=f"Processed {len(results)} items",
+            batch_id="sync",
+            results=results
+        )
+    except Exception as e:
+        logger.error(f"Error linking content: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{collection_id}/query", response_model=QueryResponse)
+async def query_collection(
+    collection_id: str,
+    request: QueryAnswerRequest,
+    x_user_id: str = Header(...)
+):
+    """
+    Query documents in a collection.
+
+    Example:
+    {
+        "query": "What are the main points?",
+        "top_k": 5,
+        "answer_style": "detailed",
+        "filters": {
+            "file_ids": ["file_uuid_1", "file_uuid_2"],
+            "content_type": "pdf"
+        }
+    }
+    """
+    try:
+        # Extract filters from request body (collection_id comes from path)
+        file_ids = request.filters.file_ids if request.filters else None
+        content_type = request.filters.content_type.value if request.filters and request.filters.content_type else None
+        news_subcategory = request.filters.news_subcategory if request.filters else None
+
         return query_service.search(
-            collection_name=collection_id, # This is used as identifier in some logic
+            collection_name=f"user_{x_user_id}",
             query_text=request.query,
             limit=request.top_k,
             collection_ids=[collection_id],
+            file_ids=file_ids,
+            content_type=content_type,
+            news_subcategory=news_subcategory,
             answer_style=request.answer_style or "detailed"
         )
     except Exception as e:
-        logger.error(f"Error in collection chat: {e}")
+        logger.error(f"Error querying collection: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.post("/{collection_id}/summary")
-async def collection_summary(
+
+@router.post("/{collection_id}/retrieve", response_model=RetrieveResponse)
+async def retrieve_chunks(
     collection_id: str,
-    x_user_id: str = Header(..., description="User ID for context isolation")
+    request: RetrieveRequest,
+    x_user_id: str = Header(...)
 ):
     """
-    Generate a professional and high-quality summary of the collection.
+    Retrieve relevant chunks for a query without generating an answer.
+    Returns source chunks that match the query.
+
+    Example:
+    {
+        "query": "What are the main provisions?",
+        "top_k": 5,
+        "filters": {
+            "file_ids": ["file_uuid_1"]
+        }
+    }
     """
     try:
-        return await collection_task_service.generate_summary(collection_id, x_user_id)
-    except Exception as e:
-        logger.error(f"Error generating collection summary: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        file_ids = request.filters.file_ids if request.filters else None
+        content_type = request.filters.content_type.value if request.filters and request.filters.content_type else None
+        news_subcategory = request.filters.news_subcategory if request.filters else None
 
-@router.post("/{collection_id}/quiz", response_model=QuestionGenerationResponse)
-async def collection_quiz(
-    collection_id: str,
-    num_questions: int = Query(10, ge=1, le=20),
-    difficulty: str = Query("moderate", description="easy, moderate, difficult"),
-    x_user_id: str = Header(..., description="User ID for context isolation")
-):
-    """
-    Generate a mixed quiz (MCQ, Assertion-Reasoning, Match) from the collection.
-    """
-    try:
-        return await collection_task_service.generate_quiz(collection_id, num_questions, difficulty)
-    except Exception as e:
-        logger.error(f"Error generating collection quiz: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-@router.post("/{collection_id}/status", response_model=List[FileStatusResponse])
-async def get_collection_status(
-    collection_id: str,
-    request: CollectionStatusRequest,
-    x_user_id: str = Header(..., description="User ID for context isolation")
-):
-    """
-    Check the indexing status of files within a specific collection.
-
-    Returns status information for each file_id:
-    - INDEXED: File is successfully indexed with chunk count
-    - NOT_FOUND: File not found in the collection
-    - ERROR: Error occurred while checking status
-    """
-    try:
-        status_results = collection_service.check_collection_status(
+        results = await query_service.retrieve_context(
+            query=request.query,
             user_id=x_user_id,
-            collection_id=collection_id,
-            file_ids=request.file_ids
+            collection_ids=[collection_id],
+            top_k=request.top_k,
+            file_ids=file_ids,
+            content_type=content_type,
+            news_subcategory=news_subcategory,
+            use_neo4j=request.use_neo4j
         )
 
-        return [FileStatusResponse(**result) for result in status_results]
+        # Transform results to EnrichedChunk format
+        enriched_chunks = []
+        for r in results:
+            enriched_chunks.append({
+                "chunk_id": r.get("id", ""),
+                "chunk_text": r.get("text", ""),
+                "relevance_score": r.get("score", 0.0),
+                "file_id": r.get("metadata", {}).get("file_id", ""),
+                "page_number": r.get("metadata", {}).get("page_number"),
+                "timestamp": r.get("metadata", {}).get("timestamp"),
+                "concepts": r.get("metadata", {}).get("concepts", [])
+            })
+
+        return RetrieveResponse(success=True, results=enriched_chunks)
+    except Exception as e:
+        logger.error(f"Error retrieving chunks: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{collection_id}/chunks")
+async def get_chunks(
+    collection_id: str,
+    request: GetChunksRequest,
+    x_user_id: str = Header(...)
+):
+    """
+    Get all chunks for a specific file in a collection.
+
+    Example:
+    {
+        "file_id": "doc_001",
+        "limit": 100
+    }
+    """
+    try:
+        logger.info(f"Getting chunks for file {request.file_id} in {collection_id}")
+
+        collection_name = f"user_{x_user_id}"
+
+        # Scroll through all points with the file_id filter
+        chunks = qdrant_repo.scroll_by_filter(
+            collection_name=collection_name,
+            filters={
+                "metadata.collection_id": collection_id,
+                "metadata.file_id": request.file_id
+            },
+            limit=request.limit
+        )
+
+        return {
+            "success": True,
+            "file_id": request.file_id,
+            "collection_id": collection_id,
+            "chunks": chunks,
+            "count": len(chunks)
+        }
 
     except Exception as e:
-        logger.error(f"Error checking collection status: {e}", exc_info=True)
+        logger.error(f"Error getting chunks: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{collection_id}/status")
+async def get_collection_status(
+    collection_id: str,
+    x_user_id: str = Header(...)
+):
+    """
+    Get all files in a collection and their indexing status.
+
+    Returns:
+    - List of all unique files in the collection
+    - Chunk count for each file
+    - Indexing status
+    """
+    try:
+        logger.info(f"Getting status for collection {collection_id}")
+
+        collection_name = f"user_{x_user_id}"
+
+        # Get all chunks in this collection
+        chunks = qdrant_repo.scroll_by_filter(
+            collection_name=collection_name,
+            filters={"metadata.collection_id": collection_id},
+            limit=10000  # High limit to get all chunks
+        )
+
+        # Group chunks by file_id
+        file_chunks = {}
+        for chunk in chunks:
+            file_id = chunk.get("metadata", {}).get("file_id")
+            if file_id:
+                if file_id not in file_chunks:
+                    file_chunks[file_id] = {
+                        "chunks": [],
+                        "indexed_at": chunk.get("metadata", {}).get("indexed_at")
+                    }
+                file_chunks[file_id]["chunks"].append(chunk)
+
+        # Build status response
+        file_statuses = []
+        for file_id, data in file_chunks.items():
+            file_statuses.append({
+                "file_id": file_id,
+                "status": "INDEXED",
+                "chunk_count": len(data["chunks"]),
+                "indexed_at": data["indexed_at"]
+            })
+
+        return {
+            "success": True,
+            "collection_id": collection_id,
+            "files": file_statuses,
+            "total_files": len(file_statuses),
+            "total_chunks": len(chunks)
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting collection status: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{collection_id}/files")
+async def delete_files(
+    collection_id: str,
+    request: DeleteFileRequest,
+    x_user_id: str = Header(...)
+):
+    """
+    Delete specific files from a collection.
+
+    Example:
+    {
+        "file_ids": ["doc_001", "doc_002"]
+    }
+    """
+    try:
+        logger.info(f"Deleting {len(request.file_ids)} files from {collection_id}")
+
+        count = collection_service.unlink_content(
+            collection_name=f"user_{x_user_id}",
+            file_ids=request.file_ids,
+            user_id=x_user_id
+        )
+
+        return {
+            "success": True,
+            "message": f"Deleted {count} file(s)",
+            "deleted_count": count
+        }
+    except Exception as e:
+        logger.error(f"Error deleting files: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{collection_id}")
+async def delete_collection(collection_id: str):
+    """
+    Delete an entire collection from Qdrant.
+
+    WARNING: This permanently deletes all data in the collection!
+    """
+    try:
+        logger.warning(f"Deleting collection: {collection_id}")
+
+        if not qdrant_repo.collection_exists(collection_id):
+            raise HTTPException(status_code=404, detail=f"Collection '{collection_id}' not found")
+
+        qdrant_repo.client.delete_collection(collection_name=collection_id)
+
+        return {
+            "success": True,
+            "message": f"Deleted collection '{collection_id}'"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting collection: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

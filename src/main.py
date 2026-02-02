@@ -2,12 +2,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import rag, law, collections, raw
 from config import Config
+from utils.logger import setup_logging
+from middleware.logging_middleware import LoggingMiddleware
+
+# Setup structured logging
+setup_logging(log_level=Config.app.LOG_LEVEL)
 
 app = FastAPI(
     title="RAG Engine API",
     description="Core engine for uploading, processing, retrieving, and enriching documents using Retrieval-Augmented Generation (RAG)",
     version="1.0.0"
 )
+
+# Add logging middleware (must be first to capture all requests)
+app.add_middleware(LoggingMiddleware)
 
 # Add CORS middleware
 app.add_middleware(

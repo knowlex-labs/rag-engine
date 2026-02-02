@@ -1,5 +1,6 @@
 from typing import List, Dict, Any, Optional
 from repositories.neo4j_repository import neo4j_repository
+from repositories.qdrant_repository import QdrantRepository
 from repositories.feedback_repository import FeedbackRepository
 from utils.embedding_client import embedding_client
 from utils.llm_client import LlmClient
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 class QueryService:
     def __init__(self):
         self.neo4j_repo = neo4j_repository
+        self.qdrant_repo = QdrantRepository()
         self.embedding_client = embedding_client
         self.llm_client = LlmClient()
         self.feedback_repo = FeedbackRepository()
@@ -77,6 +79,48 @@ class QueryService:
 
         return None  # No specific intent, search all types
 
+    def _query_qdrant(
+        self,
+        collection_name: str,
+        query_vector: List[float],
+        limit: int,
+        collection_ids: Optional[List[str]] = None,
+        file_ids: Optional[List[str]] = None,
+        content_type: Optional[str] = None
+    ) -> List[Dict]:
+        """Query Qdrant and normalize results to match Neo4j format."""
+        raw_results = self.qdrant_repo.query_collection(
+            collection_name=collection_name,
+            query_vector=query_vector,
+            limit=limit,
+            collection_ids=collection_ids
+        )
+
+        # Normalize to match Neo4j format (text, chunk_id, file_id, score, etc.)
+        normalized = []
+        for result in raw_results:
+            payload = result.get("payload", {})
+            metadata = payload.get("metadata", {})
+
+            # Filter by file_ids if specified
+            if file_ids and metadata.get("file_id") not in file_ids:
+                continue
+
+            # Filter by content_type if specified
+            if content_type and metadata.get("content_type") != content_type:
+                continue
+
+            normalized.append({
+                "chunk_id": payload.get("chunk_id", ""),
+                "text": payload.get("text", ""),
+                "file_id": metadata.get("file_id", ""),
+                "chunk_type": metadata.get("chunk_type", ""),
+                "page_start": metadata.get("page_start"),
+                "key_terms": metadata.get("key_terms", []),
+                "score": result.get("score", 0.0)
+            })
+        return normalized
+
     def _smart_chunk_retrieval(
         self,
         collection_name: str,
@@ -86,23 +130,36 @@ class QueryService:
         collection_ids: Optional[List[str]] = None,
         file_ids: Optional[List[str]] = None,
         content_type: Optional[str] = None,
-        news_subcategory: Optional[str] = None
+        news_subcategory: Optional[str] = None,
+        use_neo4j: bool = False
     ) -> List[Dict]:
         intent = self._detect_query_intent(query_text)
 
-        results = self.neo4j_repo.vector_search(
-            query_embedding=query_vector,
-            collection_ids=collection_ids,
-            file_ids=file_ids,
-            content_type=content_type,
-            news_subcategory=news_subcategory,
-            top_k=limit
-        )
+        if use_neo4j:
+            # Use Neo4j for vector search
+            results = self.neo4j_repo.vector_search(
+                query_embedding=query_vector,
+                collection_ids=collection_ids,
+                file_ids=file_ids,
+                content_type=content_type,
+                news_subcategory=news_subcategory,
+                top_k=limit
+            )
 
-        # Fallback: If vector search fails and we are scoped to collections, get fallback content
-        if not results and collection_ids:
-            logger.info(f"Vector search returned no results for collection(s) {collection_ids}. Attempting fallback retrieval.")
-            results = self.neo4j_repo.retrieve_fallback_chunks(collection_ids, content_type=content_type, limit=limit)
+            # Fallback: If vector search fails and we are scoped to collections, get fallback content
+            if not results and collection_ids:
+                logger.info(f"Vector search returned no results for collection(s) {collection_ids}. Attempting fallback retrieval.")
+                results = self.neo4j_repo.retrieve_fallback_chunks(collection_ids, content_type=content_type, limit=limit)
+        else:
+            # Use Qdrant for vector search (default)
+            results = self._query_qdrant(
+                collection_name=collection_name,
+                query_vector=query_vector,
+                limit=limit,
+                collection_ids=collection_ids,
+                file_ids=file_ids,
+                content_type=content_type
+            )
 
         if not intent:
             return results
@@ -261,7 +318,8 @@ class QueryService:
         file_ids: Optional[List[str]] = None,
         content_type: Optional[str] = None,
         news_subcategory: Optional[str] = None,
-        enable_reranking: bool = True
+        enable_reranking: bool = True,
+        use_neo4j: bool = False
     ) -> List[Dict[str, Any]]:
         """
         Retrieve relevant context chunks for a query without generating an answer.
@@ -279,7 +337,8 @@ class QueryService:
                 collection_ids=collection_ids,
                 file_ids=file_ids,
                 content_type=content_type,
-                news_subcategory=news_subcategory
+                news_subcategory=news_subcategory,
+                use_neo4j=use_neo4j
             )
 
             if enable_reranking and reranker.is_available() and results:
@@ -293,7 +352,7 @@ class QueryService:
     def get_all_embeddings(self, collection_name: str, limit: int = 100) -> Dict[str, Any]:
         return {"message": "Get all embeddings not implemented for Neo4j"}
 
-    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False, collection_ids: Optional[List[str]] = None, file_ids: Optional[List[str]] = None, content_type: Optional[str] = None, news_subcategory: Optional[str] = None, answer_style: str = "detailed") -> QueryResponse:
+    def search(self, collection_name: str, query_text: str, limit: int = 10, enable_critic: bool = True, structured_output: bool = False, collection_ids: Optional[List[str]] = None, file_ids: Optional[List[str]] = None, content_type: Optional[str] = None, news_subcategory: Optional[str] = None, answer_style: str = "detailed", use_neo4j: bool = False) -> QueryResponse:
         try:
             query_vector = self.embedding_client.generate_single_embedding(query_text)
 
@@ -305,7 +364,8 @@ class QueryService:
                 collection_ids=collection_ids,
                 file_ids=file_ids,
                 content_type=content_type,
-                news_subcategory=news_subcategory
+                news_subcategory=news_subcategory,
+                use_neo4j=use_neo4j
             )
 
             if reranker.is_available() and results:

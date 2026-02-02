@@ -2,7 +2,6 @@
 import logging
 import threading
 from neo4j import GraphDatabase
-from neo4j.exceptions import ServiceUnavailable, AuthError
 from config import Config
 
 logger = logging.getLogger(__name__)

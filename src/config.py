@@ -10,15 +10,15 @@ class ParserConfig:
 
 class EmbeddingConfig:
     MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "text-embedding-004")
-    PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "gemini")
-    VECTOR_SIZE: int = int(os.getenv("VECTOR_SIZE", "768"))
+    PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "openai")
+    VECTOR_SIZE: int = int(os.getenv("VECTOR_SIZE", "1536"))
     DISTANCE_METRIC: str = os.getenv("DISTANCE_METRIC", "COSINE")
     CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "800"))
     CHUNK_OVERLAP: int = int(os.getenv("CHUNK_OVERLAP", "100"))
     MAX_CHUNK_SIZE: int = int(os.getenv("MAX_CHUNK_SIZE", "1200"))
 
 class LlmConfig:
-    PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini")
+    PROVIDER: str = os.getenv("LLM_PROVIDER", "openai")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
     OPENAI_MAX_TOKENS: int = int(os.getenv("OPENAI_MAX_TOKENS", "1000"))
@@ -65,12 +65,11 @@ class QueryConfig:
 class StorageConfig:
     STORAGE_TYPE: str = os.getenv("STORAGE_TYPE", "local").lower()
 
-class MinIOConfig:
-    HOST: str = os.getenv("MINIO_HOST", "localhost:9000")
-    ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-    SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "minioadmin")
-    SECURE: bool = os.getenv("MINIO_SECURE", "false").lower() == "true"
-
+class S3Config:
+    ACCESS_KEY: str = os.getenv("S3_ACCESS_KEY", "")
+    SECRET_KEY: str = os.getenv("S3_SECRET_KEY", "")
+    REGION_NAME: str = os.getenv("S3_REGION_NAME", "us-east-1")
+    BUCKET_NAME: str = os.getenv("S3_BUCKET_NAME", "rag-engine")
 
 class Neo4jConfig:
     URI: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
@@ -81,6 +80,12 @@ class Neo4jConfig:
 
 class LlamaCloudConfig:
     API_KEY: str = os.getenv("LLAMA_CLOUD_API_KEY", "")
+
+class QdrantConfig:
+    HOST: str = os.getenv("QDRANT_HOST", "localhost")
+    PORT: int = int(os.getenv("QDRANT_PORT", "6333"))
+    TIMEOUT: int = int(os.getenv("QDRANT_TIMEOUT", "30"))
+    API_KEY: str = os.getenv("QDRANT_API_KEY", "")
 
 class Config:
     parser = ParserConfig()
@@ -93,6 +98,7 @@ class Config:
     query = QueryConfig()
     storage = StorageConfig()
 
-    minio = MinIOConfig()
+    s3 = S3Config()
+    qdrant = QdrantConfig()
     neo4j = Neo4jConfig()
     llama_cloud = LlamaCloudConfig()

@@ -13,34 +13,26 @@ logger = logging.getLogger(__name__)
 class QdrantRepository:
     def __init__(self):
         host = Config.qdrant.HOST
-        
-        if Config.qdrant.API_KEY:
-            # When using API key, use url parameter
-            # Check if host already contains a scheme (http:// or https://)
-            if host.startswith(('http://', 'https://')):
-                # Host is already a full URL (e.g., from Qdrant Cloud), use it directly
-                url = host
-            else:
-                # Host is just a hostname, construct URL with scheme and port
-                url = f"http://{host}:{Config.qdrant.PORT}"
-            logger.info(f"Initializing Qdrant client with URL: {url}")
-            logger.info(f"API Key present: {bool(Config.qdrant.API_KEY)}")
+
+        # Determine if using cloud instance (has domain with dots) or local
+        is_cloud = '.' in host and 'localhost' not in host
+
+        if is_cloud:
+            # For cloud instances, use HTTPS and the full host URL without port
             self.client = QdrantClient(
-                url=url,
+                url=f"https://{host}",
                 api_key=Config.qdrant.API_KEY,
                 timeout=Config.qdrant.TIMEOUT
             )
         else:
-            # For local connections without API key, extract hostname from URL if needed
-            if host.startswith(('http://', 'https://')):
-                # Extract hostname from URL (remove scheme and any path/port)
-                host = host.split('://', 1)[1].split('/')[0].split(':')[0]
-            logger.info(f"Initializing Qdrant client with host: {host}:{Config.qdrant.PORT}")
+            # For local instances, use HTTP with port
             self.client = QdrantClient(
-                host=host,
-                port=Config.qdrant.PORT,
+                url=f"http://{host}:{Config.qdrant.PORT}",
+                api_key=Config.qdrant.API_KEY,
                 timeout=Config.qdrant.TIMEOUT
             )
+            
+
 
     def collection_exists(self, collection_name: str) -> bool:
         try:
@@ -581,3 +573,50 @@ class QdrantRepository:
             status[doc_id] = "indexed" if results[0] else "not_found"
             logger.debug(f"Document {doc_id} status: {status[doc_id]}")
         return status
+
+    def scroll_by_filter(self, collection_name: str, filters: Dict[str, str], limit: int = 100) -> List[Dict]:
+        """
+        Scroll through points in a collection with filters.
+
+        Args:
+            collection_name: Name of the collection
+            filters: Dictionary of field->value filters
+            limit: Maximum number of points to return
+
+        Returns:
+            List of chunks with metadata
+        """
+        try:
+            # Build filter conditions
+            must_conditions = []
+            for key, value in filters.items():
+                must_conditions.append(
+                    FieldCondition(key=key, match=MatchValue(value=value))
+                )
+
+            # Scroll with filter
+            results, _ = self.client.scroll(
+                collection_name=collection_name,
+                scroll_filter=Filter(must=must_conditions) if must_conditions else None,
+                limit=limit,
+                with_payload=True,
+                with_vectors=False
+            )
+
+            # Format results
+            chunks = []
+            for point in results:
+                chunk_data = {
+                    "id": point.id,
+                    "text": point.payload.get("text", ""),
+                    "metadata": point.payload.get("metadata", {}),
+                    "chunk_id": point.payload.get("chunk_id", ""),
+                    "document_id": point.payload.get("document_id", "")
+                }
+                chunks.append(chunk_data)
+
+            return chunks
+
+        except Exception as e:
+            logger.error(f"Error scrolling collection {collection_name}: {e}")
+            return []

@@ -1,15 +1,11 @@
-from config import Config
 from .storage_interface import StorageServiceInterface
-from .minio_storage_service import MinIOStorageService
 from .local_storage_service import LocalStorageService
 
 
 def get_storage_service() -> StorageServiceInterface:
-    storage_type = Config.storage.STORAGE_TYPE
-
-    if storage_type == "local":
-        return LocalStorageService()
-    elif storage_type == "minio":
-        return MinIOStorageService()
-    else:
-        raise NotImplementedError(f"Storage type '{storage_type}' not implemented")
+    """
+    Returns a storage service instance. MinIO support has been removed.
+    Always returns LocalStorageService regardless of config.
+    """
+    # Always use local storage (MinIO has been removed)
+    return LocalStorageService()

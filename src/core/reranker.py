@@ -22,6 +22,11 @@ class Reranker:
         return cls._instance
 
     def __init__(self):
+        # Lazy loading - model will be loaded on first use
+        pass
+
+    def _ensure_model_loaded(self):
+        """Load model lazily on first use."""
         if self._model is None:
             try:
                 logger.info(f"Loading reranker model: {Config.reranking.RERANKER_MODEL}")
@@ -48,6 +53,10 @@ class Reranker:
         # Use config value if top_k not specified
         final_top_k = top_k or Config.reranking.RERANKER_TOP_K
         logger.info(f"Fetching top {final_top_k} documents")
+
+        # Load model lazily if enabled
+        if Config.reranking.RERANKER_ENABLED:
+            self._ensure_model_loaded()
 
         # If reranker is disabled or model failed to load, return original order
         if not Config.reranking.RERANKER_ENABLED or self._model is None:
@@ -96,6 +105,8 @@ class Reranker:
 
     def is_available(self) -> bool:
         """Check if reranker is available and enabled."""
+        if Config.reranking.RERANKER_ENABLED:
+            self._ensure_model_loaded()
         return Config.reranking.RERANKER_ENABLED and self._model is not None
 
 # Global reranker instance

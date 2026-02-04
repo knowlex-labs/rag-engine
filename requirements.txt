@@ -22,3 +22,4 @@ readability-lxml==0.8.1
 google-cloud-storage==2.14.0
 neo4j>=5.15.0
 llama-parse>=0.3.0
+qdrant-client>=1.7.0

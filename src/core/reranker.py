@@ -1,4 +1,3 @@
-from sentence_transformers import CrossEncoder
 import time
 import logging
 from typing import List, Dict, Any, Optional
@@ -30,6 +29,7 @@ class Reranker:
         if self._model is None:
             try:
                 logger.info(f"Loading reranker model: {Config.reranking.RERANKER_MODEL}")
+                from sentence_transformers import CrossEncoder
                 self._model = CrossEncoder(Config.reranking.RERANKER_MODEL)
                 logger.info("Reranker model loaded successfully")
             except Exception as e:

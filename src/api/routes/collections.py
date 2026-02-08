@@ -1,12 +1,15 @@
 from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel
-from typing import List, Optional
+from typing import Optional, Tuple
 import logging
 
 from repositories.qdrant_repository import QdrantRepository
 from services.collection_service import CollectionService
 from services.query_service import QueryService
-from models.api_models import BatchLinkRequest, IngestionResponse, QueryAnswerRequest, QueryResponse, RetrieveRequest, RetrieveResponse
+from models.api_models import (
+    BatchLinkRequest, IngestionResponse, QueryAnswerRequest, QueryResponse,
+    RetrieveRequest, RetrieveResponse, DeleteFileRequest,
+    CreateCollectionRequest, GetChunksRequest, FileStatusRequest,
+)
 
 router = APIRouter(prefix="/api/v1/collections")
 logger = logging.getLogger(__name__)
@@ -16,51 +19,24 @@ collection_service = CollectionService()
 query_service = QueryService()
 
 
-# ============================================================================
-# MODELS
-# ============================================================================
-
-class CreateCollectionRequest(BaseModel):
-    collection_name: str
-    use_new_schema: bool = True
+def _get_collection_name(user_id: str) -> str:
+    return f"user_{user_id}"
 
 
-class DeleteFileRequest(BaseModel):
-    file_ids: List[str]
+def _extract_filters(request) -> Tuple[Optional[list], Optional[str], Optional[str]]:
+    if not request.filters:
+        return None, None, None
+    f = request.filters
+    return (
+        f.file_ids,
+        f.content_type.value if f.content_type else None,
+        f.news_subcategory,
+    )
 
 
-class GetChunksRequest(BaseModel):
-    file_id: str
-    limit: int = 100
-
-
-class FileStatusRequest(BaseModel):
-    file_ids: List[str]
-
-
-class FileStatusItem(BaseModel):
-    file_id: str
-    status: str  # "INDEXED", "NOT_FOUND", "PARTIAL"
-    chunk_count: int
-    indexed_at: Optional[str] = None
-
-
-# ============================================================================
-# ENDPOINTS - ORDER MATTERS! Static routes first, then parameterized routes
-# ============================================================================
-
-# Static routes (no path parameters)
 @router.post("/create")
 async def create_collection(request: CreateCollectionRequest):
-    """
-    Create a new collection in Qdrant.
-
-    Example:
-    {
-        "collection_name": "LEGAL_COLLECTION_DEFAULT",
-        "use_new_schema": true
-    }
-    """
+    """Create a new collection in Qdrant."""
     try:
         logger.info(f"Creating collection: {request.collection_name}")
 
@@ -92,9 +68,7 @@ async def create_collection(request: CreateCollectionRequest):
 
 @router.get("/list")
 async def list_collections():
-    """
-    List all collections in Qdrant.
-    """
+    """List all collections in Qdrant."""
     try:
         collections = qdrant_repo.client.get_collections()
         collection_names = [col.name for col in collections.collections]
@@ -115,39 +89,26 @@ async def get_files_status(
     request: FileStatusRequest,
     x_user_id: str = Header(...)
 ):
-    """
-    Check indexing status of specific files within a collection.
-
-    Example:
-    {
-        "file_ids": ["doc_001", "doc_002", "doc_003"]
-    }
-
-    Returns status for each file:
-    - INDEXED: File is indexed with chunk count
-    - NOT_FOUND: File not found in the collection
-    """
+    """Check indexing status of specific files within a collection."""
     try:
         logger.info(f"Checking status for {len(request.file_ids)} files in collection {collection_id}")
 
-        collection_name = f"user_{x_user_id}"
+        collection_name = _get_collection_name(x_user_id)
         file_statuses = []
 
         for file_id in request.file_ids:
-            # Count chunks for this file in this collection
             chunks = qdrant_repo.scroll_by_filter(
                 collection_name=collection_name,
                 filters={
                     "metadata.collection_id": collection_id,
                     "metadata.file_id": file_id
                 },
-                limit=10000  # High limit to count all chunks
+                limit=10000
             )
 
             chunk_count = len(chunks)
 
             if chunk_count > 0:
-                # Get the most recent indexed timestamp if available
                 indexed_at = None
                 if chunks and chunks[0].get("metadata", {}).get("indexed_at"):
                     indexed_at = chunks[0]["metadata"]["indexed_at"]
@@ -178,28 +139,13 @@ async def get_files_status(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Parameterized routes (with {collection_id})
 @router.post("/{collection_id}/link-content", response_model=IngestionResponse, status_code=207)
 async def link_content(
     collection_id: str,
     request: BatchLinkRequest,
     x_user_id: str = Header(...)
 ):
-    """
-    Index documents, web pages, or YouTube videos to a collection.
-
-    Example:
-    {
-        "items": [
-            {
-                "file_id": "doc_001",
-                "type": "file",
-                "storage_url": "local:///path/to/document.pdf",
-                "collection_id": "LEGAL_COLLECTION_DEFAULT"
-            }
-        ]
-    }
-    """
+    """Index documents, web pages, or YouTube videos to a collection."""
     try:
         logger.info(f"Linking content to {collection_id}: {len(request.items)} items")
         logger.debug(f"Request details - collection_id: {collection_id}, user_id: {x_user_id}, items: {[item.dict() for item in request.items]}")
@@ -225,28 +171,12 @@ async def query_collection(
     request: QueryAnswerRequest,
     x_user_id: str = Header(...)
 ):
-    """
-    Query documents in a collection.
-
-    Example:
-    {
-        "query": "What are the main points?",
-        "top_k": 5,
-        "answer_style": "detailed",
-        "filters": {
-            "file_ids": ["file_uuid_1", "file_uuid_2"],
-            "content_type": "pdf"
-        }
-    }
-    """
+    """Query documents in a collection."""
     try:
-        # Extract filters from request body (collection_id comes from path)
-        file_ids = request.filters.file_ids if request.filters else None
-        content_type = request.filters.content_type.value if request.filters and request.filters.content_type else None
-        news_subcategory = request.filters.news_subcategory if request.filters else None
+        file_ids, content_type, news_subcategory = _extract_filters(request)
 
         return query_service.search(
-            collection_name=f"user_{x_user_id}",
+            collection_name=_get_collection_name(x_user_id),
             query_text=request.query,
             limit=request.top_k,
             collection_ids=[collection_id],
@@ -266,23 +196,9 @@ async def retrieve_chunks(
     request: RetrieveRequest,
     x_user_id: str = Header(...)
 ):
-    """
-    Retrieve relevant chunks for a query without generating an answer.
-    Returns source chunks that match the query.
-
-    Example:
-    {
-        "query": "What are the main provisions?",
-        "top_k": 5,
-        "filters": {
-            "file_ids": ["file_uuid_1"]
-        }
-    }
-    """
+    """Retrieve relevant chunks for a query without generating an answer."""
     try:
-        file_ids = request.filters.file_ids if request.filters else None
-        content_type = request.filters.content_type.value if request.filters and request.filters.content_type else None
-        news_subcategory = request.filters.news_subcategory if request.filters else None
+        file_ids, content_type, news_subcategory = _extract_filters(request)
 
         results = await query_service.retrieve_context(
             query=request.query,
@@ -295,7 +211,6 @@ async def retrieve_chunks(
             use_neo4j=request.use_neo4j
         )
 
-        # Transform results to EnrichedChunk format
         enriched_chunks = []
         for r in results:
             enriched_chunks.append({
@@ -320,21 +235,12 @@ async def get_chunks(
     request: GetChunksRequest,
     x_user_id: str = Header(...)
 ):
-    """
-    Get all chunks for a specific file in a collection.
-
-    Example:
-    {
-        "file_id": "doc_001",
-        "limit": 100
-    }
-    """
+    """Get all chunks for a specific file in a collection."""
     try:
         logger.info(f"Getting chunks for file {request.file_id} in {collection_id}")
 
-        collection_name = f"user_{x_user_id}"
+        collection_name = _get_collection_name(x_user_id)
 
-        # Scroll through all points with the file_id filter
         chunks = qdrant_repo.scroll_by_filter(
             collection_name=collection_name,
             filters={
@@ -362,27 +268,18 @@ async def get_collection_status(
     collection_id: str,
     x_user_id: str = Header(...)
 ):
-    """
-    Get all files in a collection and their indexing status.
-
-    Returns:
-    - List of all unique files in the collection
-    - Chunk count for each file
-    - Indexing status
-    """
+    """Get all files in a collection and their indexing status."""
     try:
         logger.info(f"Getting status for collection {collection_id}")
 
-        collection_name = f"user_{x_user_id}"
+        collection_name = _get_collection_name(x_user_id)
 
-        # Get all chunks in this collection
         chunks = qdrant_repo.scroll_by_filter(
             collection_name=collection_name,
             filters={"metadata.collection_id": collection_id},
-            limit=10000  # High limit to get all chunks
+            limit=10000
         )
 
-        # Group chunks by file_id
         file_chunks = {}
         for chunk in chunks:
             file_id = chunk.get("metadata", {}).get("file_id")
@@ -394,7 +291,6 @@ async def get_collection_status(
                     }
                 file_chunks[file_id]["chunks"].append(chunk)
 
-        # Build status response
         file_statuses = []
         for file_id, data in file_chunks.items():
             file_statuses.append({
@@ -423,19 +319,12 @@ async def delete_files(
     request: DeleteFileRequest,
     x_user_id: str = Header(...)
 ):
-    """
-    Delete specific files from a collection.
-
-    Example:
-    {
-        "file_ids": ["doc_001", "doc_002"]
-    }
-    """
+    """Delete specific files from a collection."""
     try:
         logger.info(f"Deleting {len(request.file_ids)} files from {collection_id}")
 
         count = collection_service.unlink_content(
-            collection_name=f"user_{x_user_id}",
+            collection_name=_get_collection_name(x_user_id),
             file_ids=request.file_ids,
             user_id=x_user_id
         )
@@ -452,11 +341,7 @@ async def delete_files(
 
 @router.delete("/{collection_id}")
 async def delete_collection(collection_id: str):
-    """
-    Delete an entire collection from Qdrant.
-
-    WARNING: This permanently deletes all data in the collection!
-    """
+    """Delete an entire collection from Qdrant. This permanently deletes all data!"""
     try:
         logger.warning(f"Deleting collection: {collection_id}")
 

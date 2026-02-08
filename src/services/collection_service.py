@@ -54,7 +54,6 @@ class CollectionService:
         content_type = request.items[0].content_type.value if request.items and request.items[0].content_type else "legal"
         logger.info(f"Starting batch process for tenant {tenant_id}, collection {collection_id}, content_type {content_type}")
 
-        # Create Qdrant user collection (default backend)
         qdrant_collection_name = self._get_user_collection(tenant_id)
         self.qdrant_repo.create_user_collection(tenant_id)
 
@@ -218,12 +217,6 @@ class CollectionService:
 
         # Add crawled timestamp
         metadata['crawled_date'] = datetime.now().isoformat()
-
-        # For now, these would need to be provided via API or extracted using NLP
-        # metadata['news_category'] = "general"
-        # metadata['news_subcategory'] = None
-        # metadata['tags'] = []
-        # metadata['summary'] = None
 
         return metadata if metadata else None
 

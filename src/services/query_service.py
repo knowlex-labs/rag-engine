@@ -54,25 +54,17 @@ class QueryService:
         ]
 
     def _detect_query_intent(self, query: str) -> Optional[str]:
-        """
-        Detect the intent of a query to determine which chunk type to prioritize.
-
-        Returns:
-            'concept', 'example', 'question', or None for mixed search
-        """
+        """Detect query intent to prioritize matching chunk types."""
         query_lower = query.lower().strip()
 
-        # Check for concept queries
         for pattern in self.concept_patterns:
             if re.search(pattern, query_lower, re.IGNORECASE):
                 return ChunkType.CONCEPT.value
 
-        # Check for example queries
         for pattern in self.example_patterns:
             if re.search(pattern, query_lower, re.IGNORECASE):
                 return ChunkType.EXAMPLE.value
 
-        # Check for question/problem queries
         for pattern in self.question_patterns:
             if re.search(pattern, query_lower, re.IGNORECASE):
                 return ChunkType.QUESTION.value
@@ -136,7 +128,6 @@ class QueryService:
         intent = self._detect_query_intent(query_text)
 
         if use_neo4j:
-            # Use Neo4j for vector search
             results = self.neo4j_repo.vector_search(
                 query_embedding=query_vector,
                 collection_ids=collection_ids,

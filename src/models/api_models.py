@@ -1,37 +1,13 @@
 from pydantic import BaseModel, model_validator
-from typing import List, Optional, Any, Dict
-from datetime import datetime
+from typing import List, Optional
 from enum import Enum
 
-class RagConfig(BaseModel):
-    name: str
-    version: str
-
-class IndexingConfig(BaseModel):
-    name: str
-    version: str
-
-class CreateCollectionRequest(BaseModel):
-    name: str
-    rag_config: Optional[RagConfig] = None
-    indexing_config: Optional[IndexingConfig] = None
-
-class ApiResponse(BaseModel):
-    status: str
-    message: str
-
-class ApiResponseWithBody(BaseModel):
-    status: str
-    message: str
-    body: Dict[str, Any]
-
-# Enums - Define before they are used
+# Enums
 class ChunkType(str, Enum):
     CONCEPT = "concept"
     EXAMPLE = "example"
     QUESTION = "question"
     OTHER = "other"
-    # Legal document types
     SECTION = "section"
     PROVISION = "provision"
     DEFINITION = "definition"
@@ -41,17 +17,16 @@ class ChunkType(str, Enum):
 
 class ContentType(str, Enum):
     """Type of content being indexed - determines chunking strategy"""
-    BOOK = "book"           # Full textbook (1000+ pages, use larger chunks)
-    CHAPTER = "chapter"     # Single chapter (10-50 pages, use medium chunks)
-    DOCUMENT = "document"   # Small document (<10 pages, use small chunks)
-    AUTO = "auto"           # Auto-detect based on file size
+    BOOK = "book"
+    CHAPTER = "chapter"
+    DOCUMENT = "document"
+    AUTO = "auto"
 
 class DataContentType(str, Enum):
     """Type of data content for filtering and separation"""
-    LEGAL = "legal"         # Constitution, BNS, legal documents
-    NEWS = "news"           # News articles and current events
+    LEGAL = "legal"
+    NEWS = "news"
 
-# Metadata models
 class BookMetadata(BaseModel):
     """Book-level metadata for full textbook indexing"""
     book_id: Optional[str] = None
@@ -62,30 +37,12 @@ class BookMetadata(BaseModel):
     total_chapters: Optional[int] = None
     total_pages: Optional[int] = None
 
-class NewsMetadata(BaseModel):
-    """News-specific metadata for articles and current events"""
-    published_date: Optional[datetime] = None
-    crawled_date: Optional[datetime] = None
-    source_name: Optional[str] = None
-    source_url: Optional[str] = None
-    author: Optional[str] = None
-    news_category: Optional[str] = None  # e.g., "politics", "legal", "business"
-    news_subcategory: Optional[str] = None  # e.g., "supreme_court_news", "state_news"
-    tags: List[str] = []
-    headline: Optional[str] = None
-    summary: Optional[str] = None
-
-# Chunking configuration
 class ChunkingStrategy(BaseModel):
     """Dynamic chunking configuration based on content type"""
     chunk_size: int
     chunk_overlap: int
     content_type: ContentType
     description: str
-
-# Request/Response models
-# Request/Response models
-# New RAG API Models (per RAG_API_DOC.md)
 
 class IndexingStatus(str, Enum):
     PENDING = "INDEXING_PENDING"
@@ -98,9 +55,9 @@ class LinkItem(BaseModel):
     type: str # 'file', 'youtube', 'web'
     file_id: str
     collection_id: Optional[str] = None
-    url: Optional[str] = None      # For web/youtube
-    storage_url: Optional[str] = None  # For file (local://, http://, https://)
-    content_type: Optional[DataContentType] = DataContentType.LEGAL  # Default to legal for backward compatibility
+    url: Optional[str] = None
+    storage_url: Optional[str] = None
+    content_type: Optional[DataContentType] = DataContentType.LEGAL
 
     @model_validator(mode='before')
     @classmethod
@@ -118,7 +75,7 @@ class LinkItem(BaseModel):
 
 class BatchLinkRequest(BaseModel):
     items: List[LinkItem]
-    use_neo4j: bool = False  # Also index to Neo4j (in addition to Qdrant)
+    use_neo4j: bool = False
 
 class BatchItemResponse(BaseModel):
     file_id: str
@@ -134,14 +91,14 @@ class RetrieveFilters(BaseModel):
     collection_ids: Optional[List[str]] = None
     file_ids: Optional[List[str]] = None
     content_type: Optional[DataContentType] = None
-    news_subcategory: Optional[str] = None  # For granular news filtering like "supreme_court_news"
+    news_subcategory: Optional[str] = None
 
 class RetrieveRequest(BaseModel):
     query: str
     filters: Optional[RetrieveFilters] = None
     top_k: int = 5
     include_graph_context: bool = True
-    use_neo4j: bool = False  # Use Neo4j instead of Qdrant
+    use_neo4j: bool = False
 
 class EnrichedChunk(BaseModel):
     chunk_id: str
@@ -151,7 +108,6 @@ class EnrichedChunk(BaseModel):
     page_number: Optional[int] = None
     timestamp: Optional[str] = None
     concepts: List[str] = []
-    # prerequisites: List[str] = [] # Graph feature, can implement if graph is ready, else omit or empty
 
 class RetrieveResponse(BaseModel):
     success: bool
@@ -163,54 +119,19 @@ class QueryAnswerRequest(BaseModel):
     top_k: int = 5
     include_sources: bool = False
     answer_style: Optional[str] = "detailed"
-    use_neo4j: bool = False  # Use Neo4j instead of Qdrant
-
-class QueryAnswerResponse(BaseModel):
-    success: bool
-    answer: str
-    sources: Optional[List[EnrichedChunk]] = None
+    use_neo4j: bool = False
 
 class DeleteFileRequest(BaseModel):
     file_ids: List[str]
 
-class DeleteCollectionRequest(BaseModel):
-    collection_id: str
+class QueryResponse(BaseModel):
+    answer: str
+    confidence: float
+    is_relevant: bool
+    chunks: List['ChunkConfig']
+    critic: Optional['CriticEvaluation'] = None
 
-class IndexingStatusResponse(BaseModel):
-    file_id: str
-    status: IndexingStatus
-    error: Optional[str] = None
-
-class BatchStatusRequest(BaseModel):
-    file_ids: List[str]
-
-class StatusItemResponse(BaseModel):
-    file_id: str
-    name: Optional[str] = None
-    source: Optional[str] = None
-    status: str
-    error: Optional[str] = None
-
-class BatchStatusResponse(BaseModel):
-    message: str
-    results: List[StatusItemResponse]
-
-class CollectionStatusRequest(BaseModel):
-    file_ids: List[str]
-
-class FileStatusResponse(BaseModel):
-    file_id: str
-    status: IndexingStatus
-    indexed_at: Optional[str] = None
-    chunk_count: Optional[int] = None
-    error: Optional[str] = None
-
-
-
-
-
-
-# --- Internal Models for Query Service ---
+# Internal models for query service
 
 class ChunkConfig(BaseModel):
     source: str
@@ -252,47 +173,21 @@ class CriticEvaluation(BaseModel):
     missing_info: str
     enrichment_suggestions: List[str]
 
-class QueryRequest(BaseModel):
-    # Legacy wrapper if needed, rag.py uses RetrieveRequest now
-    query: str
-    enable_critic: bool = True
-    structured_output: bool = False
+# Models moved from collections.py
 
-class QueryResponse(BaseModel):
-    answer: str
-    confidence: float
-    is_relevant: bool
-    chunks: List[ChunkConfig]
-    critic: Optional[CriticEvaluation] = None
+class CreateCollectionRequest(BaseModel):
+    collection_name: str
+    use_new_schema: bool = True
 
+class GetChunksRequest(BaseModel):
+    file_id: str
+    limit: int = 100
 
-class CreateConfigRequest(BaseModel):
-    pass
+class FileStatusRequest(BaseModel):
+    file_ids: List[str]
 
-class CreateConfigResponse(BaseModel):
-    message: str
-    config_id: str
-
-class FeedbackRequest(BaseModel):
-    query: str
-    doc_ids: List[str]
-    label: int
-    collection: str
-
-class FeedbackResponse(BaseModel):
+class FileStatusItem(BaseModel):
+    file_id: str
     status: str
-    message: str
-
-class EmbeddingItem(BaseModel):
-    id: str
-    document_id: str
-    text: str
-    source: str
-    metadata: Dict[str, Any]
-    vector: Optional[List[float]] = None
-
-class GetEmbeddingsResponse(BaseModel):
-    status: str
-    message: str
-    body: Dict[str, Any]
-
+    chunk_count: int
+    indexed_at: Optional[str] = None

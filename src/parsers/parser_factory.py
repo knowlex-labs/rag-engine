@@ -16,22 +16,27 @@ logger = logging.getLogger(__name__)
 class ParserFactory:
     @staticmethod
     def get_parser(source_type: str, **kwargs) -> BaseParser:
+        logger.info(f"ParserFactory.get_parser: source_type={source_type}")
         source_type = source_type.lower()
 
         if source_type == "pdf":
+            logger.info("ParserFactory: using PDFParser")
             return PDFParser()
 
         elif source_type == "file":
+            logger.info("ParserFactory: using PDFParser (default for file)")
             # For file content type, we need to detect the actual file format
             # This will be called with the downloaded file path, so we can detect from extension
             return PDFParser()  # Default to PDF for now, could be enhanced to detect format
 
         elif source_type == "youtube":
+            logger.info("ParserFactory: using YouTubeParser")
             return YouTubeParser(
                 gemini_api_key=Config.llm.GEMINI_API_KEY
             )
 
         elif source_type == "web":
+            logger.info("ParserFactory: using WebParser")
             user_agent = kwargs.get('user_agent', 'RAG-Engine/1.0')
             timeout = kwargs.get('timeout', 30)
             return WebParser(
@@ -40,9 +45,11 @@ class ParserFactory:
             )
 
         elif source_type == "constitution":
+            logger.info("ParserFactory: using ConstitutionParser")
             return ConstitutionParser()
 
         else:
+            logger.error(f"ParserFactory: unsupported source_type={source_type}")
             raise ValueError(f"Unsupported source type: {source_type}")
 
     @staticmethod

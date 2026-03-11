@@ -1,11 +1,19 @@
 """
-Structured logging with trace_id and user_id tracking
+Structured logging with trace_id and user_id tracking.
+
+Configuration is loaded from logging.yaml (next to this package).
+The ContextualFilter injects trace_id/user_id from ContextVars so
+every logger automatically includes them — no per-module setup needed.
 """
 import logging
+import logging.config
+import os
 import sys
 from contextvars import ContextVar
 from datetime import datetime
 from typing import Optional
+
+import yaml
 
 # Context variables to store trace_id and user_id per request
 trace_id_var: ContextVar[Optional[str]] = ContextVar('trace_id', default=None)
@@ -14,7 +22,8 @@ user_id_var: ContextVar[Optional[str]] = ContextVar('user_id', default=None)
 
 class ContextualFilter(logging.Filter):
     """
-    Logging filter to inject trace_id and user_id into log records
+    Logging filter to inject trace_id and user_id into log records.
+    Referenced by logging.yaml via '()' factory syntax.
     """
     def filter(self, record):
         record.trace_id = trace_id_var.get() or "N/A"
@@ -24,7 +33,8 @@ class ContextualFilter(logging.Filter):
 
 class CustomFormatter(logging.Formatter):
     """
-    Custom formatter with structured output including trace_id and user_id
+    Custom formatter with structured output including trace_id and user_id.
+    Referenced by logging.yaml via '()' factory syntax.
     """
 
     # ANSI color codes
@@ -67,39 +77,32 @@ class CustomFormatter(logging.Formatter):
 
 def setup_logging(log_level: str = "INFO"):
     """
-    Setup structured logging for the application
+    Setup structured logging for the application.
 
-    Args:
-        log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    Loads configuration from logging.yaml. The root logger level is
+    overridden by the log_level argument (from env / Config).
     """
-    # Get root logger
-    root_logger = logging.getLogger()
-    root_logger.setLevel(getattr(logging, log_level.upper()))
+    # Resolve logging.yaml relative to the src/ directory
+    src_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config_path = os.path.join(src_dir, "logging.yaml")
 
-    # Remove existing handlers
-    root_logger.handlers.clear()
+    if os.path.exists(config_path):
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
 
-    # Create console handler
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(getattr(logging, log_level.upper()))
+        # Override root level from application config / env
+        config["root"]["level"] = log_level.upper()
 
-    # Add custom formatter
-    formatter = CustomFormatter()
-    console_handler.setFormatter(formatter)
+        logging.config.dictConfig(config)
+    else:
+        # Fallback: basic config if yaml is missing
+        logging.basicConfig(
+            level=getattr(logging, log_level.upper()),
+            stream=sys.stdout,
+            format="[%(asctime)s] %(levelname)-8s | traceId: N/A | userId: N/A | %(name)s | %(message)s",
+        )
 
-    # Add contextual filter
-    contextual_filter = ContextualFilter()
-    console_handler.addFilter(contextual_filter)
-
-    # Add handler to root logger
-    root_logger.addHandler(console_handler)
-
-    # Reduce noise from third-party libraries
-    logging.getLogger("httpx").setLevel(logging.WARNING)
-    logging.getLogger("httpcore").setLevel(logging.WARNING)
-    logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
-
-    return root_logger
+    return logging.getLogger()
 
 
 def set_trace_id(trace_id: str):

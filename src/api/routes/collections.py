@@ -97,10 +97,12 @@ async def get_files_status(
         file_statuses = []
 
         for file_id in request.file_ids:
+            # Use request.collection_id if provided, otherwise fall back to URL path param
+            filter_collection_id = request.collection_id if request.collection_id else collection_id
             chunks = qdrant_repo.scroll_by_filter(
                 collection_name=collection_name,
                 filters={
-                    "metadata.collection_id": collection_id,
+                    "metadata.collection_id": filter_collection_id,
                     "metadata.file_id": file_id
                 },
                 limit=10000
@@ -147,13 +149,15 @@ async def link_content(
 ):
     """Index documents, web pages, or YouTube videos to a collection."""
     try:
-        logger.info(f"Linking content to {collection_id}: {len(request.items)} items")
-        logger.debug(f"Request details - collection_id: {collection_id}, user_id: {x_user_id}, items: {[item.dict() for item in request.items]}")
+        logger.info(f"=== API: link_content STARTED ===")
+        logger.info(f"collection_id={collection_id}, user_id={x_user_id}, item_count={len(request.items)}")
 
         for item in request.items:
             item.collection_id = collection_id
 
+        logger.info(f"Calling collection_service.process_batch...")
         results = await collection_service.process_batch(request, x_user_id)
+        logger.info(f"collection_service.process_batch returned {len(results)} results")
 
         return IngestionResponse(
             message=f"Processed {len(results)} items",
@@ -161,6 +165,7 @@ async def link_content(
             results=results
         )
     except Exception as e:
+        logger.error(f"=== API: link_content FAILED ===")
         logger.error(f"Error linking content: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 

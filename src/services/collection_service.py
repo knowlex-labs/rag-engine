@@ -49,6 +49,9 @@ class CollectionService:
         return documents
 
     async def process_batch(self, request: BatchLinkRequest, tenant_id: str):
+        logger.info(f"=== INDEXING: process_batch STARTED ===")
+        logger.info(f"tenant_id={tenant_id}, item_count={len(request.items)}")
+
         collection_id = request.items[0].collection_id if request.items else "default"
         # Get content_type from first item (all items in batch should have same content_type)
         content_type = request.items[0].content_type.value if request.items and request.items[0].content_type else "legal"
@@ -62,16 +65,25 @@ class CollectionService:
             self.neo4j_repo.create_user_collection(tenant_id, collection_id or "default", content_type)
 
         results = []
-        for item in request.items:
+        for idx, item in enumerate(request.items):
+            logger.info(f"=== INDEXING: Item {idx + 1}/{len(request.items)} ===")
+            logger.info(f"file_id={item.file_id}, type={item.type}")
             try:
-                logger.info(f"Processing item {item.file_id} (type: {item.type})")
+                logger.info(f"Resolving source for {item.file_id}")
                 source = self._resolve_source(item)
+                logger.info(f"Source resolved: {source[:80] if source else 'None'}")
+
                 logger.info(f"Parsing content for {item.file_id}")
                 parsed = self._parse_content(source, item.type)
+                logger.info(f"Parsed: title={getattr(parsed.metadata, 'title', 'N/A')}")
+
                 logger.info(f"Chunking content for {item.file_id}")
                 chunks = self._chunk_content(parsed, item.type)
-                logger.info(f"Generating embeddings for {len(chunks)} chunks of {item.file_id}")
+                logger.info(f"Created {len(chunks)} chunks")
+
+                logger.info(f"Generating embeddings for {len(chunks)} chunks")
                 embeddings = self._generate_embeddings(chunks)
+                logger.info(f"Embeddings generated: {len(embeddings)}")
 
                 # Prepare news metadata if content_type is news
                 news_metadata = None
@@ -117,40 +129,49 @@ class CollectionService:
                 })
 
             except Exception as e:
-                logger.error(f"Failed to process {item.file_id}: {e}")
+                logger.error(f"=== INDEXING FAILED: {item.file_id} ===")
+                logger.error(f"Error: {e}", exc_info=True)
                 results.append({
                     "file_id": item.file_id,
                     "status": "INDEXING_FAILED",
                     "error": str(e)
                 })
 
+        logger.info(f"=== INDEXING: process_batch COMPLETED ===")
         return results
 
     def _resolve_source(self, item: LinkItem) -> str:
+        logger.info(f"_resolve_source: item type={item.type}")
         from urllib.parse import unquote
         if item.type == 'file':
             if not item.storage_url:
+                logger.error("_resolve_source: Missing storage_url!")
                 raise ValueError("Missing storage_url")
 
             # Unquote in case of %20 etc
             storage_url = unquote(item.storage_url)
-            logger.info(f"Resolving storage URL: {storage_url}")
+            logger.info(f"_resolve_source: storage_url={storage_url}")
 
             # Handle local:// URLs (local storage)
             if storage_url.startswith('local://'):
-                logger.info(f"Downloading from local storage: {storage_url}")
+                logger.info(f"_resolve_source: Downloading from local storage")
                 local_path = self.storage_service.download_for_processing(storage_url)
                 if not local_path:
+                    logger.error(f"_resolve_source: Failed to get file from local storage: {storage_url}")
                     raise ValueError(f"Failed to get file from local storage: {storage_url}")
-                logger.info(f"Local path: {local_path}")
+                logger.info(f"_resolve_source: local_path={local_path}")
                 return local_path
 
             # Handle HTTP/HTTPS URLs
             if storage_url.startswith(('http://', 'https://')):
-                logger.info(f"Downloading from HTTP URL: {storage_url}")
-                return self._download_from_url(storage_url)
+                logger.info(f"_resolve_source: Downloading from HTTP URL")
+                result = self._download_from_url(storage_url)
+                logger.info(f"_resolve_source: downloaded to {result}")
+                return result
 
+            logger.error(f"_resolve_source: Unsupported storage URL format: {storage_url}")
             raise ValueError(f"Unsupported storage URL format: {storage_url}")
+        logger.info(f"_resolve_source: returning item.url")
         return item.url
 
     def _download_from_url(self, url: str) -> str:
@@ -174,15 +195,24 @@ class CollectionService:
 
 
     def _parse_content(self, source: str, item_type: str):
+        logger.info(f"_parse_content: source={source[:50]}, item_type={item_type}")
         parser = ParserFactory.get_parser(item_type)
-        return parser.parse(source)
+        result = parser.parse(source)
+        logger.info(f"_parse_content: done, pages={getattr(result.metadata, 'page_count', 'N/A')}")
+        return result
 
     def _chunk_content(self, parsed_content, item_type: str):
-        return chunking_service.chunk_parsed_content(parsed_content, item_type)
+        logger.info(f"_chunk_content: item_type={item_type}")
+        result = chunking_service.chunk_parsed_content(parsed_content, item_type)
+        logger.info(f"_chunk_content: created {len(result)} chunks")
+        return result
 
     def _generate_embeddings(self, chunks):
+        logger.info(f"_generate_embeddings: {len(chunks)} chunks")
         texts = [chunk.text for chunk in chunks]
-        return self.embedding_client.generate_embeddings(texts)
+        result = self.embedding_client.generate_embeddings(texts)
+        logger.info(f"_generate_embeddings: done, {len(result)} embeddings")
+        return result
 
     def _extract_news_metadata(self, parsed_content, item: LinkItem) -> dict:
         """Extract news-specific metadata from parsed content and LinkItem"""

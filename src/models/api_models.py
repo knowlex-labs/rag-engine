@@ -185,6 +185,7 @@ class GetChunksRequest(BaseModel):
 
 class FileStatusRequest(BaseModel):
     file_ids: List[str]
+    collection_id: Optional[str] = None
 
 class FileStatusItem(BaseModel):
     file_id: str

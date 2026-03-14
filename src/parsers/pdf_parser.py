@@ -4,12 +4,13 @@ PDF parser using PyMuPDF with font-based header detection and legal document sup
 
 import re
 import logging
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 import fitz
 
 from .base_parser import BaseParser
 from .models import ParsedContent, ParsedMetadata, ContentSection
+from config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -91,12 +92,27 @@ class PDFParser(BaseParser):
 
             metadata = self._extract_metadata(doc, source)
 
-            headers = self._extract_headers_with_font_sizes(doc)
-            logger.info(f"Extracted {len(headers)} headers from PDF")
-
             full_text = ""
             for page in doc:
                 full_text += page.get_text() + "\n"
+
+            # Detect scanned PDF: less than 100 chars per page means no text layer
+            chars_per_page = len(full_text.strip()) / max(doc.page_count, 1)
+            if chars_per_page < 100:
+                logger.info(f"Scanned PDF detected ({chars_per_page:.0f} chars/page) — using Gemini Vision OCR")
+                full_text = self._ocr_with_gemini(doc, metadata.title)
+                doc.close()
+                sections = [ContentSection(level=1, text=full_text, title=metadata.title, page_number=1)]
+                return ParsedContent(
+                    text=full_text,
+                    metadata=metadata,
+                    sections=sections,
+                    source_type='pdf',
+                    has_diagrams=True,
+                )
+
+            headers = self._extract_headers_with_font_sizes(doc)
+            logger.info(f"Extracted {len(headers)} headers from PDF")
 
             sections = self._build_sections_from_headers(doc, headers)
 
@@ -433,6 +449,36 @@ class PDFParser(BaseParser):
             content += page_text + "\n"
 
         return content.strip()
+
+    def _ocr_with_gemini(self, doc, title: str) -> str:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=Config.llm.GEMINI_API_KEY)
+        prompt = (
+            "Transcribe all text from this document page exactly as it appears. "
+            "Include all visible text: headers, body, stamps, seals, dates, names, "
+            "numbers, handwritten notes, and footers. Preserve structure and formatting."
+        )
+
+        page_texts = []
+        for page_num, page in enumerate(doc, start=1):
+            pixmap = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+            image_bytes = pixmap.tobytes("png")
+
+            response = client.models.generate_content(
+                model=Config.llm.GEMINI_MODEL,
+                contents=[
+                    types.Part.from_bytes(data=image_bytes, mime_type="image/png"),
+                    prompt
+                ],
+                config=types.GenerateContentConfig(temperature=0.1, max_output_tokens=4000),
+            )
+            page_text = response.text.strip()
+            logger.info(f"OCR page {page_num}/{doc.page_count}: {len(page_text)} chars extracted")
+            page_texts.append(f"[Page {page_num}]\n{page_text}")
+
+        return "\n\n".join(page_texts)
 
     def validate_source(self, source: str | Path) -> None:
         """Validate PDF source exists."""

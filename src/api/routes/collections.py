@@ -93,7 +93,7 @@ async def get_files_status(
     try:
         logger.info(f"Checking status for {len(request.file_ids)} files in collection {collection_id}")
 
-        collection_name = _get_collection_name(x_user_id)
+        collection_name = collection_id
         file_statuses = []
 
         for file_id in request.file_ids:
@@ -159,11 +159,20 @@ async def link_content(
         results = await collection_service.process_batch(request, x_user_id)
         logger.info(f"collection_service.process_batch returned {len(results)} results")
 
+        # Surface quota errors as HTTP 429 so callers stop retrying
+        for result in results:
+            if result.get("status") == "INDEXING_FAILED":
+                error = result.get("error", "")
+                if "429" in error or "RESOURCE_EXHAUSTED" in error or "quota" in error.lower():
+                    raise HTTPException(status_code=429, detail="Gemini API quota exceeded. Please retry later.")
+
         return IngestionResponse(
             message=f"Processed {len(results)} items",
             batch_id="sync",
             results=results
         )
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"=== API: link_content FAILED ===")
         logger.error(f"Error linking content: {e}", exc_info=True)
@@ -181,10 +190,10 @@ async def query_collection(
         file_ids, content_type, news_subcategory = _extract_filters(request)
 
         return query_service.search(
-            collection_name=_get_collection_name(x_user_id),
+            collection_name=collection_id,
             query_text=request.query,
             limit=request.top_k,
-            collection_ids=[collection_id],
+            collection_ids=None,
             file_ids=file_ids,
             content_type=content_type,
             news_subcategory=news_subcategory,
@@ -207,8 +216,8 @@ async def retrieve_chunks(
 
         results = await query_service.retrieve_context(
             query=request.query,
-            user_id=x_user_id,
-            collection_ids=[collection_id],
+            user_id=collection_id,
+            collection_ids=None,
             top_k=request.top_k,
             file_ids=file_ids,
             content_type=content_type,
@@ -244,7 +253,7 @@ async def get_chunks(
     try:
         logger.info(f"Getting chunks for file {request.file_id} in {collection_id}")
 
-        collection_name = _get_collection_name(x_user_id)
+        collection_name = collection_id
 
         chunks = qdrant_repo.scroll_by_filter(
             collection_name=collection_name,
@@ -277,7 +286,7 @@ async def get_collection_status(
     try:
         logger.info(f"Getting status for collection {collection_id}")
 
-        collection_name = _get_collection_name(x_user_id)
+        collection_name = collection_id
 
         chunks = qdrant_repo.scroll_by_filter(
             collection_name=collection_name,
@@ -329,7 +338,7 @@ async def delete_files(
         logger.info(f"Deleting {len(request.file_ids)} files from {collection_id}")
 
         count = collection_service.unlink_content(
-            collection_name=_get_collection_name(x_user_id),
+            collection_name=collection_id,
             file_ids=request.file_ids,
             user_id=x_user_id
         )

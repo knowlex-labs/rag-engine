@@ -9,6 +9,7 @@ from .pdf_parser import PDFParser
 from .youtube_parser import YouTubeParser
 from .web_parser import WebParser
 from .constitution_parser import ConstitutionParser
+from .image_parser import ImageParser
 from config import Config
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,10 @@ class ParserFactory:
             return YouTubeParser(
                 gemini_api_key=Config.llm.GEMINI_API_KEY
             )
+
+        elif source_type == "image":
+            logger.info("ParserFactory: using ImageParser")
+            return ImageParser()
 
         elif source_type == "web":
             logger.info("ParserFactory: using WebParser")
@@ -61,12 +66,14 @@ class ParserFactory:
     @staticmethod
     def detect_source_type(source: Union[str, Path]) -> str:
         if isinstance(source, Path):
-            if source.suffix.lower() == '.pdf':
-                # Check if this is a Constitution document
+            ext = source.suffix.lower()
+            if ext == '.pdf':
                 source_name = source.name.lower()
                 if ParserFactory._is_constitution_document(source_name):
                     return 'constitution'
                 return 'pdf'
+            elif ext in {'.png', '.jpg', '.jpeg', '.webp'}:
+                return 'image'
             else:
                 raise ValueError(f"Unsupported file type: {source.suffix}")
 
@@ -77,11 +84,13 @@ class ParserFactory:
 
             if not parsed.scheme:
                 path = Path(source_str)
-                if path.suffix.lower() == '.pdf':
-                    # Check if this is a Constitution document
+                ext = path.suffix.lower()
+                if ext == '.pdf':
                     if ParserFactory._is_constitution_document(source_str.lower()):
                         return 'constitution'
                     return 'pdf'
+                elif ext in {'.png', '.jpg', '.jpeg', '.webp'}:
+                    return 'image'
                 else:
                     raise ValueError(f"Unsupported file type: {path.suffix}")
 
@@ -140,6 +149,12 @@ class ParserFactory:
                 'class': 'WebParser',
                 'description': 'Scrapes web articles',
                 'supports': ['http://', 'https://'],
+                'required_params': []
+            },
+            'image': {
+                'class': 'ImageParser',
+                'description': 'Parses images using Gemini Vision and multimodal embeddings',
+                'supports': ['.png', '.jpg', '.jpeg', '.webp'],
                 'required_params': []
             }
         }

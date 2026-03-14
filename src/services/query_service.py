@@ -248,7 +248,15 @@ class QueryService:
                 chunks=[]
             )
 
-        chunk_texts = [chunk.text for chunk in chunks]
+        # Tag image chunks so the LLM knows they describe visual content
+        chunk_texts = []
+        for i, chunk in enumerate(chunks):
+            result = relevant_results[i] if i < len(relevant_results) else {}
+            chunk_type = result.get("chunk_type", "")
+            if chunk_type == "image":
+                chunk_texts.append(f"[Image Content]: {chunk.text}")
+            else:
+                chunk_texts.append(chunk.text)
         full_chunk_texts = self._extract_full_texts(relevant_results)
         answer = self.llm_client.generate_answer(query, chunk_texts, force_json=structured_output, answer_style=answer_style)
         answer = enhance_response_if_needed(answer, query)
@@ -318,7 +326,7 @@ class QueryService:
         """
         try:
             query_vector = self.embedding_client.generate_single_embedding(query)
-            collection_name = f"user_{user_id}"
+            collection_name = user_id  # user_id here is actually the collection_id
 
             results = self._smart_chunk_retrieval(
                 collection_name,

@@ -9,8 +9,8 @@ class ParserConfig:
     YOUTUBE_TRANSCRIPT_FALLBACK: str = os.getenv("YOUTUBE_TRANSCRIPT_FALLBACK", "gemini")
 
 class EmbeddingConfig:
-    MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "text-embedding-004")
-    PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "openai")
+    MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "gemini-embedding-2-preview")
+    PROVIDER: str = os.getenv("EMBEDDING_PROVIDER", "gemini")
     VECTOR_SIZE: int = int(os.getenv("VECTOR_SIZE", "1536"))
     DISTANCE_METRIC: str = os.getenv("DISTANCE_METRIC", "COSINE")
     CHUNK_SIZE: int = int(os.getenv("CHUNK_SIZE", "800"))

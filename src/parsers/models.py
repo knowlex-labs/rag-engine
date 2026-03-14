@@ -3,7 +3,7 @@ Data models for parsed content.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime
 
 
@@ -79,9 +79,13 @@ class ParsedContent:
     has_code_blocks: bool = False
     has_diagrams: bool = False
 
+    # Image-specific fields
+    image_data: Optional[bytes] = None
+    image_path: Optional[str] = None
+
     def __post_init__(self):
         """Validate source type."""
-        valid_types = ['pdf', 'youtube', 'web', 'constitution']
+        valid_types = ['pdf', 'youtube', 'web', 'constitution', 'image']
         if self.source_type not in valid_types:
             raise ValueError(f"Invalid source_type: {self.source_type}. Must be one of {valid_types}")
 

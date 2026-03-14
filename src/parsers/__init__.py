@@ -19,6 +19,7 @@ from .base_parser import BaseParser
 from .pdf_parser import PDFParser
 from .youtube_parser import YouTubeParser
 from .web_parser import WebParser
+from .image_parser import ImageParser
 from .parser_factory import ParserFactory
 
 __all__ = [
@@ -29,5 +30,6 @@ __all__ = [
     'PDFParser',
     'YouTubeParser',
     'WebParser',
+    'ImageParser',
     'ParserFactory',
 ]

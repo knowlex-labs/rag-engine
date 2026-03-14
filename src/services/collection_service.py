@@ -53,12 +53,12 @@ class CollectionService:
         logger.info(f"tenant_id={tenant_id}, item_count={len(request.items)}")
 
         collection_id = request.items[0].collection_id if request.items else "default"
-        # Get content_type from first item (all items in batch should have same content_type)
         content_type = request.items[0].content_type.value if request.items and request.items[0].content_type else "legal"
         logger.info(f"Starting batch process for tenant {tenant_id}, collection {collection_id}, content_type {content_type}")
 
-        qdrant_collection_name = self._get_user_collection(tenant_id)
-        self.qdrant_repo.create_user_collection(tenant_id)
+        qdrant_collection_name = collection_id
+        if not self.qdrant_repo.collection_exists(collection_id):
+            raise ValueError(f"Collection '{collection_id}' does not exist")
 
         # Optionally also create Neo4j collection if use_neo4j is True
         if request.use_neo4j:
@@ -78,11 +78,11 @@ class CollectionService:
                 logger.info(f"Parsed: title={getattr(parsed.metadata, 'title', 'N/A')}")
 
                 logger.info(f"Chunking content for {item.file_id}")
-                chunks = self._chunk_content(parsed, item.type)
+                chunks = self._chunk_content(parsed, parsed.source_type)
                 logger.info(f"Created {len(chunks)} chunks")
 
                 logger.info(f"Generating embeddings for {len(chunks)} chunks")
-                embeddings = self._generate_embeddings(chunks)
+                embeddings = self._generate_embeddings(chunks, parsed)
                 logger.info(f"Embeddings generated: {len(embeddings)}")
 
                 # Prepare news metadata if content_type is news
@@ -143,7 +143,7 @@ class CollectionService:
     def _resolve_source(self, item: LinkItem) -> str:
         logger.info(f"_resolve_source: item type={item.type}")
         from urllib.parse import unquote
-        if item.type == 'file':
+        if item.type in ('file', 'image'):
             if not item.storage_url:
                 logger.error("_resolve_source: Missing storage_url!")
                 raise ValueError("Missing storage_url")
@@ -178,13 +178,12 @@ class CollectionService:
         try:
             response = requests.get(url, stream=True)
             response.raise_for_status()
-            
-            # Extract filename from URL or header if possible, else default
-            # Simple approach: temp file with generic suffix or try to guess from Content-Disposition
-            # For now, we'll just fetch and assume pdf/text based on subsequent parser logic or just use a safe suffix
-            suffix = ".pdf" # Defaulting for now, parser might auto-detect or fail if mismatch. 
-            # ideally item.type='file' is vague. But parsing logic usually handles magic numbers or just needs bytes.
-            
+
+            # Detect suffix from URL, fallback to .pdf
+            from pathlib import Path as _Path
+            url_path = _Path(url.split('?')[0])
+            suffix = url_path.suffix.lower() if url_path.suffix else ".pdf"
+
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp_file:
                 for chunk in response.iter_content(chunk_size=8192):
                     tmp_file.write(chunk)
@@ -196,6 +195,13 @@ class CollectionService:
 
     def _parse_content(self, source: str, item_type: str):
         logger.info(f"_parse_content: source={source[:50]}, item_type={item_type}")
+        # For generic "file" type, detect actual format from extension
+        if item_type == "file":
+            from pathlib import Path as _Path
+            ext = _Path(source).suffix.lower()
+            if ext in {".png", ".jpg", ".jpeg", ".webp"}:
+                item_type = "image"
+                logger.info(f"_parse_content: detected image from extension {ext}, routing to ImageParser")
         parser = ParserFactory.get_parser(item_type)
         result = parser.parse(source)
         logger.info(f"_parse_content: done, pages={getattr(result.metadata, 'page_count', 'N/A')}")
@@ -207,8 +213,19 @@ class CollectionService:
         logger.info(f"_chunk_content: created {len(result)} chunks")
         return result
 
-    def _generate_embeddings(self, chunks):
+    def _generate_embeddings(self, chunks, parsed_content=None):
         logger.info(f"_generate_embeddings: {len(chunks)} chunks")
+
+        # For images, embed the raw image bytes directly (multimodal embedding)
+        if parsed_content and parsed_content.source_type == "image" and parsed_content.image_data:
+            from parsers.image_parser import MIME_TYPES
+            from pathlib import Path
+            ext = Path(parsed_content.image_path).suffix.lower() if parsed_content.image_path else ".png"
+            mime_type = MIME_TYPES.get(ext, "image/png")
+            embedding = self.embedding_client.generate_image_embedding(parsed_content.image_data, mime_type)
+            logger.info(f"_generate_embeddings: generated 1 image embedding")
+            return [embedding]
+
         texts = [chunk.text for chunk in chunks]
         result = self.embedding_client.generate_embeddings(texts)
         logger.info(f"_generate_embeddings: done, {len(result)} embeddings")

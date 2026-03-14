@@ -14,6 +14,7 @@ class ChunkType(str, Enum):
     SCHEDULE = "schedule"
     PREAMBLE = "preamble"
     CHAPTER = "chapter"
+    IMAGE = "image"
 
 class ContentType(str, Enum):
     """Type of content being indexed - determines chunking strategy"""
@@ -52,7 +53,7 @@ class IndexingStatus(str, Enum):
     CANCELLED = "INDEXING_CANCELLED"
 
 class LinkItem(BaseModel):
-    type: str # 'file', 'youtube', 'web'
+    type: str # 'file', 'youtube', 'web', 'image'
     file_id: str
     collection_id: Optional[str] = None
     url: Optional[str] = None
@@ -69,8 +70,8 @@ class LinkItem(BaseModel):
 
             if type_val in ['youtube', 'web'] and not url:
                 raise ValueError(f"{type_val} requires 'url'")
-            if type_val == 'file' and not storage_url:
-                raise ValueError("file requires 'storage_url'")
+            if type_val in ['file', 'image'] and not storage_url:
+                raise ValueError(f"{type_val} requires 'storage_url'")
         return values
 
 class BatchLinkRequest(BaseModel):

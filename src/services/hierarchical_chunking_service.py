@@ -111,10 +111,13 @@ class HierarchicalChunkingService:
         """
         Chunk ParsedContent preserving hierarchy and metadata.
         """
+        if file_type == "image":
+            return self._create_image_chunk(parsed_content)
+
         chunks = []
         document_id = str(uuid.uuid4())
         chunk_num = 0
-        
+
         for section in parsed_content.sections:
              if not section.text.strip():
                  continue
@@ -220,6 +223,30 @@ class HierarchicalChunkingService:
 
         logger.info(f"Created {len(chunks)} basic chunks from text")
         return chunks
+
+    def _create_image_chunk(self, parsed_content: ParsedContent) -> List[HierarchicalChunk]:
+        document_id = str(uuid.uuid4())
+        title = parsed_content.metadata.title or "Image"
+
+        chunk = HierarchicalChunk(
+            chunk_id=f"{document_id}_image_1",
+            document_id=document_id,
+            text=parsed_content.text,
+            topic_metadata=TopicMetadata(
+                chapter_title=title,
+                section_title="Image Content",
+                page_start=1,
+                page_end=1,
+            ),
+            chunk_metadata=ChunkMetadata(
+                chunk_type=ChunkType.IMAGE,
+                topic_id=document_id,
+                key_terms=self._extract_key_terms(parsed_content.text),
+                has_diagrams=True,
+            ),
+        )
+        logger.info(f"Created 1 image chunk for document {document_id}")
+        return [chunk]
 
     def _classify_chunk_type_from_header(self, header_text: str) -> ChunkType:
         header_lower = header_text.lower()
